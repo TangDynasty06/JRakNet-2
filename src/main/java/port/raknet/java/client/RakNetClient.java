@@ -17,10 +17,10 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import port.raknet.java.net.SessionState;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.SystemAddress;
-import port.raknet.java.protocol.raknet.ConnectionReplyOne;
-import port.raknet.java.protocol.raknet.ConnectionReplyTwo;
-import port.raknet.java.protocol.raknet.ConnectionRequestOne;
-import port.raknet.java.protocol.raknet.ConnectionRequestTwo;
+import port.raknet.java.protocol.raknet.ConnectionOpenReplyOne;
+import port.raknet.java.protocol.raknet.ConnectionOpenReplyTwo;
+import port.raknet.java.protocol.raknet.ConnectionOpenRequestOne;
+import port.raknet.java.protocol.raknet.ConnectionOpenRequestTwo;
 import port.raknet.java.protocol.raknet.StatusRequest;
 import port.raknet.java.protocol.raknet.StatusResponse;
 
@@ -68,7 +68,7 @@ public class RakNetClient extends Thread {
 		this.session = new ServerSession(channel, location);
 		
 		// Send first request packet
-		ConnectionRequestOne ccro = new ConnectionRequestOne();
+		ConnectionOpenRequestOne ccro = new ConnectionOpenRequestOne();
 		ccro.mtuSize = 2048;
 		ccro.protocol = 7;
 		ccro.encode();
@@ -102,7 +102,7 @@ public class RakNetClient extends Thread {
 									if (state == SessionState.CONNECTING_1) {
 										if (pid == 0x06) {
 											if (msg.sender().equals(session.getAddress())) {
-												ConnectionReplyOne scro = new ConnectionReplyOne(packet);
+												ConnectionOpenReplyOne scro = new ConnectionOpenReplyOne(packet);
 												scro.decode();
 
 												if (scro.magic == true) {
@@ -113,7 +113,7 @@ public class RakNetClient extends Thread {
 
 													// Encode second response
 													// and send it
-													ConnectionRequestTwo ccrt = new ConnectionRequestTwo(packet);
+													ConnectionOpenRequestTwo ccrt = new ConnectionOpenRequestTwo(packet);
 													ccrt.address = new SystemAddress("127.0.0.1", 0, 4);
 													ccrt.clientId = this.clientId;
 													ccrt.mtuSize = scro.mtuSize;
@@ -127,7 +127,7 @@ public class RakNetClient extends Thread {
 									} else if (state == SessionState.CONNECTING_2) {
 										if (pid == 0x08) {
 											if (msg.sender().equals(session.getAddress())) {
-												ConnectionReplyTwo scrt = new ConnectionReplyTwo();
+												ConnectionOpenReplyTwo scrt = new ConnectionOpenReplyTwo();
 												scrt.decode();
 
 												if (scrt.magic == true) {

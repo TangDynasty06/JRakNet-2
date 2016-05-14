@@ -36,12 +36,12 @@ public class ClientSession implements RakNet {
 
 	// Packet data
 	private int splitId = 0;
-	private int clientSeqNumber = 0;
-	private int serverSeqNumber = 0;
+	private int lastSeqNumber = 0;
+	private int sendSeqNumber = 0;
 	private long lastReceiveTime = 0L;
-	public final SplitManager splitManager = new SplitManager();
-	public final ArrayList<CustomPacket> recovery = new ArrayList<CustomPacket>();
-	public final ArrayList<CustomPacket> ackQueue = new ArrayList<CustomPacket>();
+	private final SplitManager splitManager = new SplitManager();
+	private final ArrayList<CustomPacket> recovery = new ArrayList<CustomPacket>();
+	private final ArrayList<CustomPacket> ackQueue = new ArrayList<CustomPacket>();
 
 	public ClientSession(ChannelHandlerContext context, InetSocketAddress address) {
 		this.context = context;
@@ -64,6 +64,13 @@ public class ClientSession implements RakNet {
 	 */
 	public int getPort() {
 		return address.getPort();
+	}
+
+	/**
+	 * Returns the client's remote address as a <code>InetSocketAddress</code>
+	 */
+	public InetSocketAddress getSocketAddress() {
+		return this.address;
 	}
 
 	/**
@@ -139,8 +146,15 @@ public class ClientSession implements RakNet {
 	/**
 	 * Updates the <code>lastReceiveTime</code> for the client
 	 */
-	public void updateLastReceiveTime() {
-		this.lastReceiveTime = System.currentTimeMillis();
+	public void updateLastReceiveTime(long amount) {
+		this.lastReceiveTime += amount;
+	}
+
+	/**
+	 * Resets the <code>lastReceiveTime</code> for the client
+	 */
+	public void resetLastReceiveTime() {
+		this.lastReceiveTime = 0L;
 	}
 
 	/**
@@ -148,29 +162,50 @@ public class ClientSession implements RakNet {
 	 * 
 	 * @param custom
 	 */
-	public CustomPacket[] handleCustom(CustomPacket custom) {
-		if (custom.getId() >= CUSTOM_0 && custom.getId() <= CUSTOM_1) {
+	public Packet[] handleCustom(CustomPacket custom) {
+		if (custom.getId() >= CUSTOM_0 && custom.getId() <= CUSTOM_F) {
 			ArrayList<Packet> packets = new ArrayList<Packet>();
 			for (EncapsulatedPacket encapsulated : custom.packets) {
 				Reliability reliability = encapsulated.reliability;
 
+				// Check packet order based on reliability
 				if (reliability.isOrdered()) {
-					if (clientSeqNumber + 1 != custom.seqNumber) {
-						return new CustomPacket[0]; // Packet came out of order
+					if (lastSeqNumber + 1 != custom.seqNumber) {
+						System.out.println("Ordered packet came out of order!");
+						return new Packet[0]; // Packet came out of order
+					} else {
+						lastSeqNumber++;
 					}
 				} else if (reliability.isSequenced()) {
-					if (clientSeqNumber > custom.seqNumber) {
-						return new CustomPacket[0]; // Packet was old
+					if (lastSeqNumber > custom.seqNumber) {
+						System.out.println("Sequenced packet as old!");
+						return new Packet[0]; // Packet was old
+					} else {
+						lastSeqNumber = custom.seqNumber;
 					}
 				}
 
 				if (reliability.isReliable()) {
-					Acknowledge ack = new Acknowledge(ACK);
-					ack.packets = new int[] { custom.seqNumber };
-					ack.encode();
+					// Only send NACK if packet is reliable
+					if (lastSeqNumber - custom.seqNumber > 1) {
+						Acknowledge nack = new Acknowledge(NACK);
+						int[] missing = new int[custom.seqNumber - lastSeqNumber - 1];
+						for (int i = 0; i < missing.length; i++) {
+							missing[i] = lastSeqNumber + i + 1;
+						}
+						nack.packets = missing;
+						nack.encode();
 
-					this.sendRaw(ack);
+						this.sendRaw(nack);
+					}
 				}
+
+				// Acknowledge the packet was received
+				Acknowledge ack = new Acknowledge(ACK);
+				ack.packets = new int[] { custom.seqNumber };
+				ack.encode();
+
+				this.sendRaw(ack);
 
 				if (encapsulated.split == true) {
 					SplitPacket split = splitManager.updateSplit(encapsulated);
@@ -183,7 +218,7 @@ public class ClientSession implements RakNet {
 				}
 			}
 
-			return packets.toArray(new CustomPacket[packets.size()]);
+			return packets.toArray(new Packet[packets.size()]);
 		} else {
 			System.err.println("Packet must be a CustomPacket! Not " + getName(custom.getId()));
 			return null;
@@ -253,7 +288,7 @@ public class ClientSession implements RakNet {
 		// Send each EncapsulatedPacket
 		for (EncapsulatedPacket encapsulated : toSend) {
 			CustomPacket custom = new CustomPacket();
-			custom.seqNumber = this.serverSeqNumber++;
+			custom.seqNumber = this.sendSeqNumber++;
 			custom.packets.add(encapsulated);
 			custom.encode();
 
@@ -293,7 +328,7 @@ public class ClientSession implements RakNet {
 	 * @param packet
 	 */
 	public void sendRaw(Packet packet) {
-		context.write(new DatagramPacket(packet.buffer(), address));
+		context.writeAndFlush(new DatagramPacket(packet.buffer(), address));
 	}
 
 }

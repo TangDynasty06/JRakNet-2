@@ -69,27 +69,28 @@ public class Acknowledge extends Packet implements Bytable {
 	@Override
 	public void decode() {
 		int count = this.getUShort();
-		List<Integer> ack = new ArrayList<>();
+		List<Integer> packets = new ArrayList<>();
 		int cnt = 0;
 		for (int i = 0; i < count && this.remaining() > 0 && cnt < 4096; i++) {
 			if (!this.getBoolean()) {
-				int start = this.readLTriad(buffer);
-				int end = this.readLTriad(buffer);
+				int start = this.getLTriad();
+				int end = this.getLTriad();
 				if ((end - start) > 512) {
 					end = start + 512;
 				}
 				for (int c = start; c <= end; c++) {
 					cnt = cnt + 1;
-					ack.add(c);
+					packets.add(c);
 				}
 			} else {
-				ack.add(this.readLTriad(buffer));
+				packets.add(this.getLTriad());
 			}
 		}
 
-		this.packets = new int[ack.size()];
-		for (int i = 0; i < packets.length; i++) {
-			packets[i] = ack.get(i).intValue();
+		// Manually set values
+		this.packets = new int[packets.size()];
+		for (int i = 0; i < packets.size(); i++) {
+			this.packets[i] = packets.get(i).intValue();
 		}
 	}
 

@@ -22,7 +22,44 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 		this.server = server;
 		this.maxSessions = maxSessions;
 		this.sessions = new HashMap<InetSocketAddress, ClientSession>();
-		new ClientChecker().start();
+	}
+
+	/**
+	 * Returns all currently connect ClientSessions
+	 * 
+	 * @return ClientSession[]
+	 */
+	public ClientSession[] getSessions() {
+		return sessions.values().toArray(new ClientSession[sessions.size()]);
+	}
+
+	/**
+	 * Returns a ClientSession based on it's InetSocketAddress
+	 * 
+	 * @param address
+	 * @return ClientSession
+	 */
+	public ClientSession getSession(InetSocketAddress address) {
+		return sessions.get(address);
+	}
+
+	/**
+	 * Removes a ClientSession from the handler based on their remote address
+	 * 
+	 * @param address
+	 */
+	public void removeSession(InetSocketAddress address) {
+		// TODO: Tell client why they were disconnected
+		sessions.remove(address);
+	}
+
+	/**
+	 * Removes a ClientSession from the handler
+	 * 
+	 * @param session
+	 */
+	public void removeSession(ClientSession session) {
+		this.removeSession(session.getSocketAddress());
 	}
 
 	@Override
@@ -42,24 +79,24 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 		Packet packet = new Packet(msg.content());
 		short pid = packet.getId();
 
-		// Handle special packet types here so the server doesn't have too
-		session.updateLastReceiveTime();
+		// Handle internal packets here
+		session.resetLastReceiveTime();
 		if (pid >= CUSTOM_0 && pid <= CUSTOM_F) {
 			CustomPacket custom = new CustomPacket(packet);
 			custom.decode();
 			for (Packet dataPacket : session.handleCustom(custom)) {
-				server.handleDataPacket(dataPacket.getId(), dataPacket, session);
+				server.handlePacket(dataPacket.getId(), dataPacket, session);
 			}
 		} else if (pid == ACK) {
-			Acknowledge ack = new Acknowledge(ACK);
+			Acknowledge ack = new Acknowledge(packet);
 			ack.decode();
 			session.checkACK(ack);
 		} else if (pid == NACK) {
-			Acknowledge nack = new Acknowledge(NACK);
+			Acknowledge nack = new Acknowledge(packet);
 			nack.decode();
 			session.checkNACK(nack);
 		} else {
-			server.handlePacket(pid, packet, session);
+			server.handleRaw(pid, packet, session);
 		}
 	}
 
@@ -72,24 +109,6 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		cause.printStackTrace();
 		// ctx.close();
-	}
-
-	class ClientChecker extends Thread {
-		public void run() {
-			long last = System.currentTimeMillis();
-			while (true) {
-				long current = System.currentTimeMillis();
-				if (current - last == 50) { // Check once every 20th of a second
-					for (ClientSession session : sessions.values()) {
-						if(session.getLastReceiveTime() > 5000L) {
-							System.out.println("Removed session " + session.getAddress() + " due to timeout");
-						}
-					}
-					last = current;
-				}
-			}
-		}
-
 	}
 
 }

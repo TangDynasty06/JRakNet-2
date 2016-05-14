@@ -13,8 +13,18 @@ public class RakNetOptions {
 	public int maximumTransferSize = 2048;
 
 	/**
-	 * The servers broadcast name <br>
+	 * The server's broadcast name
 	 */
 	public String broadcastName = "";
+
+	/**
+	 * How long the server will wait before updating tracker
+	 */
+	public long trackerWait = 100L;
+
+	/**
+	 * How long until a client is disconnected from the server due to inactivity
+	 */
+	public long timeout = 5000L;
 
 }

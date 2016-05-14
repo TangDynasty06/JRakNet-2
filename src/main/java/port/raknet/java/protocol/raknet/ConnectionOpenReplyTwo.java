@@ -1,36 +1,40 @@
 package port.raknet.java.protocol.raknet;
 
 import port.raknet.java.protocol.Packet;
+import port.raknet.java.protocol.SystemAddress;
 
-public class ConnectionReplyOne extends Packet {
+public class ConnectionOpenReplyTwo extends Packet {
 
 	public boolean magic;
 	public long serverId;
-	public boolean security;
+	public SystemAddress clientAddress;
 	public short mtuSize;
+	public byte useSecurity;
 
-	public ConnectionReplyOne(Packet packet) {
+	public ConnectionOpenReplyTwo(Packet packet) {
 		super(packet);
 	}
 
-	public ConnectionReplyOne() {
-		super(ID_OPEN_CONNECTION_REPLY_1);
+	public ConnectionOpenReplyTwo() {
+		super(ID_OPEN_CONNECTION_REPLY_2);
 	}
 
 	@Override
 	public void encode() {
 		this.putMagic();
 		this.putLong(serverId);
-		this.putBoolean(security);
+		this.putAddress(clientAddress);
 		this.putShort(mtuSize);
+		this.putByte(useSecurity);
 	}
 
 	@Override
 	public void decode() {
 		this.magic = this.checkMagic();
 		this.serverId = this.getLong();
-		this.security = this.getBoolean();
+		this.clientAddress = this.getAddress();
 		this.mtuSize = this.getShort();
+		this.useSecurity = this.getByte();
 	}
 
 }

@@ -3,18 +3,18 @@ package port.raknet.java.protocol.raknet;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.SystemAddress;
 
-public class ConnectionRequestTwo extends Packet {
+public class ConnectionOpenRequestTwo extends Packet {
 
 	public boolean magic;
 	public SystemAddress address;
 	public short mtuSize;
 	public long clientId;
 
-	public ConnectionRequestTwo(Packet packet) {
+	public ConnectionOpenRequestTwo(Packet packet) {
 		super(packet);
 	}
 
-	public ConnectionRequestTwo() {
+	public ConnectionOpenRequestTwo() {
 		super(ID_OPEN_CONNECTION_REQUEST_2);
 	}
 
