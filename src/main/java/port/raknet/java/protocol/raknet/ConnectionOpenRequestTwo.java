@@ -15,7 +15,7 @@ public class ConnectionOpenRequestTwo extends Packet {
 	}
 
 	public ConnectionOpenRequestTwo() {
-		super(ID_OPEN_CONNECTION_REQUEST_2);
+		super(ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_2);
 	}
 
 	@Override

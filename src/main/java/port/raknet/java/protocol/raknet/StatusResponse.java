@@ -14,7 +14,7 @@ public class StatusResponse extends Packet {
 	}
 
 	public StatusResponse() {
-		super(ID_STATUS_RESPONSE);
+		super(ID_UNCONNECTED_STATUS_RESPONSE);
 	}
 
 	@Override

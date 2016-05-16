@@ -16,7 +16,7 @@ public class ConnectionOpenReplyTwo extends Packet {
 	}
 
 	public ConnectionOpenReplyTwo() {
-		super(ID_OPEN_CONNECTION_REPLY_2);
+		super(ID_UNCONNECTED_OPEN_CONNECTION_REPLY_2);
 	}
 
 	@Override

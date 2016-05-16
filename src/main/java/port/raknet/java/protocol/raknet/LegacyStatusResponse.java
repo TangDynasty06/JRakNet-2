@@ -14,7 +14,7 @@ public class LegacyStatusResponse extends Packet {
 	}
 
 	public LegacyStatusResponse() {
-		super(ID_LEGACY_STATUS_RESPONSE);
+		super(ID_UNCONNECTED_LEGACY_STATUS_RESPONSE);
 	}
 
 	@Override

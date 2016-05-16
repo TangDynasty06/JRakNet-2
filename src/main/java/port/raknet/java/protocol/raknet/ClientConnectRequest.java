@@ -13,7 +13,7 @@ public class ClientConnectRequest extends Packet {
 	}
 
 	public ClientConnectRequest() {
-		super(ID_CLIENT_CONNECT_REQUEST);
+		super(ID_CONNECTED_CLIENT_CONNECT_REQUEST);
 	}
 
 	@Override

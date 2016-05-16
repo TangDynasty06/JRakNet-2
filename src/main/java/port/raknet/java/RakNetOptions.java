@@ -23,8 +23,9 @@ public class RakNetOptions {
 	public long trackerWait = 100L;
 
 	/**
-	 * How long until a client is disconnected from the server due to inactivity
+	 * How long until a client is disconnected from the server due to
+	 * inactivity, it is suggested be at least 10,000 MS (10 Seconds)
 	 */
-	public long timeout = 5000L;
+	public long timeout = 10000L;
 
 }

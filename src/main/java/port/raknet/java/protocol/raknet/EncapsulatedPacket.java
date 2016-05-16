@@ -1,7 +1,9 @@
 package port.raknet.java.protocol.raknet;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import port.raknet.java.protocol.Bytable;
+import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.Reliability;
 
 public class EncapsulatedPacket implements Bytable {
@@ -27,6 +29,11 @@ public class EncapsulatedPacket implements Bytable {
 
 	// Packet payload
 	public byte[] payload;
+
+	/**
+	 * Only used by the handler if the packet is ordered
+	 */
+	public int seqNumber = -1;
 
 	public void encode(ByteBuf buffer) {
 		buffer.writeByte((byte) ((reliability.asByte() << 5) | (split ? FLAG_SPLIT : 0)));
@@ -73,6 +80,10 @@ public class EncapsulatedPacket implements Bytable {
 
 		this.payload = new byte[length];
 		buffer.readBytes(payload);
+	}
+
+	public Packet convertPayload() {
+		return new Packet(Unpooled.copiedBuffer(payload));
 	}
 
 }

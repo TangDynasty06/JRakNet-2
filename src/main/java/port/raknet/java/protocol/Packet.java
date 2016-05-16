@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.util.IllegalReferenceCountException;
 import port.raknet.java.RakNet;
 
 public class Packet implements RakNet {
@@ -217,7 +218,12 @@ public class Packet implements RakNet {
 	}
 
 	public ByteBuf buffer() {
-		return this.buffer.duplicate();
+		try {
+			return this.buffer.duplicate();
+		} catch (IllegalReferenceCountException e) {
+			// Packet is empty, so return an empty buffer
+			return Unpooled.buffer();
+		}
 	}
 
 	public int remaining() {

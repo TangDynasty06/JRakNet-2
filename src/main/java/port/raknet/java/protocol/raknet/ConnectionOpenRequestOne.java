@@ -13,7 +13,7 @@ public class ConnectionOpenRequestOne extends Packet {
 	}
 
 	public ConnectionOpenRequestOne() {
-		super(ID_OPEN_CONNECTION_REQUEST_1);
+		super(ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_1);
 	}
 
 	@Override

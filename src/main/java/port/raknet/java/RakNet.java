@@ -8,22 +8,27 @@ public interface RakNet {
 	public static final int NETWORK_PROTOCOL = 7;
 
 	// Status Request
-	public static final short ID_STATUS_REQUEST = 0x01;
-	public static final short ID_LEGACY_STATUS_REQUEST = 0x02;
+	public static final short ID_UNCONNECTED_STATUS_REQUEST = 0x01;
+	public static final short ID_UNCONNECTED_LEGACY_STATUS_REQUEST = 0x02;
 
 	// Connection
-	public static final short ID_OPEN_CONNECTION_REQUEST_1 = 0x05;
-	public static final short ID_OPEN_CONNECTION_REPLY_1 = 0x06;
-	public static final short ID_OPEN_CONNECTION_REQUEST_2 = 0x07;
-	public static final short ID_OPEN_CONNECTION_REPLY_2 = 0x08;
-	public static final short ID_CLIENT_CONNECT_REQUEST = 0x09;
-	public static final short ID_SERVER_HANDSHAKE = 0x10;
-	public static final short ID_CLIENT_HANDSHAKE = 0x13;
+	public static final short ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_1 = 0x05;
+	public static final short ID_UNCONNECTED_OPEN_CONNECTION_REPLY_1 = 0x06;
+	public static final short ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_2 = 0x07;
+	public static final short ID_UNCONNECTED_OPEN_CONNECTION_REPLY_2 = 0x08;
+	public static final short ID_CONNECTED_CLIENT_CONNECT_REQUEST = 0x09;
+	public static final short ID_CONNECTED_SERVER_HANDSHAKE = 0x10;
+	public static final short ID_CONNECTED_CLIENT_HANDSHAKE = 0x13;
+	public static final short ID_CONNECTED_CANCEL_CONNECTION = 0x15;
 	public static final short ID_INCOMPATIBLE_PROTOCOL_VERSION = 0x1A;
 
 	// Status Response
-	public static final short ID_STATUS_RESPONSE = 0x1C;
-	public static final short ID_LEGACY_STATUS_RESPONSE = 0x1D;
+	public static final short ID_UNCONNECTED_STATUS_RESPONSE = 0x1C;
+	public static final short ID_UNCONNECTED_LEGACY_STATUS_RESPONSE = 0x1D;
+
+	// Keep-Alive and Latency
+	public static final short ID_CONNECTED_PING = 0x00;
+	public static final short ID_CONNECTED_PONG = 0x03;
 
 	// Custom Packets
 	public static final short CUSTOM_0 = 0x80;
@@ -47,7 +52,7 @@ public interface RakNet {
 	public static final short NACK = 0xA0;
 	public static final short ACK = 0xC0;
 
-	public default String getName(int id) {
+	public static String getName(int id) {
 		try {
 			Class<?> rakClass = RakNet.class;
 			for (Field field : rakClass.getFields()) {

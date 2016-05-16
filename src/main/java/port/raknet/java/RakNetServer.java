@@ -14,16 +14,15 @@ import port.raknet.java.net.ClientSession;
 import port.raknet.java.net.RakNetHandler;
 import port.raknet.java.net.SessionState;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.raknet.ClientConnectRequest;
-import port.raknet.java.protocol.raknet.ClientHandshake;
 import port.raknet.java.protocol.raknet.ConnectionOpenReplyOne;
 import port.raknet.java.protocol.raknet.ConnectionOpenReplyTwo;
 import port.raknet.java.protocol.raknet.ConnectionOpenRequestOne;
 import port.raknet.java.protocol.raknet.ConnectionOpenRequestTwo;
+import port.raknet.java.protocol.raknet.EncapsulatedPacket;
 import port.raknet.java.protocol.raknet.IncompatibleProtocolVersion;
 import port.raknet.java.protocol.raknet.LegacyStatusRequest;
 import port.raknet.java.protocol.raknet.LegacyStatusResponse;
-import port.raknet.java.protocol.raknet.ServerHandshake;
+import port.raknet.java.protocol.raknet.Ping;
 import port.raknet.java.protocol.raknet.StatusRequest;
 import port.raknet.java.protocol.raknet.StatusResponse;
 
@@ -35,6 +34,8 @@ import port.raknet.java.protocol.raknet.StatusResponse;
  */
 public class RakNetServer implements RakNet {
 
+	private static final Random generator = new Random();
+
 	private final long serverId;
 	private final RakNetOptions options;
 	private final RakNetTracker tracker;
@@ -42,7 +43,7 @@ public class RakNetServer implements RakNet {
 	private RakNetHandler handler;
 
 	public RakNetServer(RakNetOptions options) {
-		this.serverId = new Random().nextLong();
+		this.serverId = generator.nextLong();
 		this.options = options;
 		this.tracker = new RakNetTracker();
 		if (options.maximumTransferSize % 2 != 0) {
@@ -112,8 +113,9 @@ public class RakNetServer implements RakNet {
 	 * @param packet
 	 * @param session
 	 */
-	public void handleRaw(short pid, Packet packet, ClientSession session) {
-		if (pid == ID_STATUS_REQUEST) {
+	public void handleRaw(Packet packet, ClientSession session) {
+		short pid = packet.getId();
+		if (pid == ID_UNCONNECTED_STATUS_REQUEST) {
 			StatusRequest csr = new StatusRequest(packet);
 			csr.decode();
 
@@ -127,7 +129,7 @@ public class RakNetServer implements RakNet {
 
 				session.sendRaw(ssr);
 			}
-		} else if (pid == ID_LEGACY_STATUS_REQUEST) {
+		} else if (pid == ID_UNCONNECTED_LEGACY_STATUS_REQUEST) {
 			LegacyStatusRequest clsr = new LegacyStatusRequest(packet);
 			clsr.decode();
 
@@ -141,7 +143,7 @@ public class RakNetServer implements RakNet {
 
 				session.sendRaw(slsr);
 			}
-		} else if (pid == ID_OPEN_CONNECTION_REQUEST_1) {
+		} else if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_1) {
 			if (session.getState() == SessionState.DISCONNECTED) {
 				ConnectionOpenRequestOne ccro = new ConnectionOpenRequestOne(packet);
 				ccro.decode();
@@ -169,7 +171,7 @@ public class RakNetServer implements RakNet {
 					}
 				}
 			}
-		} else if (pid == ID_OPEN_CONNECTION_REQUEST_2) {
+		} else if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_2) {
 			if (session.getState() == SessionState.CONNECTING_1) {
 				ConnectionOpenRequestTwo ccrt = new ConnectionOpenRequestTwo(packet);
 				ccrt.decode();
@@ -187,43 +189,6 @@ public class RakNetServer implements RakNet {
 					scrt.encode();
 
 					session.sendRaw(scrt);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Handles a packet
-	 * 
-	 * @param pid
-	 * @param packet
-	 * @param session
-	 */
-	public void handlePacket(short pid, Packet packet, ClientSession session) {
-		if (session.getState() == SessionState.CONNECTED) {
-			this.executeHook(Hook.PACKET_RECEIVED, pid, packet, session);
-		} else {
-			if (session.getState() == SessionState.CONNECTING_2) {
-				if (pid == ID_CLIENT_CONNECT_REQUEST) {
-					ClientConnectRequest cchr = new ClientConnectRequest(packet);
-					cchr.decode();
-					session.setState(SessionState.HANDSHAKING);
-
-					ServerHandshake scha = new ServerHandshake();
-					scha.clientAddress = session.getSystemAddress();
-					scha.sendPing = cchr.sendPing;
-					scha.sendPong = System.currentTimeMillis();
-					scha.encode();
-
-					session.sendPacket(scha);
-				}
-			} else if (session.getState() == SessionState.HANDSHAKING) {
-				if (pid == ID_CLIENT_HANDSHAKE) {
-					ClientHandshake cch = new ClientHandshake(packet);
-					cch.decode();
-
-					session.setState(SessionState.CONNECTED);
-					this.executeHook(Hook.CLIENT_CONNECTED, session, System.currentTimeMillis());
 				}
 			}
 		}
@@ -263,10 +228,16 @@ public class RakNetServer implements RakNet {
 				long current = System.currentTimeMillis();
 				if (current - last >= options.trackerWait) {
 					for (ClientSession session : handler.getSessions()) {
-						session.updateLastReceiveTime(options.trackerWait);
+						session.pushLastReceiveTime(options.trackerWait);
+						if (session.getLastReceiveTime() / options.timeout == 0.5) {
+							// Ping ID's do not need to match
+							Ping ping = new Ping();
+							ping.pingId = generator.nextLong();
+							ping.encode();
+							session.sendPacket(ping);
+						}
 						if (session.getLastReceiveTime() > options.timeout) {
-							handler.removeSession(session);
-							executeHook(Hook.CLIENT_DISCONNECTED, session, "Timeout", System.currentTimeMillis());
+							handler.removeSession(session, "Timeout");
 						} else {
 							session.resendACK();
 						}
@@ -298,15 +269,11 @@ public class RakNetServer implements RakNet {
 
 			@Override
 			public void run(Object... parameters) {
-				short pid = (short) parameters[0];
-				Packet packet = (Packet) parameters[1];
-				ClientSession session = (ClientSession) parameters[2];
+				ClientSession session = (ClientSession) parameters[0];
+				EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
 
-				System.out.println("Received game packet from " + session.getAddress() + "!");
-				for (byte b : packet.array()) {
-					System.out.print(Integer.toHexString(b).toUpperCase() + " ");
-				}
-				System.out.println();
+				System.out.println("Received game packet from " + session.getAddress() + " with ID: "
+						+ encapsulated.convertPayload().getId());
 			}
 
 		});

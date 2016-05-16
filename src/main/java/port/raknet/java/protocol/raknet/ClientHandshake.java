@@ -14,7 +14,7 @@ public class ClientHandshake extends Packet {
 	}
 
 	public ClientHandshake() {
-		super(ID_CLIENT_HANDSHAKE);
+		super(ID_CONNECTED_CLIENT_HANDSHAKE);
 	}
 
 	@Override

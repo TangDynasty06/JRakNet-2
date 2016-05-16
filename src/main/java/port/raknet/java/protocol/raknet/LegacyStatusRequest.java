@@ -12,7 +12,7 @@ public class LegacyStatusRequest extends Packet {
 	}
 
 	public LegacyStatusRequest() {
-		super(ID_LEGACY_STATUS_REQUEST);
+		super(ID_UNCONNECTED_LEGACY_STATUS_REQUEST);
 	}
 
 	@Override

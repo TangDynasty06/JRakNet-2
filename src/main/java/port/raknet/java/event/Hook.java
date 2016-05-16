@@ -8,10 +8,9 @@ public enum Hook {
 	 * Received whenever the server receives a status request <br>
 	 * <br>
 	 * 
-	 * Parameter 0: The server identifier <code>Type: java.lang.String</code>
+	 * Parameter 0: The address of who is requesting the status (InetAddress)
 	 * <br>
-	 * Parameter 1: The address of who is requesting the status
-	 * <code>Type: java.net.InetAddress</code>
+	 * Parameter 1: The broadcast message (String)
 	 */
 	SERVER_PING,
 
@@ -19,30 +18,27 @@ public enum Hook {
 	 * Received whenever the server receives a legacy status request <br>
 	 * <br>
 	 * 
-	 * Parameter 0: The server broadcast data
-	 * <code>Type: java.lang.String</code><br>
-	 * Parameter 1: The address of who is requesting the status
-	 * <code>Type: java.net.InetAddress</code>
+	 * Parameter 0: The address of who is requesting the status (InetAddress)
+	 * <br>
+	 * Parameter 1: The broadcast message (String)
 	 */
 	LEGACY_PING,
 
 	/**
 	 * Received whenever a client is officially connected to a server <br>
 	 * <br>
-	 * Parameter 0: The client's address
-	 * <code>Type: port.raknet.java.net.ClietnSession</code><br>
-	 * Parameter 1: The time the client connected <code>Type: long</code>
+	 * Parameter 0: The ClientSession (ClientSession)<br>
+	 * Parameter 1: The time the client connected (long)
 	 */
 	CLIENT_CONNECTED,
 
 	/**
 	 * Received whenever a client disconnects from the server <br>
 	 * <br>
-	 * Parameter 0: The client's address
-	 * <code>Type: port.raknet.java.net.ClientSession</code><br>
-	 * Parameter 1: The reason the client was disconnected
-	 * <code>Type: java.lang.String</code><br>
-	 * Parameter 2: The time the client disconnected <code>Type: long</code>
+	 * 
+	 * Parameter 0: The ClientSession (ClientSession)<br>
+	 * Parameter 1: The reason the client was disconnected (String)<br>
+	 * Parameter 2: The time the client disconnected (long)
 	 */
 	CLIENT_DISCONNECTED,
 
@@ -50,11 +46,8 @@ public enum Hook {
 	 * Received whenever a packet is received<br>
 	 * <br>
 	 * 
-	 * Parameter 0: The packet ID <code>Type: short</code><br>
-	 * Parameter 1: The packet
-	 * <code>Type: port.raknet.java.protocol.Packet</code><br>
-	 * Parameter 2: The ClientSession that sent the packet
-	 * <code>Type: port.raknet.java.net.ClientSession</code>
+	 * Parameter 0: The ClientSession (ClientSession)<br>
+	 * Parameter 1: The EncapsulatedPacket (EncapsulatedPacket)
 	 */
 	PACKET_RECEIVED;
 

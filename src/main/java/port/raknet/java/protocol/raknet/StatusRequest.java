@@ -12,7 +12,7 @@ public class StatusRequest extends Packet {
 	}
 
 	public StatusRequest() {
-		super(ID_STATUS_REQUEST);
+		super(ID_UNCONNECTED_STATUS_REQUEST);
 	}
 
 	@Override
