@@ -16,12 +16,7 @@ public class RakNetOptions {
 	 * The server's broadcast name
 	 */
 	public String broadcastName = "";
-
-	/**
-	 * How long the server will wait before updating tracker
-	 */
-	public long trackerWait = 100L;
-
+	
 	/**
 	 * How long until a client is disconnected from the server due to
 	 * inactivity, it is suggested be at least 10,000 MS (10 Seconds)

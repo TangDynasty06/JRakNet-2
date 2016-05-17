@@ -7,9 +7,10 @@ import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.Reliability;
 
 public class EncapsulatedPacket implements Bytable {
-
-	public static byte FLAG_RELIABILITY = (byte) 0xF4;
-	public static byte FLAG_SPLIT = (byte) 0x10;
+	
+	public static final short DEFAULT_SIZE = 11;
+	public static final byte FLAG_RELIABILITY = (byte) 0xF4;
+	public static final byte FLAG_SPLIT = (byte) 0x10;
 
 	// Encapsulation data
 	public Reliability reliability;

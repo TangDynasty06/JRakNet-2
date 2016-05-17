@@ -57,7 +57,7 @@ public class ClientSession implements RakNet {
 	private int splitId;
 	private int sendIndex;
 	private int receiveIndex;
-	private HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
+	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
 
 	// Acknowledge data
 	private final HashMap<Integer, CustomPacket> reliableQueue;
@@ -70,9 +70,9 @@ public class ClientSession implements RakNet {
 		this.state = SessionState.DISCONNECTED;
 		this.context = context;
 		this.address = address;
+		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
 		this.reliableQueue = new HashMap<Integer, CustomPacket>();
 		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
-		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
 	}
 
 	/**
@@ -216,9 +216,8 @@ public class ClientSession implements RakNet {
 		for (EncapsulatedPacket packet : custom.packets) {
 			try {
 				this.handleEncapsulated(packet);
-			} catch (RakNetException rne) {
-				handler.removeSession(this, rne.getClass().getSimpleName() + ": " + rne.getLocalizedMessage());
-				return;
+			} catch (RakNetException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -238,8 +237,9 @@ public class ClientSession implements RakNet {
 			if (encapsulated.orderIndex < receiveIndex) {
 				return; // Packet is old, no error needed
 			}
+		} else {
+			receiveIndex = encapsulated.orderIndex + 1;
 		}
-		this.receiveIndex = encapsulated.orderIndex;
 
 		// Handle split data of packet
 		if (encapsulated.split == true) {
@@ -317,6 +317,50 @@ public class ClientSession implements RakNet {
 			server.executeHook(Hook.PACKET_RECEIVED, this, encapsulated);
 		}
 	}
+	
+	/**
+	 * Resends each in the queue that has not yet been acknowledged
+	 */
+	public void resendACK() {
+		for (CustomPacket custom : reliableQueue.values()) {
+			this.sendRaw(custom);
+		}
+	}
+
+	/**
+	 * Removes all ACK packet from the ACKQueue found in the ACK packet
+	 * 
+	 * @param ack
+	 * @throws UnexpectedPacketException
+	 */
+	public void checkACK(Acknowledge ack) throws UnexpectedPacketException {
+		if (ack.getId() == ACK) {
+			int[] packets = ack.packets;
+			for (int i = 0; i < packets.length; i++) {
+				reliableQueue.remove(packets[i]);
+			}
+		} else {
+			throw new UnexpectedPacketException(ACK, ack.getId());
+		}
+	}
+
+	/**
+	 * Resends all packets with the ID's contained in the NACK packet
+	 * 
+	 * @param nack
+	 * @throws UnexpectedPacketException
+	 */
+	public void checkNACK(Acknowledge nack) throws UnexpectedPacketException {
+		if (nack.getId() == NACK) {
+			int[] packets = nack.packets;
+			for (int i = 0; i < packets.length; i++) {
+				CustomPacket recovered = recoveryQueue.get(packets[i]);
+				this.sendRaw(recovered);
+			}
+		} else {
+			throw new UnexpectedPacketException(NACK, nack.getId());
+		}
+	}
 
 	/**
 	 * Sends an EncapsulatedPacket, will split automatically if the packet is
@@ -328,7 +372,7 @@ public class ClientSession implements RakNet {
 	public void sendEncapsulated(EncapsulatedPacket packet) {
 		// If packet is too big, split it up
 		ArrayList<EncapsulatedPacket> toSend = new ArrayList<EncapsulatedPacket>();
-		if (CustomPacket.DEFAULT_SIZE + packet.payload.length > this.mtuSize) {
+		if (CustomPacket.DEFAULT_SIZE + EncapsulatedPacket.DEFAULT_SIZE + packet.payload.length > this.mtuSize) {
 			EncapsulatedPacket[] split = SplitPacket.createSplit(packet, mtuSize, splitId++);
 			for (EncapsulatedPacket encapsulated : split) {
 				toSend.add(encapsulated);
@@ -339,11 +383,9 @@ public class ClientSession implements RakNet {
 
 		// Send each EncapsulatedPacket
 		for (EncapsulatedPacket encapsulated : toSend) {
-			// Update packet orderIndex
-			encapsulated.orderIndex = this.sendIndex++;
-
 			// Create CustomPacket and set data
 			CustomPacket custom = new CustomPacket();
+			encapsulated.orderIndex = this.sendIndex++;
 			custom.seqNumber = this.sendSeqNumber++;
 			custom.packets.add(encapsulated);
 			custom.encode();
@@ -387,50 +429,6 @@ public class ClientSession implements RakNet {
 	 */
 	public void sendRaw(Packet packet) {
 		context.writeAndFlush(new DatagramPacket(packet.buffer(), address));
-	}
-
-	/**
-	 * Resends each in the queue that has not yet been acknowledged
-	 */
-	public void resendACK() {
-		for (CustomPacket custom : reliableQueue.values()) {
-			this.sendRaw(custom);
-		}
-	}
-
-	/**
-	 * Removes all ACK packet from the ACKQueue found in the ACK packet
-	 * 
-	 * @param ack
-	 * @throws UnexpectedPacketException
-	 */
-	public void checkACK(Acknowledge ack) throws UnexpectedPacketException {
-		if (ack.getId() == ACK) {
-			int[] packets = ack.packets;
-			for (int i = 0; i < packets.length; i++) {
-				reliableQueue.remove(packets[i]);
-			}
-		} else {
-			throw new UnexpectedPacketException(ACK, ack.getId());
-		}
-	}
-
-	/**
-	 * Resends all packets with the ID's contained in the NACK packet
-	 * 
-	 * @param nack
-	 * @throws UnexpectedPacketException
-	 */
-	public void checkNACK(Acknowledge nack) throws UnexpectedPacketException {
-		if (nack.getId() == NACK) {
-			int[] packets = nack.packets;
-			for (int i = 0; i < packets.length; i++) {
-				CustomPacket recovered = recoveryQueue.get(packets[i]);
-				this.sendRaw(recovered);
-			}
-		} else {
-			throw new UnexpectedPacketException(NACK, nack.getId());
-		}
 	}
 
 }

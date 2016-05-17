@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
@@ -14,6 +15,11 @@ import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.raknet.Acknowledge;
 import port.raknet.java.protocol.raknet.CustomPacket;
 
+/**
+ * The internal Netty handler for the server, handles ACK, NACK, and Custompackets on it's own. Unconnected 
+ *
+ * @author Trent Summerlin
+ */
 public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetServer server;
@@ -96,6 +102,7 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+		System.out.println(Unpooled.copiedBuffer(msg.content()).array().length);
 		if (!blocked.contains(msg.sender())) {
 			// Verify session
 			InetSocketAddress address = msg.sender();
@@ -114,7 +121,7 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 
 			// Handle internal packets here
 			session.resetLastReceiveTime();
-			if (pid >= CUSTOM_0 && pid <= CUSTOM_F) {
+			if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {
 				CustomPacket custom = new CustomPacket(packet);
 				custom.decode();
 				session.handleCustom(custom);
@@ -130,11 +137,6 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 				server.handleRaw(packet, session);
 			}
 		}
-	}
-
-	@Override
-	public final void channelReadComplete(ChannelHandlerContext ctx) {
-		ctx.flush();
 	}
 
 	@Override

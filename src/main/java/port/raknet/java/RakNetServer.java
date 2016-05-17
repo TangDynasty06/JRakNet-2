@@ -35,6 +35,7 @@ import port.raknet.java.protocol.raknet.StatusResponse;
 public class RakNetServer implements RakNet {
 
 	private static final Random generator = new Random();
+	private static final long tickTime = 100L;
 
 	private final long serverId;
 	private final RakNetOptions options;
@@ -226,9 +227,9 @@ public class RakNetServer implements RakNet {
 			long last = System.currentTimeMillis();
 			while (true) {
 				long current = System.currentTimeMillis();
-				if (current - last >= options.trackerWait) {
+				if (current - last >= tickTime) {	
 					for (ClientSession session : handler.getSessions()) {
-						session.pushLastReceiveTime(options.trackerWait);
+						session.pushLastReceiveTime(tickTime);
 						if (session.getLastReceiveTime() / options.timeout == 0.5) {
 							// Ping ID's do not need to match
 							Ping ping = new Ping();

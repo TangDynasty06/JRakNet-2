@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import port.raknet.java.protocol.Packet;
 
 public class CustomPacket extends Packet {
-
-	private static final int TRIAD_BYTES = 3;
-	public static final int DEFAULT_SIZE = (Byte.BYTES + TRIAD_BYTES);
+	
+	public static final int DEFAULT_SIZE = 4;
 
 	/**
 	 * This is handled by the ClientSession class
@@ -21,7 +20,7 @@ public class CustomPacket extends Packet {
 	}
 
 	public CustomPacket() {
-		super(CUSTOM_4);
+		super(ID_CUSTOM_4);
 		this.packets = new ArrayList<EncapsulatedPacket>();
 	}
 

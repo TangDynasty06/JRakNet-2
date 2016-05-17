@@ -31,22 +31,22 @@ public interface RakNet {
 	public static final short ID_CONNECTED_PONG = 0x03;
 
 	// Custom Packets
-	public static final short CUSTOM_0 = 0x80;
-	public static final short CUSTOM_1 = 0x81;
-	public static final short CUSTOM_2 = 0x82;
-	public static final short CUSTOM_3 = 0x83;
-	public static final short CUSTOM_4 = 0x84;
-	public static final short CUSTOM_5 = 0x85;
-	public static final short CUSTOM_6 = 0x86;
-	public static final short CUSTOM_7 = 0x87;
-	public static final short CUSTOM_8 = 0x88;
-	public static final short CUSTOM_9 = 0x89;
-	public static final short CUSTOM_A = 0x8A;
-	public static final short CUSTOM_B = 0x8B;
-	public static final short CUSTOM_C = 0x8C;
-	public static final short CUSTOM_D = 0x8D;
-	public static final short CUSTOM_E = 0x8E;
-	public static final short CUSTOM_F = 0x8F;
+	public static final short ID_CUSTOM_0 = 0x80;
+	public static final short ID_CUSTOM_1 = 0x81;
+	public static final short ID_CUSTOM_2 = 0x82;
+	public static final short ID_CUSTOM_3 = 0x83;
+	public static final short ID_CUSTOM_4 = 0x84;
+	public static final short ID_CUSTOM_5 = 0x85;
+	public static final short ID_CUSTOM_6 = 0x86;
+	public static final short ID_CUSTOM_7 = 0x87;
+	public static final short ID_CUSTOM_8 = 0x88;
+	public static final short ID_CUSTOM_9 = 0x89;
+	public static final short ID_CUSTOM_A = 0x8A;
+	public static final short ID_CUSTOM_B = 0x8B;
+	public static final short ID_CUSTOM_C = 0x8C;
+	public static final short ID_CUSTOM_D = 0x8D;
+	public static final short ID_CUSTOM_E = 0x8E;
+	public static final short ID_CUSTOM_F = 0x8F;
 
 	// Reliability
 	public static final short NACK = 0xA0;
