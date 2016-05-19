@@ -4,12 +4,12 @@ import java.util.ArrayList;
 
 import port.raknet.java.protocol.raknet.CustomPacket;
 import port.raknet.java.protocol.raknet.EncapsulatedPacket;
-import port.raknet.java.utils.Utils;
+import port.raknet.java.utils.ArrayUtils;
 
 public class SplitPacket {
 
 	public static EncapsulatedPacket[] createSplit(EncapsulatedPacket packet, int mtuSize, int splitId) {
-		byte[][] splitData = Utils.splitArray(packet.payload, mtuSize - CustomPacket.DEFAULT_SIZE);
+		byte[][] splitData = ArrayUtils.splitArray(packet.payload, mtuSize - CustomPacket.DEFAULT_SIZE);
 		ArrayList<EncapsulatedPacket> packets = new ArrayList<EncapsulatedPacket>();
 		for (int i = 0; i < splitData.length; i++) {
 			// Copy packet data

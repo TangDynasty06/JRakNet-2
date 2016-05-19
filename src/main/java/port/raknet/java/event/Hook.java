@@ -2,6 +2,12 @@ package port.raknet.java.event;
 
 import java.util.HashMap;
 
+/**
+ * Executed when a certain event occurs within the server that might be
+ * desirable by the programmer to change it's outcome
+ *
+ * @author Trent Summerlin
+ */
 public enum Hook {
 
 	/**
@@ -12,7 +18,7 @@ public enum Hook {
 	 * <br>
 	 * Parameter 1: The broadcast message (String)
 	 */
-	SERVER_PING,
+	STATUS_REQUEST,
 
 	/**
 	 * Received whenever the server receives a legacy status request <br>
@@ -25,28 +31,28 @@ public enum Hook {
 	LEGACY_PING,
 
 	/**
-	 * Received whenever a client is officially connected to a server <br>
+	 * Received whenever a session is officially connected <br>
 	 * <br>
-	 * Parameter 0: The ClientSession (ClientSession)<br>
+	 * Parameter 0: The RakNetSession (RakNetSession)<br>
 	 * Parameter 1: The time the client connected (long)
 	 */
-	CLIENT_CONNECTED,
+	SESSION_CONNECTED,
 
 	/**
-	 * Received whenever a client disconnects from the server <br>
+	 * Received whenever a session disconnects <br>
 	 * <br>
 	 * 
-	 * Parameter 0: The ClientSession (ClientSession)<br>
+	 * Parameter 0: The RakNetSession (RakNetSession)<br>
 	 * Parameter 1: The reason the client was disconnected (String)<br>
 	 * Parameter 2: The time the client disconnected (long)
 	 */
-	CLIENT_DISCONNECTED,
+	SESSION_DISCONNECTED,
 
 	/**
 	 * Received whenever a packet is received<br>
 	 * <br>
 	 * 
-	 * Parameter 0: The ClientSession (ClientSession)<br>
+	 * Parameter 0: The RakNetSession (RakNetSession)<br>
 	 * Parameter 1: The EncapsulatedPacket (EncapsulatedPacket)
 	 */
 	PACKET_RECEIVED;

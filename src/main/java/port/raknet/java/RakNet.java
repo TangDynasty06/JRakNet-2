@@ -26,10 +26,6 @@ public interface RakNet {
 	public static final short ID_UNCONNECTED_STATUS_RESPONSE = 0x1C;
 	public static final short ID_UNCONNECTED_LEGACY_STATUS_RESPONSE = 0x1D;
 
-	// Keep-Alive and Latency
-	public static final short ID_CONNECTED_PING = 0x00;
-	public static final short ID_CONNECTED_PONG = 0x03;
-
 	// Custom Packets
 	public static final short ID_CUSTOM_0 = 0x80;
 	public static final short ID_CUSTOM_1 = 0x81;
@@ -49,15 +45,25 @@ public interface RakNet {
 	public static final short ID_CUSTOM_F = 0x8F;
 
 	// Reliability
-	public static final short NACK = 0xA0;
-	public static final short ACK = 0xC0;
+	public static final short ID_ACK = 0xC0;
+	public static final short ID_NACK = 0xA0;
 
+	// Keep-Alive and Latency (MCPE only, but will not hurt other protocols)
+	public static final short ID_CONNECTED_PING = 0x00;
+	public static final short ID_CONNECTED_PONG = 0x03;
+
+	/**
+	 * Used to get a packet name by it's ID
+	 * 
+	 * @param id
+	 * @return String
+	 */
 	public static String getName(int id) {
 		try {
 			Class<?> rakClass = RakNet.class;
 			for (Field field : rakClass.getFields()) {
 				String name = field.getName();
-				if (field.getType().equals(short.class)) {
+				if (field.getType().equals(short.class) && name.startsWith("ID")) {
 					short fid = field.getShort(name);
 					if (fid == id) {
 						return name;

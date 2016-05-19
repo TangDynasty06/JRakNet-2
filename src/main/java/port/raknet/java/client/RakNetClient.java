@@ -1,141 +1,177 @@
 package port.raknet.java.client;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Random;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import port.raknet.java.RakNet;
-import port.raknet.java.net.SessionState;
+import port.raknet.java.RakNetOptions;
+import port.raknet.java.SessionState;
+import port.raknet.java.event.Hook;
+import port.raknet.java.event.HookRunnable;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.SystemAddress;
-import port.raknet.java.protocol.raknet.ConnectionOpenReplyOne;
-import port.raknet.java.protocol.raknet.ConnectionOpenReplyTwo;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestOne;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestTwo;
 import port.raknet.java.protocol.raknet.Ping;
+import port.raknet.java.protocol.raknet.StatusRequest;
 import port.raknet.java.protocol.raknet.StatusResponse;
+import port.raknet.java.session.ServerSession;
 
-public class RakNetClient extends Thread implements RakNet {
+public class RakNetClient implements RakNet {
 
-	private static final long tickTime = 100L;
 	private static final Random generator = new Random();
+	private static final long tickTime = 100L;
 
-	public static void main(String[] args) throws Exception {
-		RakNetClient rnk = new RakNetClient();
-		rnk.start();
-
-		Thread.sleep(1000);
-		rnk.connect("localhost", 19132);
-	}
-
-	private final HashMap<InetSocketAddress, String> advertisers;
-
-	private ServerSession session;
-	private SessionState state = SessionState.DISCONNECTED;
+	private final long clientId;
+	private final RakNetOptions options;
+	private final RakNetTracker tracker;
+	private final HashMap<Hook, HookRunnable> hooks;
+	private final HashMap<Long, String> advertisers;
+	private RakNetClientHandler handler;
 	private Channel channel;
+	private boolean running;
 
-	public RakNetClient() {
-		this.advertisers = new HashMap<InetSocketAddress, String>();
+	private long lastPingId = 0L;
+
+	public RakNetClient(RakNetOptions options) {
+		this.clientId = generator.nextLong();
+		this.options = options;
+		this.tracker = new RakNetTracker();
+		if (options.maximumTransferSize % 2 != 0) {
+			throw new RuntimeException("Invalid transfer size, must be divisble by 2!");
+		}
+		this.advertisers = new HashMap<Long, String>();
+		this.hooks = Hook.getHooks();
 	}
 
-	public void connect(String address, int port) {
-		InetSocketAddress location = new InetSocketAddress(address, port);
-		this.session = new ServerSession(channel, location);
-
-		// Send first request packet
-		ConnectionOpenRequestOne ccro = new ConnectionOpenRequestOne();
-		ccro.mtuSize = 2048;
-		ccro.protocol = 7;
-		ccro.encode();
-
-		state = SessionState.CONNECTING_1;
-		session.sendRaw(ccro);
+	/**
+	 * Returns the client options which this instance uses
+	 * 
+	 * @return RakNetOptions
+	 */
+	public RakNetOptions getOptions() {
+		return this.options;
 	}
 
-	@Override
-	public void run() {
-		EventLoopGroup group = new NioEventLoopGroup();
-		try {
-			// Create bootstrap and configure it
-			Bootstrap b = new Bootstrap();
-			b.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
-					.handler(new SimpleChannelInboundHandler<DatagramPacket>() {
-						long clientId = new Random().nextLong();
+	/**
+	 * Returns the ClientID
+	 * 
+	 * @return long
+	 */
+	public long getClientId() {
+		return this.clientId;
+	}
 
-						@Override
-						protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-							try {
-								Packet packet = new Packet(msg.content());
-								short pid = packet.getId();
-								if (pid == 0x1C) {
-									StatusResponse response = new StatusResponse(packet);
-									response.decode();
-									advertisers.put(msg.sender(), response.identifier);
-								}
+	/**
+	 * Sets the HookRunnable for the specified Hook
+	 * 
+	 * @param type
+	 * @param runnable
+	 */
+	public void addHook(Hook type, HookRunnable runnable) {
+		hooks.put(type, runnable);
+	}
 
-								if (pid == ID_INCOMPATIBLE_PROTOCOL_VERSION) {
-									System.err.println("INCOMPATIBLE PROTOCOL!");
-									System.exit(0);
-								} else if (state == SessionState.CONNECTING_1) {
-									if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REPLY_1) {
-										if (msg.sender().equals(session.getAddress())) {
-											ConnectionOpenReplyOne scro = new ConnectionOpenReplyOne(packet);
-											scro.decode();
+	/**
+	 * Removes the current HookRunnable for the specified Hook
+	 * 
+	 * @param type
+	 */
+	public void removeHook(Hook type) {
+		hooks.put(type, null);
+	}
 
-											if (scro.magic == true) {
-												session.setMTUSize(scro.mtuSize);
-												session.setClientId(scro.serverId);
-												ConnectionOpenRequestTwo ccrt = new ConnectionOpenRequestTwo(packet);
-												ccrt.address = new SystemAddress(
-														InetAddress.getLocalHost().getHostAddress().substring(1), 0, 4);
-												ccrt.clientId = this.clientId;
-												ccrt.mtuSize = scro.mtuSize;
-												ccrt.encode();
-												session.sendRaw(ccrt);
+	/**
+	 * Executes a Hook event with the specified parameters, the returned
+	 * Object[] is what has been passed in and possibly modified by the
+	 * HookRunnable
+	 * 
+	 * @param type
+	 * @param parameters
+	 * @return Object[]
+	 */
+	public Object[] executeHook(Hook type, Object... parameters) {
+		HookRunnable hook = hooks.get(type);
+		if (hook != null) {
+			hook.run(parameters);
+		}
+		return parameters;
+	}
 
-												state = SessionState.CONNECTING_2;
-											}
-										}
-									}
-								} else if (state == SessionState.CONNECTING_2) {
-									if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REPLY_2) {
-										if (msg.sender().equals(session.getAddress())) {
-											ConnectionOpenReplyTwo scrt = new ConnectionOpenReplyTwo();
-											scrt.decode();
+	/**
+	 * Broadcasts a packet to the entire network to the specified port
+	 * 
+	 * @param port
+	 * @param packet
+	 */
+	public void broadcastPacket(int port, Packet packet) {
+		channel.writeAndFlush(new DatagramPacket(packet.buffer(), new InetSocketAddress("255.255.255.255", port)));
+	}
 
-										}
-									}
-								}
+	/**
+	 * Handles a raw packet
+	 * 
+	 * @param pid
+	 * @param packet
+	 * @param session
+	 */
+	public void handleRaw(Packet packet, InetSocketAddress sender) {
+		short pid = packet.getId();
+		if (pid == ID_UNCONNECTED_STATUS_RESPONSE) {
+			StatusResponse response = new StatusResponse(packet);
+			response.decode();
 
-							} catch (IndexOutOfBoundsException e) {
-								// Do NOT handle, if the packet is bad it does
-								// not mean the world is ending :)
-							}
-						}
-					});
-
-			this.channel = b.bind(0).sync().channel();
-			while (true)
-				;
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			group.shutdownGracefully();
+			if (response.pingId == lastPingId && response.magic == true) {
+				advertisers.put(response.serverId, response.identifier);
+			}
 		}
 	}
 
 	/**
-	 * Used to update ServerSession data without blocking the main thread
+	 * Starts the client
+	 */
+	public void startClient() {
+		if (running == true) {
+			throw new RuntimeException("Client is already running!");
+		}
+		this.handler = new RakNetClientHandler(this, 10);
+		tracker.start();
+
+		// Bind socket and start receiving data
+		EventLoopGroup group = new NioEventLoopGroup();
+		try {
+			Bootstrap b = new Bootstrap();
+			b.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
+					.option(ChannelOption.SO_RCVBUF, options.maximumTransferSize)
+					.option(ChannelOption.SO_SNDBUF, options.maximumTransferSize).handler(handler);
+
+			this.channel = b.bind(options.port).sync().channel();
+			channel.closeFuture().await();
+		} catch (Exception e) {
+			group.shutdownGracefully();
+			e.printStackTrace();
+		}
+		this.running = true;
+	}
+
+	/**
+	 * Starts a client on it's own thread
+	 * 
+	 * @return Thread
+	 */
+	public Thread startThreadedClient() {
+		RakNetClientThread thread = new RakNetClientThread(this);
+		thread.start();
+		return thread;
+	}
+
+	/**
+	 * Used to update ClientSession data without blocking the main thread
 	 */
 	private class RakNetTracker extends Thread {
 		@Override
@@ -143,21 +179,31 @@ public class RakNetClient extends Thread implements RakNet {
 			long last = System.currentTimeMillis();
 			while (true) {
 				long current = System.currentTimeMillis();
-				if (current - last >= tickTime) {
-					session.pushLastReceiveTime(tickTime);
-					if (session.getLastReceiveTime() / 5000L == 0.5) {
-						// Ping ID's do not need to match
-						Ping ping = new Ping();
-						ping.pingId = generator.nextLong();
-						ping.encode();
-						session.sendPacket(ping);
-					}
-					if (session.getLastReceiveTime() > 5000L) {
-						System.out.println("SERVER TIMEOUT!");
-					} else {
-						session.resendACK();
-					}
+				if (current - last >= 1000L) {
+					StatusRequest request = new StatusRequest();
+					request.pingId = generator.nextLong();
+					request.encode();
 
+					broadcastPacket(options.broadcastPort, request);
+				}
+				if (current - last >= tickTime) {
+					ServerSession session = handler.getSession();
+					if (session != null) {
+						session.pushLastReceiveTime(tickTime);
+						if (session.getLastReceiveTime() / options.timeout == 0.5) {
+							// Ping ID's do not need to match
+							Ping ping = new Ping();
+							ping.pingId = lastPingId = generator.nextLong();
+							ping.encode();
+							session.sendPacket(ping);
+						} else if (session.getLastReceiveTime() > options.timeout) {
+							if (session.getState() == SessionState.CONNECTED) {
+								handler.removeSession("Timeout");
+							}
+						} else {
+							session.resendACK();
+						}
+					}
 					last = current;
 				}
 			}

@@ -1,4 +1,4 @@
-package port.raknet.java;
+package port.raknet.java.server;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -8,11 +8,11 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import port.raknet.java.RakNet;
+import port.raknet.java.RakNetOptions;
+import port.raknet.java.SessionState;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
-import port.raknet.java.net.ClientSession;
-import port.raknet.java.net.RakNetHandler;
-import port.raknet.java.net.SessionState;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.raknet.ConnectionOpenReplyOne;
 import port.raknet.java.protocol.raknet.ConnectionOpenReplyTwo;
@@ -25,6 +25,7 @@ import port.raknet.java.protocol.raknet.LegacyStatusResponse;
 import port.raknet.java.protocol.raknet.Ping;
 import port.raknet.java.protocol.raknet.StatusRequest;
 import port.raknet.java.protocol.raknet.StatusResponse;
+import port.raknet.java.session.ClientSession;
 
 /**
  * A RakNet server instance, used to handle the main packets and track
@@ -41,7 +42,8 @@ public class RakNetServer implements RakNet {
 	private final RakNetOptions options;
 	private final RakNetTracker tracker;
 	private final HashMap<Hook, HookRunnable> hooks;
-	private RakNetHandler handler;
+	private RakNetServerHandler handler;
+	private boolean running;
 
 	public RakNetServer(RakNetOptions options) {
 		this.serverId = generator.nextLong();
@@ -124,7 +126,8 @@ public class RakNetServer implements RakNet {
 				StatusResponse ssr = new StatusResponse();
 				ssr.pingId = csr.pingId;
 				ssr.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.SERVER_PING, options.broadcastName, session.getAddress());
+				Object[] parameters = this.executeHook(Hook.STATUS_REQUEST, options.broadcastName,
+						session.getAddress());
 				ssr.identifier = parameters[0].toString();
 				ssr.encode();
 
@@ -179,7 +182,7 @@ public class RakNetServer implements RakNet {
 
 				if (ccrt.magic == true) {
 					session.setState(SessionState.CONNECTING_2);
-					session.setClientId(ccrt.clientId);
+					session.setSessionId(ccrt.clientId);
 					session.setMTUSize(ccrt.mtuSize);
 
 					ConnectionOpenReplyTwo scrt = new ConnectionOpenReplyTwo();
@@ -199,8 +202,10 @@ public class RakNetServer implements RakNet {
 	 * Starts the server
 	 */
 	public void startServer() {
-		// Create tracker and start it
-		this.handler = new RakNetHandler(this, 10);
+		if (running == true) {
+			throw new RuntimeException("Server is already running!");
+		}
+		this.handler = new RakNetServerHandler(this, 10);
 		tracker.start();
 
 		// Bind socket and start receiving data
@@ -216,18 +221,27 @@ public class RakNetServer implements RakNet {
 			group.shutdownGracefully();
 			e.printStackTrace();
 		}
+		this.running = true;
 	}
 
 	/**
-	 * Used to update ClientSession data without blocking the main thread
+	 * Starts a server on it's own thread
+	 * 
+	 * @return Thread
 	 */
+	public Thread startThreadedServer() {
+		RakNetServerThread thread = new RakNetServerThread(this);
+		thread.start();
+		return thread;
+	}
+
 	private class RakNetTracker extends Thread {
 		@Override
 		public void run() {
 			long last = System.currentTimeMillis();
 			while (true) {
 				long current = System.currentTimeMillis();
-				if (current - last >= tickTime) {	
+				if (current - last >= tickTime) {
 					for (ClientSession session : handler.getSessions()) {
 						session.pushLastReceiveTime(tickTime);
 						if (session.getLastReceiveTime() / options.timeout == 0.5) {
@@ -238,7 +252,9 @@ public class RakNetServer implements RakNet {
 							session.sendPacket(ping);
 						}
 						if (session.getLastReceiveTime() > options.timeout) {
-							handler.removeSession(session, "Timeout");
+							if (session.getState() == SessionState.CONNECTED) {
+								handler.removeSession(session, "Timeout");
+							}
 						} else {
 							session.resendACK();
 						}
@@ -256,12 +272,12 @@ public class RakNetServer implements RakNet {
 		options.broadcastName = "MCPE;A RakNet Server;60;0.14.2;0;10";
 
 		RakNetServer server = new RakNetServer(options);
-		server.addHook(Hook.CLIENT_CONNECTED, new HookRunnable() {
+		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
 
 			@Override
 			public void run(Object... parameters) {
 				ClientSession session = (ClientSession) parameters[0];
-				System.out.println("Client from " + session.getAddress() + " with client ID " + session.getClientId()
+				System.out.println("Client from " + session.getAddress() + " with client ID " + session.getSessionId()
 						+ " has connected to the server!");
 			}
 
@@ -278,7 +294,7 @@ public class RakNetServer implements RakNet {
 			}
 
 		});
-		server.addHook(Hook.CLIENT_DISCONNECTED, new HookRunnable() {
+		server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 
 			@Override
 			public void run(Object... parameters) {

@@ -1,4 +1,4 @@
-package port.raknet.java.client;
+package port.raknet.java.session;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -9,12 +9,13 @@ import java.util.Map;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import port.raknet.java.RakNet;
+import port.raknet.java.SessionState;
 import port.raknet.java.exception.RakNetException;
+import port.raknet.java.exception.SplitQueueOverloadException;
 import port.raknet.java.exception.UnexpectedPacketException;
-import port.raknet.java.net.SessionState;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.SplitPacket;
@@ -23,15 +24,15 @@ import port.raknet.java.protocol.raknet.Acknowledge;
 import port.raknet.java.protocol.raknet.CustomPacket;
 import port.raknet.java.protocol.raknet.EncapsulatedPacket;
 
-public class ServerSession implements RakNet {
+public abstract class RakNetSession implements RakNet {
 
 	// Channel data
-	private final Channel channel;
+	private final ChannelHandlerContext context;
 	private final InetSocketAddress address;
 
 	// Client data
 	private SessionState state;
-	private long clientId;
+	private long sessionId;
 	private short mtuSize;
 
 	// Packet sequencing data
@@ -41,26 +42,27 @@ public class ServerSession implements RakNet {
 
 	// Queue data
 	private int splitId;
-	private int sendIndex;
-	private int receiveIndex;
+	private int[] sendIndex;
+	private int[] receiveIndex;
 	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
 
 	// Acknowledge data
 	private final HashMap<Integer, CustomPacket> reliableQueue;
 	private final HashMap<Integer, CustomPacket> recoveryQueue;
 
-	public ServerSession(Channel channel,
-			InetSocketAddress address) {
-		this.state = SessionState.DISCONNECTED;
-		this.channel = channel;
+	public RakNetSession(ChannelHandlerContext context, InetSocketAddress address) {
+		this.context = context;
 		this.address = address;
+		this.state = SessionState.DISCONNECTED;
+		this.sendIndex = new int[32];
+		this.receiveIndex = new int[32];
 		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
 		this.reliableQueue = new HashMap<Integer, CustomPacket>();
 		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
 	}
 
 	/**
-	 * Returns the clients remote address
+	 * Returns the client's remote address
 	 * 
 	 * @return InetAddress
 	 */
@@ -105,7 +107,7 @@ public class ServerSession implements RakNet {
 	}
 
 	/**
-	 * Set the clients specified RakNet state
+	 * Set the client's specified RakNet state
 	 * 
 	 * @param state
 	 */
@@ -114,21 +116,21 @@ public class ServerSession implements RakNet {
 	}
 
 	/**
-	 * Returns the client's ID
+	 * Returns the sessions's ID
 	 * 
 	 * @return long
 	 */
-	public long getClientId() {
-		return this.clientId;
+	public long getSessionId() {
+		return this.sessionId;
 	}
 
 	/**
-	 * Sets the client's ID
+	 * Sets the session's ID
 	 * 
 	 * @param clientId
 	 */
-	public void setClientId(long clientId) {
-		this.clientId = clientId;
+	public void setSessionId(long sessionId) {
+		this.sessionId = sessionId;
 	}
 
 	/**
@@ -141,7 +143,7 @@ public class ServerSession implements RakNet {
 	}
 
 	/**
-	 * Sets the client MTU size
+	 * Sets the client's MTU size
 	 * 
 	 * @param mtuSize
 	 */
@@ -179,7 +181,7 @@ public class ServerSession implements RakNet {
 	 * @param channel
 	 * @param packet
 	 */
-	public void sendEncapsulated(EncapsulatedPacket packet) {
+	public final void sendEncapsulated(EncapsulatedPacket packet) {
 		// If packet is too big, split it up
 		ArrayList<EncapsulatedPacket> toSend = new ArrayList<EncapsulatedPacket>();
 		if (CustomPacket.DEFAULT_SIZE + EncapsulatedPacket.DEFAULT_SIZE + packet.payload.length > this.mtuSize) {
@@ -195,7 +197,7 @@ public class ServerSession implements RakNet {
 		for (EncapsulatedPacket encapsulated : toSend) {
 			// Create CustomPacket and set data
 			CustomPacket custom = new CustomPacket();
-			encapsulated.orderIndex = this.sendIndex++;
+			encapsulated.orderIndex = this.sendIndex[encapsulated.orderChannel]++;
 			custom.seqNumber = this.sendSeqNumber++;
 			custom.packets.add(encapsulated);
 			custom.encode();
@@ -215,7 +217,7 @@ public class ServerSession implements RakNet {
 	 * @param packet
 	 * @param reliability
 	 */
-	public void sendPacket(Reliability reliability, Packet packet) {
+	public final void sendPacket(Reliability reliability, Packet packet) {
 		EncapsulatedPacket encapsulated = new EncapsulatedPacket();
 		encapsulated.reliability = reliability;
 		encapsulated.payload = packet.array();
@@ -228,7 +230,7 @@ public class ServerSession implements RakNet {
 	 * 
 	 * @param packet
 	 */
-	public void sendPacket(Packet packet) {
+	public final void sendPacket(Packet packet) {
 		this.sendPacket(Reliability.RELIABLE_ORDERED, packet);
 	}
 
@@ -237,14 +239,14 @@ public class ServerSession implements RakNet {
 	 * 
 	 * @param packet
 	 */
-	public void sendRaw(Packet packet) {
-		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
+	public final void sendRaw(Packet packet) {
+		context.writeAndFlush(new DatagramPacket(packet.buffer(), address));
 	}
 
 	/**
 	 * Resends each in the queue that has not yet been acknowledged
 	 */
-	public void resendACK() {
+	public final void resendACK() {
 		for (CustomPacket custom : reliableQueue.values()) {
 			this.sendRaw(custom);
 		}
@@ -256,14 +258,15 @@ public class ServerSession implements RakNet {
 	 * @param ack
 	 * @throws UnexpectedPacketException
 	 */
-	public void checkACK(Acknowledge ack) throws UnexpectedPacketException {
-		if (ack.getId() == ACK) {
+	public final void checkACK(Acknowledge ack) throws UnexpectedPacketException {
+		if (ack.getId() == ID_ACK) {
 			int[] packets = ack.packets;
 			for (int i = 0; i < packets.length; i++) {
 				reliableQueue.remove(packets[i]);
+				recoveryQueue.remove(packets[i]);
 			}
 		} else {
-			throw new UnexpectedPacketException(ACK, ack.getId());
+			throw new UnexpectedPacketException(ID_ACK, ack.getId());
 		}
 	}
 
@@ -273,22 +276,22 @@ public class ServerSession implements RakNet {
 	 * @param nack
 	 * @throws UnexpectedPacketException
 	 */
-	public void checkNACK(Acknowledge nack) throws UnexpectedPacketException {
-		if (nack.getId() == NACK) {
+	public final void checkNACK(Acknowledge nack) throws UnexpectedPacketException {
+		if (nack.getId() == ID_NACK) {
 			int[] packets = nack.packets;
 			for (int i = 0; i < packets.length; i++) {
 				CustomPacket recovered = recoveryQueue.get(packets[i]);
 				this.sendRaw(recovered);
 			}
 		} else {
-			throw new UnexpectedPacketException(NACK, nack.getId());
+			throw new UnexpectedPacketException(ID_NACK, nack.getId());
 		}
 	}
 
-	public void handleCustom(CustomPacket custom) {
+	public final void handleCustom0(CustomPacket custom) {
 		// Make sure none of the packets were lost
 		if (custom.seqNumber - receiveSeqNumber > 1) {
-			Acknowledge nack = new Acknowledge(NACK);
+			Acknowledge nack = new Acknowledge(ID_NACK);
 			int[] missing = new int[custom.seqNumber - receiveSeqNumber - 1];
 			for (int i = 0; i < missing.length; i++) {
 				missing[i] = receiveSeqNumber + i + 1;
@@ -299,42 +302,41 @@ public class ServerSession implements RakNet {
 		}
 
 		// Acknowledge packet
-		Acknowledge ack = new Acknowledge(ACK);
+		Acknowledge ack = new Acknowledge(ID_ACK);
 		ack.packets = new int[] { custom.seqNumber };
 		ack.encode();
 		this.sendRaw(ack);
 
 		// Handle EncapsulatedPackets
-		for (EncapsulatedPacket packet : custom.packets) {
+		for (EncapsulatedPacket encapsulated : custom.packets) {
 			try {
-				this.handleEncapsulated(packet);
-			} catch (RakNetException rne) {
-				// TODO: Throw error
-				// handler.removeSession(this, rne.getClass().getSimpleName() +
-				// ": " + rne.getLocalizedMessage());
-				return;
+				this.handleEncapsulated0(encapsulated);
+			} catch (RakNetException e) {
+				// e.printStackTrace();
+				break;
 			}
 		}
 	}
 
-	private void handleEncapsulated(EncapsulatedPacket encapsulated) throws RakNetException {
+	private final void handleEncapsulated0(EncapsulatedPacket encapsulated) throws RakNetException {
 		// Handle packet order based on it's reliability
 		Reliability reliability = encapsulated.reliability;
 
-		// TODO: RELIABLE_ORDERED
+		// TODO: ORDERED
 		if (reliability.isSequenced()) {
-			if (encapsulated.orderIndex < receiveIndex) {
+			if (encapsulated.orderIndex < receiveIndex[encapsulated.orderChannel]) {
 				return; // Packet is old, no error needed
 			}
 		}
-		this.receiveIndex = encapsulated.orderIndex;
+		if (reliability.isOrdered() || reliability.isSequenced()) {
+			receiveIndex[encapsulated.orderChannel] = encapsulated.orderIndex + 1;
+		}
 
 		// Handle split data of packet
 		if (encapsulated.split == true) {
 			if (!splitQueue.containsKey(encapsulated.splitId)) {
 				if (splitQueue.size() >= 128) {
-					// TODO: Throw error
-					return;
+					throw new SplitQueueOverloadException(this);
 				}
 
 				Map<Integer, EncapsulatedPacket> split = new HashMap<>();
@@ -359,34 +361,17 @@ public class ServerSession implements RakNet {
 
 				EncapsulatedPacket ep = new EncapsulatedPacket();
 				ep.payload = data;
-				ep.reliability = Reliability.RELIABLE;
-				this.handleEncapsulated(ep);
+				ep.orderChannel = encapsulated.orderChannel;
+				ep.reliability = encapsulated.reliability;
+				this.handleEncapsulated0(ep);
 			}
 			return;
 		}
 
 		// Handle packet
-		Packet packet = encapsulated.convertPayload();
-		short pid = packet.getId();
-		if (pid == ID_CONNECTED_SERVER_HANDSHAKE) {
-
-		}
+		this.handleEncapsulated(encapsulated);
 	}
 
-	public void sendEncapsulated(Reliability reliability, int channel, Packet packet) {
-		EncapsulatedPacket encapsulated = new EncapsulatedPacket();
-		encapsulated.reliability = reliability;
-		encapsulated.orderChannel = channel;
-		encapsulated.payload = packet.array();
+	public abstract void handleEncapsulated(EncapsulatedPacket encapsulated);
 
-		this.sendEncapsulated(encapsulated);
-	}
-
-	public void sendEncapsulated(Reliability reliability, Packet packet) {
-		this.sendEncapsulated(reliability, 0, packet);
-	}
-
-	public void sendEncapsulated(Packet packet) {
-		this.sendEncapsulated(Reliability.RELIABLE_ORDERED, packet);
-	}
 }

@@ -1,33 +1,33 @@
-package port.raknet.java.net;
+package port.raknet.java.server;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import port.raknet.java.RakNet;
-import port.raknet.java.RakNetServer;
 import port.raknet.java.event.Hook;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.raknet.Acknowledge;
 import port.raknet.java.protocol.raknet.CustomPacket;
+import port.raknet.java.session.ClientSession;
 
 /**
- * The internal Netty handler for the server, handles ACK, NACK, and Custompackets on it's own. Unconnected 
+ * The internal Netty handler for the server, handles ACK, NACK, and
+ * CustomPackets on it's own. Unconnected
  *
  * @author Trent Summerlin
  */
-public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
+public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetServer server;
 	private final int maxSessions;
 	private final ArrayList<InetSocketAddress> blocked;
 	private final HashMap<InetSocketAddress, ClientSession> sessions;
 
-	public RakNetHandler(RakNetServer server, int maxSessions) {
+	public RakNetServerHandler(RakNetServer server, int maxSessions) {
 		this.server = server;
 		this.maxSessions = maxSessions;
 		this.blocked = new ArrayList<InetSocketAddress>();
@@ -86,7 +86,7 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 	 * @param address
 	 */
 	public void removeSession(InetSocketAddress address, String reason) {
-		server.executeHook(Hook.CLIENT_DISCONNECTED, sessions.get(address), reason, System.currentTimeMillis());
+		server.executeHook(Hook.SESSION_DISCONNECTED, sessions.get(address), reason, System.currentTimeMillis());
 		sessions.remove(address);
 	}
 
@@ -102,13 +102,12 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-		System.out.println(Unpooled.copiedBuffer(msg.content()).array().length);
 		if (!blocked.contains(msg.sender())) {
 			// Verify session
 			InetSocketAddress address = msg.sender();
 			if (!sessions.containsKey(address)) {
 				if (sessions.size() < maxSessions) {
-					sessions.put(msg.sender(), new ClientSession(server, this, ctx, address));
+					sessions.put(msg.sender(), new ClientSession(ctx, address, this, server));
 				} else {
 					System.err.println("Too many clients, rejected " + address + "!");
 				}
@@ -116,7 +115,7 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 
 			// Get session
 			ClientSession session = sessions.get(address);
-			Packet packet = new Packet(msg.content());
+			Packet packet = new Packet(msg.content().retain());
 			short pid = packet.getId();
 
 			// Handle internal packets here
@@ -124,12 +123,12 @@ public class RakNetHandler extends SimpleChannelInboundHandler<DatagramPacket>im
 			if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {
 				CustomPacket custom = new CustomPacket(packet);
 				custom.decode();
-				session.handleCustom(custom);
-			} else if (pid == ACK) {
+				session.handleCustom0(custom);
+			} else if (pid == ID_ACK) {
 				Acknowledge ack = new Acknowledge(packet);
 				ack.decode();
 				session.checkACK(ack);
-			} else if (pid == NACK) {
+			} else if (pid == ID_NACK) {
 				Acknowledge nack = new Acknowledge(packet);
 				nack.decode();
 				session.checkNACK(nack);

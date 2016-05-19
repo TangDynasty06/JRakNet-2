@@ -217,7 +217,7 @@ public class Packet implements RakNet {
 	}
 
 	public ByteBuf buffer() {
-		return this.buffer.duplicate();
+		return this.buffer.duplicate().retain();
 	}
 
 	public int remaining() {

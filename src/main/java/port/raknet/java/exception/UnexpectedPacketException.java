@@ -2,6 +2,12 @@ package port.raknet.java.exception;
 
 import port.raknet.java.RakNet;
 
+/**
+ * Thrown when a handler is expecting a packet and receives something else
+ * instead
+ *
+ * @author Trent Summerlin
+ */
 public class UnexpectedPacketException extends RakNetException {
 
 	private static final long serialVersionUID = -3793043367215871424L;
