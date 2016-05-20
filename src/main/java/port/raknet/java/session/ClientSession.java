@@ -2,35 +2,47 @@ package port.raknet.java.session;
 
 import java.net.InetSocketAddress;
 
-import io.netty.channel.ChannelHandlerContext;
-import port.raknet.java.SessionState;
+import io.netty.channel.Channel;
 import port.raknet.java.event.Hook;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.raknet.ClientConnectRequest;
 import port.raknet.java.protocol.raknet.ClientHandshake;
+import port.raknet.java.protocol.raknet.ConnectedPing;
+import port.raknet.java.protocol.raknet.ConnectedPong;
 import port.raknet.java.protocol.raknet.EncapsulatedPacket;
-import port.raknet.java.protocol.raknet.Ping;
-import port.raknet.java.protocol.raknet.Pong;
 import port.raknet.java.protocol.raknet.ServerHandshake;
-import port.raknet.java.server.RakNetServerHandler;
 import port.raknet.java.server.RakNetServer;
+import port.raknet.java.server.RakNetServerHandler;
 
-/**
- * Represents a RakNet session, used to sending data to clients and tracking
- * it's state
- *
- * @author Trent Summerlin
- */
 public class ClientSession extends RakNetSession {
 
 	private final RakNetServerHandler handler;
 	private final RakNetServer server;
+	private SessionState state;
 
-	public ClientSession(ChannelHandlerContext context, InetSocketAddress address, RakNetServerHandler handler,
-			RakNetServer server) {
-		super(context, address);
+	public ClientSession(Channel channel, InetSocketAddress address, RakNetServerHandler handler, RakNetServer server) {
+		super(channel, address);
 		this.handler = handler;
 		this.server = server;
+		this.state = SessionState.DISCONNECTED;
+	}
+
+	/**
+	 * Returns the client's current RakNet state
+	 * 
+	 * @return SessionState
+	 */
+	public SessionState getState() {
+		return this.state;
+	}
+
+	/**
+	 * Set the client's specified RakNet state
+	 * 
+	 * @param state
+	 */
+	public void setState(SessionState state) {
+		this.state = state;
 	}
 
 	@Override
@@ -41,10 +53,10 @@ public class ClientSession extends RakNetSession {
 		// Handled depending on ClientState
 		if (pid == ID_CONNECTED_PING) {
 			if (this.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
-				Ping cp = new Ping(packet);
+				ConnectedPing cp = new ConnectedPing(packet);
 				cp.decode();
 
-				Pong sp = new Pong();
+				ConnectedPong sp = new ConnectedPong();
 				sp.pingId = cp.pingId;
 				sp.encode();
 				this.sendPacket(sp);

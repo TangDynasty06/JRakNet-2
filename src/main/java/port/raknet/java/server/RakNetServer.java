@@ -10,7 +10,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import port.raknet.java.RakNet;
 import port.raknet.java.RakNetOptions;
-import port.raknet.java.SessionState;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
 import port.raknet.java.protocol.Packet;
@@ -22,10 +21,12 @@ import port.raknet.java.protocol.raknet.EncapsulatedPacket;
 import port.raknet.java.protocol.raknet.IncompatibleProtocolVersion;
 import port.raknet.java.protocol.raknet.LegacyStatusRequest;
 import port.raknet.java.protocol.raknet.LegacyStatusResponse;
-import port.raknet.java.protocol.raknet.Ping;
 import port.raknet.java.protocol.raknet.StatusRequest;
 import port.raknet.java.protocol.raknet.StatusResponse;
+import port.raknet.java.scheduler.RakNetScheduler;
+import port.raknet.java.server.task.ServerTask;
 import port.raknet.java.session.ClientSession;
+import port.raknet.java.session.SessionState;
 
 /**
  * A RakNet server instance, used to handle the main packets and track
@@ -35,20 +36,19 @@ import port.raknet.java.session.ClientSession;
  */
 public class RakNetServer implements RakNet {
 
-	private static final Random generator = new Random();
-	private static final long tickTime = 100L;
+	private boolean running;
 
 	private final long serverId;
 	private final RakNetOptions options;
-	private final RakNetTracker tracker;
+	private final RakNetScheduler scheduler;
+	private final RakNetServerHandler handler;
 	private final HashMap<Hook, HookRunnable> hooks;
-	private RakNetServerHandler handler;
-	private boolean running;
 
 	public RakNetServer(RakNetOptions options) {
-		this.serverId = generator.nextLong();
+		this.serverId = new Random().nextLong();
 		this.options = options;
-		this.tracker = new RakNetTracker();
+		this.handler = new RakNetServerHandler(this, 10);
+		this.scheduler = new RakNetScheduler(options);
 		if (options.maximumTransferSize % 2 != 0) {
 			throw new RuntimeException("Invalid transfer size, must be divisble by 2!");
 		}
@@ -205,8 +205,6 @@ public class RakNetServer implements RakNet {
 		if (running == true) {
 			throw new RuntimeException("Server is already running!");
 		}
-		this.handler = new RakNetServerHandler(this, 10);
-		tracker.start();
 
 		// Bind socket and start receiving data
 		EventLoopGroup group = new NioEventLoopGroup();
@@ -216,11 +214,16 @@ public class RakNetServer implements RakNet {
 					.option(ChannelOption.SO_RCVBUF, options.maximumTransferSize)
 					.option(ChannelOption.SO_SNDBUF, options.maximumTransferSize).handler(handler);
 
-			b.bind(options.port).sync().channel().closeFuture().await();
+			b.bind(options.serverPort);
 		} catch (Exception e) {
 			group.shutdownGracefully();
 			e.printStackTrace();
 		}
+
+		// Start scheduler
+		scheduler.scheduleRepeatingTask(new ServerTask(this, handler), 1L);
+		scheduler.start();
+
 		this.running = true;
 	}
 
@@ -235,39 +238,9 @@ public class RakNetServer implements RakNet {
 		return thread;
 	}
 
-	private class RakNetTracker extends Thread {
-		@Override
-		public void run() {
-			long last = System.currentTimeMillis();
-			while (true) {
-				long current = System.currentTimeMillis();
-				if (current - last >= tickTime) {
-					for (ClientSession session : handler.getSessions()) {
-						session.pushLastReceiveTime(tickTime);
-						if (session.getLastReceiveTime() / options.timeout == 0.5) {
-							// Ping ID's do not need to match
-							Ping ping = new Ping();
-							ping.pingId = generator.nextLong();
-							ping.encode();
-							session.sendPacket(ping);
-						}
-						if (session.getLastReceiveTime() > options.timeout) {
-							if (session.getState() == SessionState.CONNECTED) {
-								handler.removeSession(session, "Timeout");
-							}
-						} else {
-							session.resendACK();
-						}
-					}
-					last = current;
-				}
-			}
-		}
-	}
-
 	public static void main(String[] args) {
 		RakNetOptions options = new RakNetOptions();
-		options.port = 19132;
+		options.serverPort = 19132;
 		options.maximumTransferSize = 4096;
 		options.broadcastName = "MCPE;A RakNet Server;60;0.14.2;0;10";
 

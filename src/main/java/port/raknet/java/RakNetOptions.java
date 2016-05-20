@@ -5,7 +5,7 @@ public class RakNetOptions {
 	/**
 	 * The port the server runs on
 	 */
-	public int port = 19132;
+	public int serverPort = 19132;
 
 	/**
 	 * The port the client will use to find other servers on the network

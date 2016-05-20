@@ -9,10 +9,9 @@ import java.util.Map;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
 import port.raknet.java.RakNet;
-import port.raknet.java.SessionState;
 import port.raknet.java.exception.RakNetException;
 import port.raknet.java.exception.SplitQueueOverloadException;
 import port.raknet.java.exception.UnexpectedPacketException;
@@ -27,11 +26,10 @@ import port.raknet.java.protocol.raknet.EncapsulatedPacket;
 public abstract class RakNetSession implements RakNet {
 
 	// Channel data
-	private final ChannelHandlerContext context;
+	private final Channel channel;
 	private final InetSocketAddress address;
 
-	// Client data
-	private SessionState state;
+	// Session data
 	private long sessionId;
 	private short mtuSize;
 
@@ -50,10 +48,9 @@ public abstract class RakNetSession implements RakNet {
 	private final HashMap<Integer, CustomPacket> reliableQueue;
 	private final HashMap<Integer, CustomPacket> recoveryQueue;
 
-	public RakNetSession(ChannelHandlerContext context, InetSocketAddress address) {
-		this.context = context;
+	public RakNetSession(Channel channel, InetSocketAddress address) {
+		this.channel = channel;
 		this.address = address;
-		this.state = SessionState.DISCONNECTED;
 		this.sendIndex = new int[32];
 		this.receiveIndex = new int[32];
 		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
@@ -95,24 +92,6 @@ public abstract class RakNetSession implements RakNet {
 	 */
 	public SystemAddress getSystemAddress() {
 		return SystemAddress.fromSocketAddress(address);
-	}
-
-	/**
-	 * Returns the client's connect RakNet state
-	 * 
-	 * @return SessionState
-	 */
-	public SessionState getState() {
-		return this.state;
-	}
-
-	/**
-	 * Set the client's specified RakNet state
-	 * 
-	 * @param state
-	 */
-	public void setState(SessionState state) {
-		this.state = state;
 	}
 
 	/**
@@ -240,7 +219,7 @@ public abstract class RakNetSession implements RakNet {
 	 * @param packet
 	 */
 	public final void sendRaw(Packet packet) {
-		context.writeAndFlush(new DatagramPacket(packet.buffer(), address));
+		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
 	}
 
 	/**

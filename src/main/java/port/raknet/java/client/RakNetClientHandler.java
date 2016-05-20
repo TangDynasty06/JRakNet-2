@@ -13,12 +13,10 @@ import port.raknet.java.session.ServerSession;
 public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetClient client;
-	private final int maxSessions;
 	private ServerSession session;
 
-	public RakNetClientHandler(RakNetClient client, int maxSessions) {
+	public RakNetClientHandler(RakNetClient client) {
 		this.client = client;
-		this.maxSessions = maxSessions;
 	}
 
 	/**
@@ -28,6 +26,10 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public ServerSession getSession() {
 		return this.session;
+	}
+
+	public void setSession(ServerSession session) {
+		this.session = session;
 	}
 
 	public void removeSession(String reason) {
@@ -40,23 +42,29 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		Packet packet = new Packet(msg.content().retain());
 		short pid = packet.getId();
 
-		// Handle internal packets here
 		if (session != null) {
 			session.resetLastReceiveTime();
 		}
-		
+
+		// Handle internal packets here
 		if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {
-			CustomPacket custom = new CustomPacket(packet);
-			custom.decode();
-			session.handleCustom0(custom);
+			if (session != null) {
+				CustomPacket custom = new CustomPacket(packet);
+				custom.decode();
+				session.handleCustom0(custom);
+			}
 		} else if (pid == ID_ACK) {
-			Acknowledge ack = new Acknowledge(packet);
-			ack.decode();
-			session.checkACK(ack);
+			if (session != null) {
+				Acknowledge ack = new Acknowledge(packet);
+				ack.decode();
+				session.checkACK(ack);
+			}
 		} else if (pid == ID_NACK) {
-			Acknowledge nack = new Acknowledge(packet);
-			nack.decode();
-			session.checkNACK(nack);
+			if (session != null) {
+				Acknowledge nack = new Acknowledge(packet);
+				nack.decode();
+				session.checkNACK(nack);
+			}
 		} else {
 			client.handleRaw(packet, msg.sender());
 		}

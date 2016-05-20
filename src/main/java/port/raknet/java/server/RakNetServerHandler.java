@@ -107,7 +107,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			InetSocketAddress address = msg.sender();
 			if (!sessions.containsKey(address)) {
 				if (sessions.size() < maxSessions) {
-					sessions.put(msg.sender(), new ClientSession(ctx, address, this, server));
+					sessions.put(msg.sender(), new ClientSession(ctx.channel(), address, this, server));
 				} else {
 					System.err.println("Too many clients, rejected " + address + "!");
 				}

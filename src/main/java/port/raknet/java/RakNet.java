@@ -48,7 +48,7 @@ public interface RakNet {
 	public static final short ID_ACK = 0xC0;
 	public static final short ID_NACK = 0xA0;
 
-	// Keep-Alive and Latency (MCPE only, but will not hurt other protocols)
+	// Keep-Alive and Latency testing
 	public static final short ID_CONNECTED_PING = 0x00;
 	public static final short ID_CONNECTED_PONG = 0x03;
 

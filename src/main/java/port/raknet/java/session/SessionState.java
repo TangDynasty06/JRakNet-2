@@ -1,6 +1,4 @@
-package port.raknet.java;
-
-import port.raknet.java.session.RakNetSession;
+package port.raknet.java.session;
 
 public enum SessionState {
 
