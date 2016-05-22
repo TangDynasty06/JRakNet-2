@@ -1,15 +1,15 @@
 package port.raknet.java.scheduler;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import port.raknet.java.RakNetOptions;
-import port.raknet.java.protocol.raknet.StatusRequest;
 
+/**
+ * Used to run tasks at certain times
+ *
+ * @author Trent Summerlin
+ */
 public class RakNetScheduler extends Thread {
-
-	private static final Random generator = new Random();
-	public static final long TICK = 1L;
 
 	private boolean running;
 	private int taskId;
@@ -76,43 +76,36 @@ public class RakNetScheduler extends Thread {
 		if (running == true) {
 			throw new RuntimeException("Scheduler is already running!");
 		}
-		long lastTick = System.currentTimeMillis();
 		this.running = true;
+		long last = System.currentTimeMillis();
 
 		// Start loop
 		while (true) {
 			long current = System.currentTimeMillis();
-			if (current - lastTick >= 1000L) {
-				StatusRequest request = new StatusRequest();
-				request.pingId = generator.nextLong();
-				request.encode();
+			long difference = (current - last);
 
-				// client.broadcastPacket(options.broadcastPort, request);
+			// Update tasks
+			for (int i = 0; i < tasks.size(); i++) {
+				RakNetTask task = tasks.get(i);
+				task.waitTime -= difference;
+				if (task.waitTime <= 0) {
+					task.runnable.run();
+					tasks.remove(task);
+				}
 			}
 
-			if (current - lastTick >= TICK) {
-				// Update tasks
-				for (int i = 0; i < tasks.size(); i++) {
-					RakNetTask task = tasks.get(i);
-					task.waitTime -= TICK;
-					if (task.waitTime <= 0) {
-						task.runnable.run();
-						tasks.remove(task);
-					}
+			// Update repeating tasks
+			for (int i = 0; i < repeating.size(); i++) {
+				RakNetRepeatingTask task = repeating.get(i);
+				task.waitTime -= difference;
+				if (task.waitTime <= 0) {
+					task.runnable.run();
+					task.waitTime = task.reset;
 				}
-
-				// Update repeating tasks
-				for (int i = 0; i < repeating.size(); i++) {
-					RakNetRepeatingTask task = repeating.get(i);
-					task.waitTime -= TICK;
-					if (task.waitTime <= 0) {
-						task.runnable.run();
-						task.waitTime = task.reset;
-					}
-				}
-
-				lastTick = current;
 			}
+
+			// Update time
+			last = current;
 		}
 	}
 

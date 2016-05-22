@@ -13,14 +13,19 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import port.raknet.java.RakNet;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestOne;
-import port.raknet.java.protocol.raknet.StatusRequest;
-import port.raknet.java.protocol.raknet.StatusResponse;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestOne;
+import port.raknet.java.protocol.raknet.UnconnectedPing;
+import port.raknet.java.protocol.raknet.UnconnectedPong;
 
+/**
+ * Used to easily accomplish RakNet related tasks
+ *
+ * @author Trent Summerlin
+ */
 public class RakNetUtils implements RakNet {
 
 	private static final Random generator = new Random();
-	private static final int mtuSize = 2048;
+	private static final int mtuSize = 538;
 
 	/**
 	 * Used to quickly send a packet to a sever and get it's response, do
@@ -82,14 +87,14 @@ public class RakNetUtils implements RakNet {
 	 * @return String
 	 */
 	public static String getServerIdentifier(String address, int port, long timeout) {
-		StatusRequest psr = new StatusRequest();
+		UnconnectedPing psr = new UnconnectedPing();
 		psr.pingId = generator.nextLong();
 		psr.encode();
 
 		Packet sprr = createBootstrapAndSend(address, port, psr, timeout);
 		if (sprr != null) {
-			if (sprr.getId() == ID_UNCONNECTED_STATUS_RESPONSE) {
-				StatusResponse spr = new StatusResponse(sprr);
+			if (sprr.getId() == ID_UNCONNECTED_PONG) {
+				UnconnectedPong spr = new UnconnectedPong(sprr);
 				spr.decode();
 				if (spr.magic == true && spr.pingId == psr.pingId) {
 					return spr.identifier;
@@ -119,15 +124,14 @@ public class RakNetUtils implements RakNet {
 	 * @return boolean
 	 */
 	public static boolean isServerCompatible(String address, int port, int protocol, long timeout) {
-		ConnectionOpenRequestOne ccoro = new ConnectionOpenRequestOne();
+		UnconnectedConnectionRequestOne ccoro = new UnconnectedConnectionRequestOne();
 		ccoro.mtuSize = mtuSize;
 		ccoro.protocol = (short) protocol;
 		ccoro.encode();
 
 		Packet scopo = createBootstrapAndSend(address, port, ccoro, timeout);
 		if (scopo != null) {
-			return (scopo.getId() != ID_INCOMPATIBLE_PROTOCOL_VERSION
-					&& scopo.getId() == ID_UNCONNECTED_OPEN_CONNECTION_REPLY_1);
+			return (scopo.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1);
 		}
 		return false;
 	}

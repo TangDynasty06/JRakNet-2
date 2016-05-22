@@ -2,19 +2,19 @@ package port.raknet.java.protocol.raknet;
 
 import port.raknet.java.protocol.Packet;
 
-public class StatusResponse extends Packet {
+public class UnconnectedPong extends Packet {
 
 	public long pingId;
 	public long serverId;
 	public boolean magic;
 	public String identifier;
 
-	public StatusResponse(Packet packet) {
+	public UnconnectedPong(Packet packet) {
 		super(packet);
 	}
 
-	public StatusResponse() {
-		super(ID_UNCONNECTED_STATUS_RESPONSE);
+	public UnconnectedPong() {
+		super(ID_UNCONNECTED_PONG);
 	}
 
 	@Override

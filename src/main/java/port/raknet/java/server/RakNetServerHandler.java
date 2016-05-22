@@ -10,13 +10,13 @@ import io.netty.channel.socket.DatagramPacket;
 import port.raknet.java.RakNet;
 import port.raknet.java.event.Hook;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.raknet.Acknowledge;
-import port.raknet.java.protocol.raknet.CustomPacket;
+import port.raknet.java.protocol.raknet.internal.Acknowledge;
+import port.raknet.java.protocol.raknet.internal.CustomPacket;
 import port.raknet.java.session.ClientSession;
 
 /**
  * The internal Netty handler for the server, handles ACK, NACK, and
- * CustomPackets on it's own. Unconnected
+ * CustomPackets on its own
  *
  * @author Trent Summerlin
  */
@@ -127,7 +127,6 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			} else if (pid == ID_ACK) {
 				Acknowledge ack = new Acknowledge(packet);
 				ack.decode();
-				session.checkACK(ack);
 			} else if (pid == ID_NACK) {
 				Acknowledge nack = new Acknowledge(packet);
 				nack.decode();

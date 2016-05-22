@@ -1,5 +1,11 @@
 package port.raknet.java;
 
+/**
+ * Used for setting the options for <code>RakNetServer</code> and
+ * <code>RakNetClient</code>
+ *
+ * @author Trent Summerlin
+ */
 public class RakNetOptions {
 
 	/**
@@ -8,19 +14,19 @@ public class RakNetOptions {
 	public int serverPort = 19132;
 
 	/**
+	 * The identifier the server broadcasts when receiving a unconnected ping
+	 */
+	public String serverIdentifier = "";
+
+	/**
 	 * The port the client will use to find other servers on the network
 	 */
-	public int broadcastPort = 19132;
+	public int broadcastPort = this.serverPort;
 
 	/**
 	 * The maximum amount of data the session can send and receive
 	 */
 	public int maximumTransferSize = 2048;
-
-	/**
-	 * The broadcast name
-	 */
-	public String broadcastName = "";
 
 	/**
 	 * How long until a session is disconnected from the server due to

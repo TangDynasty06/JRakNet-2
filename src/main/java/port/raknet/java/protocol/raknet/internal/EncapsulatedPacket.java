@@ -1,4 +1,4 @@
-package port.raknet.java.protocol.raknet;
+package port.raknet.java.protocol.raknet.internal;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

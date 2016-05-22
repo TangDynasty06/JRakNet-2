@@ -3,6 +3,11 @@ package port.raknet.java.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * Used for easily manipulation of arrays
+ *
+ * @author Trent Summerlin
+ */
 public abstract class ArrayUtils {
 
 	/**

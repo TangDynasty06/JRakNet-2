@@ -1,20 +1,24 @@
-package port.raknet.java.server.task;
+package port.raknet.java.server;
 
 import port.raknet.java.RakNetOptions;
 import port.raknet.java.protocol.raknet.ConnectedPing;
-import port.raknet.java.scheduler.RakNetScheduler;
-import port.raknet.java.server.RakNetServer;
-import port.raknet.java.server.RakNetServerHandler;
 import port.raknet.java.session.ClientSession;
 import port.raknet.java.session.SessionState;
 
-public class ServerTask implements Runnable {
-
+/**
+ * The tracker for the server, used to make sure clients do not timeout
+ *
+ * @author Trent Summerlin
+ */
+public class RakNetServerTask implements Runnable {
+	
+	public static final long TICK = 1000L;
+	
 	private final RakNetServer server;
 	private final RakNetServerHandler handler;
 	private long pingId;
 
-	public ServerTask(RakNetServer server, RakNetServerHandler handler) {
+	public RakNetServerTask(RakNetServer server, RakNetServerHandler handler) {
 		this.server = server;
 		this.handler = handler;
 	}
@@ -23,7 +27,7 @@ public class ServerTask implements Runnable {
 	public void run() {
 		RakNetOptions options = server.getOptions();
 		for (ClientSession session : handler.getSessions()) {
-			session.pushLastReceiveTime(RakNetScheduler.TICK);
+			session.pushLastReceiveTime(TICK);
 			if (session.getLastReceiveTime() / options.timeout == 0.5) {
 				// Ping ID's do not need to match
 				ConnectedPing ping = new ConnectedPing();
@@ -31,12 +35,10 @@ public class ServerTask implements Runnable {
 				ping.encode();
 				session.sendPacket(ping);
 			}
-			if (session.getLastReceiveTime() > options.timeout) {
+			if (session.getLastReceiveTime() >= options.timeout) {
 				if (session.getState() == SessionState.CONNECTED) {
 					handler.removeSession(session, "Timeout");
 				}
-			} else {
-				session.resendACK();
 			}
 		}
 	}

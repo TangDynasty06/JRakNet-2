@@ -2,17 +2,17 @@ package port.raknet.java.protocol.raknet;
 
 import port.raknet.java.protocol.Packet;
 
-public class LegacyStatusRequest extends Packet {
+public class UnconnectedLegacyPing extends Packet {
 
 	public long pingId;
 	public boolean magic;
 
-	public LegacyStatusRequest(Packet packet) {
+	public UnconnectedLegacyPing(Packet packet) {
 		super(packet);
 	}
 
-	public LegacyStatusRequest() {
-		super(ID_UNCONNECTED_LEGACY_STATUS_REQUEST);
+	public UnconnectedLegacyPing() {
+		super(ID_UNCONNECTED_LEGACY_PING);
 	}
 
 	@Override

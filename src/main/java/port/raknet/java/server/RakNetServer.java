@@ -13,18 +13,15 @@ import port.raknet.java.RakNetOptions;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.raknet.ConnectionOpenReplyOne;
-import port.raknet.java.protocol.raknet.ConnectionOpenReplyTwo;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestOne;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestTwo;
-import port.raknet.java.protocol.raknet.EncapsulatedPacket;
-import port.raknet.java.protocol.raknet.IncompatibleProtocolVersion;
-import port.raknet.java.protocol.raknet.LegacyStatusRequest;
-import port.raknet.java.protocol.raknet.LegacyStatusResponse;
-import port.raknet.java.protocol.raknet.StatusRequest;
-import port.raknet.java.protocol.raknet.StatusResponse;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyOne;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyTwo;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestOne;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestTwo;
+import port.raknet.java.protocol.raknet.UnconnectedLegacyPing;
+import port.raknet.java.protocol.raknet.UnconnectedLegacyPong;
+import port.raknet.java.protocol.raknet.UnconnectedPing;
+import port.raknet.java.protocol.raknet.UnconnectedPong;
 import port.raknet.java.scheduler.RakNetScheduler;
-import port.raknet.java.server.task.ServerTask;
 import port.raknet.java.session.ClientSession;
 import port.raknet.java.session.SessionState;
 
@@ -118,81 +115,67 @@ public class RakNetServer implements RakNet {
 	 */
 	public void handleRaw(Packet packet, ClientSession session) {
 		short pid = packet.getId();
-		if (pid == ID_UNCONNECTED_STATUS_REQUEST) {
-			StatusRequest csr = new StatusRequest(packet);
-			csr.decode();
+		if (pid == ID_UNCONNECTED_PING) {
+			UnconnectedPing ping = new UnconnectedPing(packet);
+			ping.decode();
 
-			if (csr.magic == true) {
-				StatusResponse ssr = new StatusResponse();
-				ssr.pingId = csr.pingId;
-				ssr.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.STATUS_REQUEST, options.broadcastName,
+			if (ping.magic == true) {
+				UnconnectedPong pong = new UnconnectedPong();
+				pong.pingId = ping.pingId;
+				pong.serverId = this.serverId;
+				Object[] parameters = this.executeHook(Hook.STATUS_REQUEST, options.serverIdentifier,
 						session.getAddress());
-				ssr.identifier = parameters[0].toString();
-				ssr.encode();
+				pong.identifier = parameters[0].toString();
+				pong.encode();
 
-				session.sendRaw(ssr);
+				session.sendRaw(pong);
 			}
-		} else if (pid == ID_UNCONNECTED_LEGACY_STATUS_REQUEST) {
-			LegacyStatusRequest clsr = new LegacyStatusRequest(packet);
-			clsr.decode();
+		} else if (pid == ID_UNCONNECTED_LEGACY_PING) {
+			UnconnectedLegacyPing legacyPing = new UnconnectedLegacyPing(packet);
+			legacyPing.decode();
 
-			if (clsr.magic == true) {
-				LegacyStatusResponse slsr = new LegacyStatusResponse();
-				slsr.pingId = clsr.pingId;
-				slsr.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.LEGACY_PING, options.broadcastName, session.getAddress());
-				slsr.data = parameters[0].toString();
-				slsr.encode();
+			if (legacyPing.magic == true) {
+				UnconnectedLegacyPong legacyPong = new UnconnectedLegacyPong();
+				legacyPong.pingId = legacyPing.pingId;
+				legacyPong.serverId = this.serverId;
+				Object[] parameters = this.executeHook(Hook.LEGACY_PING, options.serverIdentifier, session.getAddress());
+				legacyPong.data = parameters[0].toString();
+				legacyPong.encode();
 
-				session.sendRaw(slsr);
+				session.sendRaw(legacyPong);
 			}
-		} else if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_1) {
+		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_1) {
 			if (session.getState() == SessionState.DISCONNECTED) {
-				ConnectionOpenRequestOne ccro = new ConnectionOpenRequestOne(packet);
-				ccro.decode();
+				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne(packet);
+				request.decode();
 
-				if (ccro.magic == true) {
+				if (request.magic == true && request.protocol == NETWORK_PROTOCOL
+						&& request.mtuSize <= options.maximumTransferSize) {
+					UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
+					response.serverId = this.serverId;
+					response.mtuSize = request.mtuSize;
+					response.encode();
+
+					session.sendRaw(response);
 					session.setState(SessionState.CONNECTING_1);
-
-					if (ccro.protocol == NETWORK_PROTOCOL) {
-						if (ccro.mtuSize <= options.maximumTransferSize) {
-							ConnectionOpenReplyOne scro = new ConnectionOpenReplyOne();
-							scro.serverId = this.serverId;
-							scro.security = false;
-							scro.mtuSize = ccro.mtuSize;
-							scro.encode();
-
-							session.sendRaw(scro);
-						}
-					} else {
-						IncompatibleProtocolVersion sipv = new IncompatibleProtocolVersion();
-						sipv.version = NETWORK_PROTOCOL;
-						sipv.serverId = this.serverId;
-						sipv.encode();
-
-						session.sendRaw(sipv);
-					}
 				}
 			}
-		} else if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_2) {
+		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {
 			if (session.getState() == SessionState.CONNECTING_1) {
-				ConnectionOpenRequestTwo ccrt = new ConnectionOpenRequestTwo(packet);
-				ccrt.decode();
+				UnconnectedConnectionRequestTwo request = new UnconnectedConnectionRequestTwo(packet);
+				request.decode();
 
-				if (ccrt.magic == true) {
+				if (request.magic == true) {
+					UnconnectedConnectionReplyTwo response = new UnconnectedConnectionReplyTwo();
+					response.serverId = this.serverId;
+					response.clientAddress = session.getSocketAddress();
+					response.mtuSize = session.getMTUSize();
+					response.encode();
+
+					session.sendRaw(response);
+					session.setMTUSize(request.mtuSize);
+					session.setSessionId(request.clientId);
 					session.setState(SessionState.CONNECTING_2);
-					session.setSessionId(ccrt.clientId);
-					session.setMTUSize(ccrt.mtuSize);
-
-					ConnectionOpenReplyTwo scrt = new ConnectionOpenReplyTwo();
-					scrt.serverId = this.serverId;
-					scrt.clientAddress = session.getSystemAddress();
-					scrt.mtuSize = session.getMTUSize();
-					scrt.useSecurity = 0x00;
-					scrt.encode();
-
-					session.sendRaw(scrt);
 				}
 			}
 		}
@@ -221,9 +204,8 @@ public class RakNetServer implements RakNet {
 		}
 
 		// Start scheduler
-		scheduler.scheduleRepeatingTask(new ServerTask(this, handler), 1L);
+		scheduler.scheduleRepeatingTask(new RakNetServerTask(this, handler), RakNetServerTask.TICK);
 		scheduler.start();
-
 		this.running = true;
 	}
 
@@ -236,49 +218,6 @@ public class RakNetServer implements RakNet {
 		RakNetServerThread thread = new RakNetServerThread(this);
 		thread.start();
 		return thread;
-	}
-
-	public static void main(String[] args) {
-		RakNetOptions options = new RakNetOptions();
-		options.serverPort = 19132;
-		options.maximumTransferSize = 4096;
-		options.broadcastName = "MCPE;A RakNet Server;60;0.14.2;0;10";
-
-		RakNetServer server = new RakNetServer(options);
-		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				ClientSession session = (ClientSession) parameters[0];
-				System.out.println("Client from " + session.getAddress() + " with client ID " + session.getSessionId()
-						+ " has connected to the server!");
-			}
-
-		});
-		server.addHook(Hook.PACKET_RECEIVED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				ClientSession session = (ClientSession) parameters[0];
-				EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-
-				System.out.println("Received game packet from " + session.getAddress() + " with ID: "
-						+ encapsulated.convertPayload().getId());
-			}
-
-		});
-		server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				ClientSession session = (ClientSession) parameters[0];
-				String reason = (String) parameters[1];
-				System.out.println(
-						"Client from " + session.getAddress() + " disconnected for reason: \"" + reason + "\"");
-			}
-
-		});
-		server.startServer();
 	}
 
 }

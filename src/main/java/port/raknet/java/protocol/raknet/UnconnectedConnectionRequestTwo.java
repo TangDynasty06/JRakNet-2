@@ -1,27 +1,28 @@
 package port.raknet.java.protocol.raknet;
 
-import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.SystemAddress;
+import java.net.InetSocketAddress;
 
-public class ConnectionOpenRequestTwo extends Packet {
+import port.raknet.java.protocol.Packet;
+
+public class UnconnectedConnectionRequestTwo extends Packet {
 
 	public boolean magic;
-	public SystemAddress address;
+	public InetSocketAddress clientAddress;
 	public short mtuSize;
 	public long clientId;
 
-	public ConnectionOpenRequestTwo(Packet packet) {
+	public UnconnectedConnectionRequestTwo(Packet packet) {
 		super(packet);
 	}
 
-	public ConnectionOpenRequestTwo() {
-		super(ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_2);
+	public UnconnectedConnectionRequestTwo() {
+		super(ID_UNCONNECTED_CONNECTION_REQUEST_2);
 	}
 
 	@Override
 	public void encode() {
 		this.putMagic();
-		this.putAddress(address);
+		this.putAddress(clientAddress);
 		this.putShort(mtuSize);
 		this.putLong(clientId);
 	}
@@ -29,7 +30,7 @@ public class ConnectionOpenRequestTwo extends Packet {
 	@Override
 	public void decode() {
 		this.magic = this.checkMagic();
-		this.address = this.getAddress();
+		this.clientAddress = this.getAddress();
 		this.mtuSize = this.getShort();
 		this.clientId = this.getLong();
 	}

@@ -4,13 +4,15 @@
 
   <groupId>port.raknet</groupId>
   <artifactId>java</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0-ALPHA</version>
   <packaging>jar</packaging>
 
-  <name>java</name>
-  <url>http://maven.apache.org</url>
+  <name>JRakNet</name>
+  <url>http://github.com/MarfGamer/JRakNet</url>
 
   <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -28,4 +30,5 @@
 	  <version>5.0.0.Alpha2</version>
     </dependency>
   </dependencies>
+  
 </project>

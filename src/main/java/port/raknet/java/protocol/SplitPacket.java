@@ -2,8 +2,8 @@ package port.raknet.java.protocol;
 
 import java.util.ArrayList;
 
-import port.raknet.java.protocol.raknet.CustomPacket;
-import port.raknet.java.protocol.raknet.EncapsulatedPacket;
+import port.raknet.java.protocol.raknet.internal.CustomPacket;
+import port.raknet.java.protocol.raknet.internal.EncapsulatedPacket;
 import port.raknet.java.utils.ArrayUtils;
 
 public class SplitPacket {

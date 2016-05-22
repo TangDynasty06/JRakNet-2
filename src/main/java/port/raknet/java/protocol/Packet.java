@@ -1,5 +1,6 @@
 package port.raknet.java.protocol;
 
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -108,15 +109,14 @@ public class Packet implements RakNet {
 		return new String(data);
 	}
 
-	public SystemAddress getAddress() {
+	public InetSocketAddress getAddress() {
 		short version = this.getUByte();
 		if (version == 4) {
 			String address = ((~this.getByte()) & 0xFF) + "." + ((~this.getByte()) & 0xFF) + "."
 					+ ((~this.getByte()) & 0xFF) + "." + ((~this.getByte()) & 0xFF);
 			int port = this.getUShort();
-			return new SystemAddress(address, port, version);
+			return new InetSocketAddress(address, port);
 		} else if (version == 6) {
-			// TODO: IPv6 Decode
 			throw new UnsupportedOperationException("Can't read IPv6 address: Not Implemented");
 		} else {
 			throw new UnsupportedOperationException("Can't read IPv" + version + " address: unknown");
@@ -200,16 +200,20 @@ public class Packet implements RakNet {
 		return this;
 	}
 
-	public void putAddress(SystemAddress address) {
-		this.putUByte((byte) address.getVersion());
-		for (String part : address.getIpAddress().split(Pattern.quote("."))) {
+	public void putAddress(InetSocketAddress address) {
+		this.putUByte(4);
+		for (String part : address.getHostString().split(Pattern.quote("."))) {
 			this.putByte((byte) ((byte) ~(Integer.parseInt(part)) & 0xFF));
 		}
 		this.putUShort(address.getPort());
 	}
+	
+	public void putAddress(String address, int port) {
+		this.putAddress(new InetSocketAddress(address, port));
+	}
 
 	public byte[] array() {
-		return buffer.array();
+		return Arrays.copyOfRange(buffer.array(), 0, buffer.writerIndex());
 	}
 
 	public int size() {

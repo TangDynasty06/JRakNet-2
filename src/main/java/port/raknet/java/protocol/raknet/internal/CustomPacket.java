@@ -1,4 +1,4 @@
-package port.raknet.java.protocol.raknet;
+package port.raknet.java.protocol.raknet.internal;
 
 import java.util.ArrayList;
 

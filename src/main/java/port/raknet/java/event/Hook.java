@@ -34,7 +34,7 @@ public enum Hook {
 	 * Received whenever a session is officially connected <br>
 	 * <br>
 	 * Parameter 0: The RakNetSession (RakNetSession)<br>
-	 * Parameter 1: The time the client connected (long)
+	 * Parameter 1: The time the session connected (long)
 	 */
 	SESSION_CONNECTED,
 
@@ -43,8 +43,8 @@ public enum Hook {
 	 * <br>
 	 * 
 	 * Parameter 0: The RakNetSession (RakNetSession)<br>
-	 * Parameter 1: The reason the client was disconnected (String)<br>
-	 * Parameter 2: The time the client disconnected (long)
+	 * Parameter 1: The reason the session was disconnected (String)<br>
+	 * Parameter 2: The time the session disconnected (long)
 	 */
 	SESSION_DISCONNECTED,
 

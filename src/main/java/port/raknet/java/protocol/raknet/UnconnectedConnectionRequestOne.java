@@ -2,18 +2,18 @@ package port.raknet.java.protocol.raknet;
 
 import port.raknet.java.protocol.Packet;
 
-public class ConnectionOpenRequestOne extends Packet {
+public class UnconnectedConnectionRequestOne extends Packet {
 
 	public boolean magic;
 	public short protocol;
 	public short mtuSize;
 
-	public ConnectionOpenRequestOne(Packet packet) {
+	public UnconnectedConnectionRequestOne(Packet packet) {
 		super(packet);
 	}
 
-	public ConnectionOpenRequestOne() {
-		super(ID_UNCONNECTED_OPEN_CONNECTION_REQUEST_1);
+	public UnconnectedConnectionRequestOne() {
+		super(ID_UNCONNECTED_CONNECTION_REQUEST_1);
 	}
 
 	@Override

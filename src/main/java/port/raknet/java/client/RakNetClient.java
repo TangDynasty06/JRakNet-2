@@ -14,36 +14,43 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import port.raknet.java.RakNet;
 import port.raknet.java.RakNetOptions;
-import port.raknet.java.client.task.AdvertiseTask;
-import port.raknet.java.client.task.ClientTask;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.SystemAddress;
-import port.raknet.java.protocol.raknet.ClientHandshake;
-import port.raknet.java.protocol.raknet.ConnectionOpenReplyOne;
-import port.raknet.java.protocol.raknet.ConnectionOpenReplyTwo;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestOne;
-import port.raknet.java.protocol.raknet.ConnectionOpenRequestTwo;
-import port.raknet.java.protocol.raknet.StatusResponse;
+import port.raknet.java.protocol.raknet.ConnectedConnectRequest;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyOne;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyTwo;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestOne;
+import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestTwo;
 import port.raknet.java.scheduler.RakNetScheduler;
 import port.raknet.java.session.ServerSession;
 import port.raknet.java.session.SessionState;
 
+/**
+ * A RakNet client instance, used to connect to RakNet servers
+ *
+ * @author Trent Summerlin
+ */
 public class RakNetClient implements RakNet {
 
+	// Thread data
 	private boolean running;
 
+	// Client data
+	private SessionState state;
 	private final long clientId;
 	private final RakNetOptions options;
 	private final RakNetScheduler scheduler;
 	private final RakNetClientHandler handler;
 	private final HashMap<Hook, HookRunnable> hooks;
 	private final HashMap<Long, String> advertisers;
-	private SessionState state;
+
+	// Server and channel data
+	private ServerSession session;
 	private volatile Channel channel;
 
 	public RakNetClient(RakNetOptions options) {
+		this.state = SessionState.DISCONNECTED;
 		this.clientId = new Random().nextLong();
 		this.options = options;
 		this.handler = new RakNetClientHandler(this);
@@ -51,9 +58,8 @@ public class RakNetClient implements RakNet {
 		if (options.maximumTransferSize % 2 != 0) {
 			throw new RuntimeException("Invalid transfer size, must be divisble by 2!");
 		}
-		this.advertisers = new HashMap<Long, String>();
-		this.state = SessionState.DISCONNECTED;
 		this.hooks = Hook.getHooks();
+		this.advertisers = new HashMap<Long, String>();
 	}
 
 	/**
@@ -93,12 +99,87 @@ public class RakNetClient implements RakNet {
 	}
 
 	/**
+	 * Sets the session using the specified values
+	 * 
+	 * @param sender
+	 * @param serverId
+	 * @param mtuSize
+	 */
+	private void addSession(InetSocketAddress sender, long serverId, short mtuSize) {
+		ServerSession session = new ServerSession(channel, sender, this);
+		session.setSessionId(serverId);
+		session.setMTUSize(mtuSize);
+		this.session = session;
+	}
+
+	/**
+	 * Leaves the current session
+	 * 
+	 * @param reason
+	 */
+	public void removeSession(String reason) {
+		this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
+		this.session = null;
+	}
+
+	/**
 	 * Returns the current server session
 	 * 
 	 * @return ServerSession
 	 */
 	public ServerSession getSession() {
-		return handler.getSession();
+		return this.session;
+	}
+
+	/**
+	 * Returns the address the client is bound to
+	 * 
+	 * @return InetSocketAddress
+	 */
+	public InetSocketAddress getLocalAddress() {
+		return (InetSocketAddress) channel.localAddress();
+	}
+
+	/**
+	 * Returns all the servers that have advertised to the client
+	 * 
+	 * @return long[]
+	 */
+	public long[] getAdvertisers() {
+		long[] servers = new long[advertisers.size()];
+		Long[] boxed = advertisers.keySet().toArray(new Long[advertisers.size()]);
+		for (int i = 0; i < servers.length; i++) {
+			servers[i] = boxed[i].longValue();
+		}
+		return servers;
+	}
+
+	/**
+	 * Returns all the advertisements have advertised to the client
+	 * 
+	 * @return
+	 */
+	public String[] getAdvertisements() {
+		return advertisers.values().toArray(new String[advertisers.size()]);
+	}
+
+	/**
+	 * Returns an advertisement based on it's serverId
+	 * 
+	 * @param serverId
+	 * @return
+	 */
+	public String getAdvertisement(long serverId) {
+		return advertisers.get(serverId);
+	}
+
+	/**
+	 * Removes an advertisement based on it's serverId
+	 * 
+	 * @param serverId
+	 */
+	public void removeAdvertiser(long serverId) {
+		advertisers.remove(serverId);
 	}
 
 	/**
@@ -177,103 +258,56 @@ public class RakNetClient implements RakNet {
 	 */
 	public void handleRaw(Packet packet, InetSocketAddress sender) {
 		short pid = packet.getId();
-		System.out.println("Received raw packet: " + pid);
-		if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REPLY_1) {
+		if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
 			if (state == SessionState.CONNECTING_1) {
-				ConnectionOpenReplyOne scoro = new ConnectionOpenReplyOne(packet);
-				scoro.decode();
+				UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne(packet);
+				response.decode();
 
-				if (scoro.magic == true) {
-					ServerSession session = new ServerSession(channel, sender, this);
-					session.setSessionId(scoro.serverId);
-					session.setMTUSize(scoro.mtuSize);
-					handler.setSession(session);
+				if (response.magic == true) {
+					this.addSession(sender, response.serverId, response.mtuSize);
 
-					ConnectionOpenRequestTwo ccort = new ConnectionOpenRequestTwo();
-					ccort.address = this.convertLocalAddress();
-					ccort.clientId = this.clientId;
-					ccort.mtuSize = scoro.mtuSize;
-					ccort.encode();
+					UnconnectedConnectionRequestTwo request = new UnconnectedConnectionRequestTwo();
+					request.clientAddress = this.getLocalAddress();
+					request.mtuSize = response.mtuSize;
+					request.clientId = this.clientId;
+					request.encode();
 
-					this.sendRaw(sender, packet);
+					session.sendRaw(request);
 					this.state = SessionState.CONNECTING_2;
 				}
 			}
-		} else if (pid == ID_UNCONNECTED_OPEN_CONNECTION_REPLY_2) {
+		} else if (pid == ID_UNCONNECTED_CONNECTION_REPLY_2) {
 			if (state == SessionState.CONNECTING_2) {
-				ConnectionOpenReplyTwo scort = new ConnectionOpenReplyTwo(packet);
-				scort.decode();
+				UnconnectedConnectionReplyTwo response = new UnconnectedConnectionReplyTwo(packet);
+				response.decode();
 
-				if (scort.magic == true) {
-					// Most of the data here is the same, so don't bother
-					ClientHandshake handshake = new ClientHandshake();
-					handshake.address = this.convertLocalAddress();
-					handshake.sendPing = new Random().nextLong();
-					handshake.sendPong = new Random().nextLong();
-					handshake.encode();
+				if (response.magic == true) {
+					ConnectedConnectRequest request = new ConnectedConnectRequest();
+					request.clientId = this.clientId;
+					request.timestamp = System.currentTimeMillis();
+					request.encode();
 
-					ServerSession session = handler.getSession();
-					session.sendPacket(handshake);
+					session.sendPacket(request);
 					this.state = SessionState.HANDSHAKING;
 				}
 			}
-		} else if (pid == ID_INCOMPATIBLE_PROTOCOL_VERSION) {
-			if (state.getOrder() >= SessionState.CONNECTING_1.getOrder()
-					&& state.getOrder() <= SessionState.CONNECTING_2.getOrder() && handler.getSession() != null) {
-				this.executeHook(Hook.SESSION_DISCONNECTED, handler.getSession(), "Incompatible protocol",
-						System.currentTimeMillis());
-				this.state = SessionState.DISCONNECTED;
-				handler.setSession(null);
-			}
-		} else if (pid == ID_UNCONNECTED_STATUS_RESPONSE) {
-			StatusResponse response = new StatusResponse(packet);
-			response.decode();
+		} else if (pid == ID_UNCONNECTED_PONG) {
 
-			if (response.magic == true) {
-				advertisers.put(response.serverId, response.identifier);
-			}
 		}
-
-		// TODO: Get packets for login sending correctly
 	}
 
 	/**
 	 * Connects to the specified address
 	 */
 	public void connect(String address, int port) {
-		ConnectionOpenRequestOne cocro = new ConnectionOpenRequestOne();
-		cocro.protocol = RakNet.NETWORK_PROTOCOL;
-		cocro.mtuSize = (short) options.maximumTransferSize;
-		cocro.encode();
+		UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
+		request.protocol = RakNet.NETWORK_PROTOCOL;
+		request.mtuSize = (short) options.maximumTransferSize;
+		request.encode();
 
-		this.sendRaw(address, port, cocro);
+		this.sendRaw(address, port, request);
 		this.state = SessionState.CONNECTING_1;
-	}
-
-	/**
-	 * Cancels a connection to the server
-	 */
-	public void cancelConnect() {
-		Packet disconnected = new Packet(ID_CONNECTED_CANCEL_CONNECTION);
-		handler.getSession().sendPacket(disconnected);
-		// TODO: Finish this method
-	}
-
-	/**
-	 * Converts the client's local address to a SystemAdress
-	 * 
-	 * @return SystemAddress
-	 */
-	private SystemAddress convertLocalAddress() {
-		try {
-			String localAddress = InetAddress.getLocalHost().getHostAddress();
-			int localPort = ((InetSocketAddress) channel.localAddress()).getPort();
-			System.out.println(localAddress + ":" + localPort);
-			return new SystemAddress(localAddress, localPort, 4);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+		// TODO: Repeatedly send 0x05 until we get a response
 	}
 
 	/**
@@ -301,17 +335,16 @@ public class RakNetClient implements RakNet {
 					.option(ChannelOption.SO_RCVBUF, options.maximumTransferSize)
 					.option(ChannelOption.SO_SNDBUF, options.maximumTransferSize).handler(handler);
 
-			this.channel = b.bind(options.serverPort).sync().channel();
+			this.channel = b.bind(new InetSocketAddress(InetAddress.getLocalHost(), 0)).sync().channel();
 		} catch (Exception e) {
 			group.shutdownGracefully();
 			e.printStackTrace();
 		}
 
 		// Start scheduler
-		scheduler.scheduleRepeatingTask(new ClientTask(this, handler), 1L);
-		scheduler.scheduleRepeatingTask(new AdvertiseTask(this), 1000L);
+		scheduler.scheduleRepeatingTask(new RakNetClientTask(this), RakNetClientTask.TICK);
+		scheduler.scheduleRepeatingTask(new RakNetAdvertiseTask(this), RakNetAdvertiseTask.TICK);
 		scheduler.start();
-
 		this.running = true;
 	}
 
@@ -324,17 +357,6 @@ public class RakNetClient implements RakNet {
 		RakNetClientThread thread = new RakNetClientThread(this);
 		thread.start();
 		return thread;
-	}
-
-	public static void main(String[] args) {
-		RakNetOptions options = new RakNetOptions();
-		RakNetClient client = new RakNetClient(options);
-		client.startThreadedClient();
-
-		while (!client.isReady())
-			;
-		System.out.println("Client ready!");
-		client.connect("192.168.1.14", 19132);
 	}
 
 }

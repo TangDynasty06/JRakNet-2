@@ -18,11 +18,16 @@ import port.raknet.java.exception.UnexpectedPacketException;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.SplitPacket;
-import port.raknet.java.protocol.SystemAddress;
-import port.raknet.java.protocol.raknet.Acknowledge;
-import port.raknet.java.protocol.raknet.CustomPacket;
-import port.raknet.java.protocol.raknet.EncapsulatedPacket;
+import port.raknet.java.protocol.raknet.internal.Acknowledge;
+import port.raknet.java.protocol.raknet.internal.CustomPacket;
+import port.raknet.java.protocol.raknet.internal.EncapsulatedPacket;
 
+/**
+ * Represents a session in RakNet, used by the internal handlers to easily track
+ * data and send packets which normally require much more data to send
+ *
+ * @author Trent Summerlin
+ */
 public abstract class RakNetSession implements RakNet {
 
 	// Channel data
@@ -45,7 +50,6 @@ public abstract class RakNetSession implements RakNet {
 	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
 
 	// Acknowledge data
-	private final HashMap<Integer, CustomPacket> reliableQueue;
 	private final HashMap<Integer, CustomPacket> recoveryQueue;
 
 	public RakNetSession(Channel channel, InetSocketAddress address) {
@@ -54,7 +58,6 @@ public abstract class RakNetSession implements RakNet {
 		this.sendIndex = new int[32];
 		this.receiveIndex = new int[32];
 		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
-		this.reliableQueue = new HashMap<Integer, CustomPacket>();
 		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
 	}
 
@@ -86,15 +89,6 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the client's remote address as a <code>SystemAddress</code>
-	 * 
-	 * @return SystemAddress
-	 */
-	public SystemAddress getSystemAddress() {
-		return SystemAddress.fromSocketAddress(address);
-	}
-
-	/**
 	 * Returns the sessions's ID
 	 * 
 	 * @return long
@@ -113,7 +107,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the client's MTU size
+	 * Returns the session's MTU size
 	 * 
 	 * @return short
 	 */
@@ -122,7 +116,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Sets the client's MTU size
+	 * Sets the session's MTU size
 	 * 
 	 * @param mtuSize
 	 */
@@ -184,9 +178,6 @@ public abstract class RakNetSession implements RakNet {
 			// Send CustomPacket and update Acknowledge queues
 			this.sendRaw(custom);
 			recoveryQueue.put(custom.seqNumber, custom);
-			if (encapsulated.reliability.isReliable()) {
-				reliableQueue.put(custom.seqNumber, custom);
-			}
 		}
 	}
 
@@ -220,33 +211,6 @@ public abstract class RakNetSession implements RakNet {
 	 */
 	public final void sendRaw(Packet packet) {
 		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
-	}
-
-	/**
-	 * Resends each in the queue that has not yet been acknowledged
-	 */
-	public final void resendACK() {
-		for (CustomPacket custom : reliableQueue.values()) {
-			this.sendRaw(custom);
-		}
-	}
-
-	/**
-	 * Removes all ACK packet from the ACKQueue found in the ACK packet
-	 * 
-	 * @param ack
-	 * @throws UnexpectedPacketException
-	 */
-	public final void checkACK(Acknowledge ack) throws UnexpectedPacketException {
-		if (ack.getId() == ID_ACK) {
-			int[] packets = ack.packets;
-			for (int i = 0; i < packets.length; i++) {
-				reliableQueue.remove(packets[i]);
-				recoveryQueue.remove(packets[i]);
-			}
-		} else {
-			throw new UnexpectedPacketException(ID_ACK, ack.getId());
-		}
 	}
 
 	/**

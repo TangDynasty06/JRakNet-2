@@ -1,19 +1,20 @@
 package port.raknet.java.protocol.raknet;
 
+import java.net.InetSocketAddress;
+
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.SystemAddress;
 
-public class ServerHandshake extends Packet {
+public class ConnectedServerHandshake extends Packet {
 
-	public SystemAddress clientAddress;
-	public long sendPing;
-	public long sendPong;
+	public InetSocketAddress clientAddress;
+	public long clientId;
+	public long timestamp;
 
-	public ServerHandshake(Packet packet) {
+	public ConnectedServerHandshake(Packet packet) {
 		super(packet);
 	}
 
-	public ServerHandshake() {
+	public ConnectedServerHandshake() {
 		super(ID_CONNECTED_SERVER_HANDSHAKE);
 	}
 
@@ -22,10 +23,10 @@ public class ServerHandshake extends Packet {
 		this.putAddress(clientAddress);
 		this.putShort(0);
 		for (int i = 0; i < 10; i++) {
-			this.putAddress(new SystemAddress("255.255.255.255", 19132, 4));
+			this.putAddress("255.255.255.255", 19132);
 		}
-		this.putLong(sendPing);
-		this.putLong(sendPong);
+		this.putLong(clientId);
+		this.putLong(timestamp);
 	}
 
 	@Override
@@ -35,8 +36,8 @@ public class ServerHandshake extends Packet {
 		for (int i = 0; i < 10; i++) {
 			this.getAddress(); // Unknown use
 		}
-		this.sendPing = this.getLong();
-		this.sendPong = this.getLong();
+		this.clientId = this.getLong();
+		this.timestamp = this.getLong();
 	}
 
 }

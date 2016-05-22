@@ -4,41 +4,28 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import port.raknet.java.RakNet;
-import port.raknet.java.event.Hook;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.raknet.Acknowledge;
-import port.raknet.java.protocol.raknet.CustomPacket;
+import port.raknet.java.protocol.raknet.internal.Acknowledge;
+import port.raknet.java.protocol.raknet.internal.CustomPacket;
 import port.raknet.java.session.ServerSession;
 
+/**
+ * The internal Netty handler for the client, handles ACK, NACK, and
+ * CustomPackets on its own
+ *
+ * @author Trent Summerlin
+ */
 public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetClient client;
-	private ServerSession session;
 
 	public RakNetClientHandler(RakNetClient client) {
 		this.client = client;
 	}
 
-	/**
-	 * Returns the current ServerSession
-	 * 
-	 * @return ServerSession
-	 */
-	public ServerSession getSession() {
-		return this.session;
-	}
-
-	public void setSession(ServerSession session) {
-		this.session = session;
-	}
-
-	public void removeSession(String reason) {
-		client.executeHook(Hook.SESSION_DISCONNECTED, session);
-		this.session = null;
-	}
-
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+		ServerSession session = client.getSession();
 		Packet packet = new Packet(msg.content().retain());
 		short pid = packet.getId();
 
@@ -57,7 +44,6 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			if (session != null) {
 				Acknowledge ack = new Acknowledge(packet);
 				ack.decode();
-				session.checkACK(ack);
 			}
 		} else if (pid == ID_NACK) {
 			if (session != null) {
