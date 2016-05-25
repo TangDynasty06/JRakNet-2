@@ -31,11 +31,6 @@ public class EncapsulatedPacket implements Bytable {
 	// Packet payload
 	public byte[] payload;
 
-	/**
-	 * Only used by the handler if the packet is ordered
-	 */
-	public int seqNumber = -1;
-
 	public void encode(ByteBuf buffer) {
 		buffer.writeByte((byte) ((reliability.asByte() << 5) | (split ? FLAG_SPLIT : 0)));
 		buffer.writeShort((payload.length * 8) & 0xFFFF);
@@ -78,7 +73,8 @@ public class EncapsulatedPacket implements Bytable {
 			this.splitId = buffer.readShort();
 			this.splitIndex = buffer.readInt();
 		}
-
+		
+		
 		this.payload = new byte[length];
 		buffer.readBytes(payload);
 	}

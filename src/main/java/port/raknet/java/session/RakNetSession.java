@@ -45,20 +45,19 @@ public abstract class RakNetSession implements RakNet {
 
 	// Queue data
 	private int splitId;
-	private int[] sendIndex;
+	private int sendMessageIndex;
+	private int[] sendOrderIndex;
 	private int[] receiveIndex;
-	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
-
-	// Acknowledge data
 	private final HashMap<Integer, CustomPacket> recoveryQueue;
+	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
 
 	public RakNetSession(Channel channel, InetSocketAddress address) {
 		this.channel = channel;
 		this.address = address;
-		this.sendIndex = new int[32];
+		this.sendOrderIndex = new int[32];
 		this.receiveIndex = new int[32];
-		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
 		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
+		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
 	}
 
 	/**
@@ -148,8 +147,8 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Sends an EncapsulatedPacket, will split automatically if the packet is
-	 * larger than the MTU
+	 * Sends an EncapsulatedPacket, will automatically split packets if
+	 * necessary.
 	 * 
 	 * @param channel
 	 * @param packet
@@ -170,7 +169,20 @@ public abstract class RakNetSession implements RakNet {
 		for (EncapsulatedPacket encapsulated : toSend) {
 			// Create CustomPacket and set data
 			CustomPacket custom = new CustomPacket();
-			encapsulated.orderIndex = this.sendIndex[encapsulated.orderChannel]++;
+
+			if (packet.reliability.isReliable()) {
+				encapsulated.messageIndex = sendMessageIndex++;
+			} else {
+				encapsulated.messageIndex = 0;
+			}
+
+			if (packet.reliability.isOrdered() || packet.reliability.isSequenced()) {
+				encapsulated.orderIndex = this.sendOrderIndex[encapsulated.orderChannel]++;
+			} else {
+				encapsulated.orderChannel = 0;
+				encapsulated.orderIndex = 0;
+			}
+
 			custom.seqNumber = this.sendSeqNumber++;
 			custom.packets.add(encapsulated);
 			custom.encode();
@@ -192,16 +204,6 @@ public abstract class RakNetSession implements RakNet {
 		encapsulated.reliability = reliability;
 		encapsulated.payload = packet.array();
 		this.sendEncapsulated(encapsulated);
-	}
-
-	/**
-	 * Sends a packet with the specified packet and reliability
-	 * <code>RELIABILITY_ORDERED</code>
-	 * 
-	 * @param packet
-	 */
-	public final void sendPacket(Packet packet) {
-		this.sendPacket(Reliability.RELIABLE_ORDERED, packet);
 	}
 
 	/**
@@ -265,13 +267,12 @@ public abstract class RakNetSession implements RakNet {
 		// Handle packet order based on it's reliability
 		Reliability reliability = encapsulated.reliability;
 
-		// TODO: ORDERED
-		if (reliability.isSequenced()) {
+		if (reliability.isOrdered()) {
+			// TODO: Ordered packets
+		} else if (reliability.isSequenced()) {
 			if (encapsulated.orderIndex < receiveIndex[encapsulated.orderChannel]) {
 				return; // Packet is old, no error needed
 			}
-		}
-		if (reliability.isOrdered() || reliability.isSequenced()) {
 			receiveIndex[encapsulated.orderChannel] = encapsulated.orderIndex + 1;
 		}
 

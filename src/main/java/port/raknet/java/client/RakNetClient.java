@@ -17,6 +17,7 @@ import port.raknet.java.RakNetOptions;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
 import port.raknet.java.protocol.Packet;
+import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.raknet.ConnectedConnectRequest;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyOne;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -25,6 +26,7 @@ import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestTwo;
 import port.raknet.java.scheduler.RakNetScheduler;
 import port.raknet.java.session.ServerSession;
 import port.raknet.java.session.SessionState;
+import port.raknet.java.utils.RakNetUtils;
 
 /**
  * A RakNet client instance, used to connect to RakNet servers
@@ -32,6 +34,8 @@ import port.raknet.java.session.SessionState;
  * @author Trent Summerlin
  */
 public class RakNetClient implements RakNet {
+
+	private static final InetAddress subnet = RakNetUtils.getSubnetMask();
 
 	// Thread data
 	private boolean running;
@@ -246,7 +250,9 @@ public class RakNetClient implements RakNet {
 	 * @param packet
 	 */
 	public void broadcastRaw(Packet packet) {
-		this.sendRaw("255.255.255.255", options.broadcastPort, packet);
+		if (subnet != null) {
+			this.sendRaw(subnet.getHostAddress(), options.broadcastPort, packet);
+		}
 	}
 
 	/**
@@ -287,7 +293,7 @@ public class RakNetClient implements RakNet {
 					request.timestamp = System.currentTimeMillis();
 					request.encode();
 
-					session.sendPacket(request);
+					session.sendPacket(Reliability.UNRELIABLE, request);
 					this.state = SessionState.HANDSHAKING;
 				}
 			}

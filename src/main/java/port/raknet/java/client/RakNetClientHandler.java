@@ -54,6 +54,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		} else {
 			client.handleRaw(packet, msg.sender());
 		}
+		msg.release(msg.refCnt() - 1);
 	}
 
 	@Override

@@ -49,6 +49,9 @@ public interface RakNet {
 	// Reliability
 	public static final short ID_ACK = 0xC0;
 	public static final short ID_NACK = 0xA0;
+	
+	// Channels
+	public static final short MAX_CHANNELS = 32;
 
 	// Keep-alive and latency testing
 	public static final short ID_CONNECTED_PING = 0x00;

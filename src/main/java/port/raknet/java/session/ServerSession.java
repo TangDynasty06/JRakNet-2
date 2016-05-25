@@ -6,6 +6,7 @@ import io.netty.channel.Channel;
 import port.raknet.java.client.RakNetClient;
 import port.raknet.java.event.Hook;
 import port.raknet.java.protocol.Packet;
+import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.raknet.ConnectedClientHandshake;
 import port.raknet.java.protocol.raknet.ConnectedServerHandshake;
 import port.raknet.java.protocol.raknet.internal.EncapsulatedPacket;
@@ -28,7 +29,7 @@ public class ServerSession extends RakNetSession {
 	public void handleEncapsulated(EncapsulatedPacket encapsulated) {
 		Packet packet = encapsulated.convertPayload();
 		short pid = packet.getId();
-		
+
 		if (client.getState() == SessionState.HANDSHAKING) {
 			if (pid == ID_CONNECTED_SERVER_HANDSHAKE) {
 				ConnectedServerHandshake serverHandshake = new ConnectedServerHandshake(packet);
@@ -40,7 +41,7 @@ public class ServerSession extends RakNetSession {
 				clientHandshake.serverTimestamp = System.currentTimeMillis();
 				clientHandshake.encode();
 
-				this.sendPacket(clientHandshake);
+				this.sendPacket(Reliability.UNRELIABLE, clientHandshake);
 				client.setState(SessionState.CONNECTED);
 				client.executeHook(Hook.SESSION_CONNECTED, this, System.currentTimeMillis());
 			}

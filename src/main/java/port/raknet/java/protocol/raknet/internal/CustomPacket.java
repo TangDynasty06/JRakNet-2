@@ -26,10 +26,8 @@ public class CustomPacket extends Packet {
 
 	@Override
 	public void encode() {
-		int encoded = 0;
 		this.putLTriad(seqNumber);
 		for (EncapsulatedPacket packet : packets) {
-			packet.messageIndex = encoded++;
 			packet.encode(buffer);
 		}
 	}

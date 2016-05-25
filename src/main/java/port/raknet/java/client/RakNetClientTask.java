@@ -1,6 +1,7 @@
 package port.raknet.java.client;
 
 import port.raknet.java.RakNetOptions;
+import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.raknet.ConnectedPing;
 import port.raknet.java.session.ServerSession;
 import port.raknet.java.session.SessionState;
@@ -11,9 +12,9 @@ import port.raknet.java.session.SessionState;
  * @author Trent Summerlin
  */
 public class RakNetClientTask implements Runnable {
-	
+
 	public static final long TICK = 1000L;
-	
+
 	private final RakNetClient client;
 	private long pingId = 0L;
 
@@ -31,7 +32,7 @@ public class RakNetClientTask implements Runnable {
 				ConnectedPing ping = new ConnectedPing();
 				ping.pingId = pingId++;
 				ping.encode();
-				session.sendPacket(ping);
+				session.sendPacket(Reliability.UNRELIABLE, ping);
 			} else if (session.getLastReceiveTime() > options.timeout) {
 				if (client.getState() == SessionState.CONNECTED) {
 					client.removeSession("Timeout");

@@ -6,11 +6,16 @@ package port.raknet.java.protocol;
  * @author Trent Summerlin
  */
 public enum Reliability {
-
-	UNRELIABLE(0, false, false, false), UNRELIABLE_SEQUENCED(1, false, false, true), RELIABLE(2, true, false,
-			false), RELIABLE_ORDERED(3, true, true, false), RELIABLE_SEQUENCED(4, true, false,
-					true), UNRELIABLE_WITH_ACK_RECEIPT(5, false, false, false), RELIABLE_WITH_ACK_RECEIPT(6, true,
-							false, false), RELIABLE_ORDERED_WITH_ACK_RECEIPT(7, true, true, false);
+	
+	// For the love of god, do not CTRL+SHIFT+F this
+	UNRELIABLE(0, false, false, false),
+	UNRELIABLE_SEQUENCED(1, false, false, true),
+	RELIABLE(2, true, false, false),
+	RELIABLE_ORDERED(3, true, true, false),
+	RELIABLE_SEQUENCED(4, true, false, true),
+	UNRELIABLE_WITH_ACK_RECEIPT(5, false, false, false),
+	RELIABLE_WITH_ACK_RECEIPT(6, true, false, false),
+	RELIABLE_ORDERED_WITH_ACK_RECEIPT(7, true, true, false);
 
 	private final byte reliability;
 	private final boolean reliable;

@@ -135,6 +135,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 				server.handleRaw(packet, session);
 			}
 		}
+		msg.release(msg.refCnt() - 1);
 	}
 
 	@Override

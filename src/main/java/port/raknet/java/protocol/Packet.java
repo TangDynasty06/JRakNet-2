@@ -15,7 +15,7 @@ public class Packet implements RakNet {
 			(byte) 0x34, (byte) 0x56, (byte) 0x78 };
 
 	protected final ByteBuf buffer;
-	private final short id;
+	protected short id;
 
 	public Packet(int id) {
 		this.buffer = Unpooled.buffer();
@@ -207,7 +207,7 @@ public class Packet implements RakNet {
 		}
 		this.putUShort(address.getPort());
 	}
-	
+
 	public void putAddress(String address, int port) {
 		this.putAddress(new InetSocketAddress(address, port));
 	}

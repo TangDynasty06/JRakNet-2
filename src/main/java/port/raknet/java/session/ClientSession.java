@@ -5,8 +5,9 @@ import java.net.InetSocketAddress;
 import io.netty.channel.Channel;
 import port.raknet.java.event.Hook;
 import port.raknet.java.protocol.Packet;
-import port.raknet.java.protocol.raknet.ConnectedConnectRequest;
+import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.raknet.ConnectedClientHandshake;
+import port.raknet.java.protocol.raknet.ConnectedConnectRequest;
 import port.raknet.java.protocol.raknet.ConnectedPing;
 import port.raknet.java.protocol.raknet.ConnectedPong;
 import port.raknet.java.protocol.raknet.ConnectedServerHandshake;
@@ -64,7 +65,7 @@ public class ClientSession extends RakNetSession {
 				ConnectedPong sp = new ConnectedPong();
 				sp.pingId = cp.pingId;
 				sp.encode();
-				this.sendPacket(sp);
+				this.sendPacket(Reliability.UNRELIABLE, sp);
 			}
 		} else if (pid == ID_CONNECTED_PONG) {
 			// Ignore, keep-alive only
@@ -79,7 +80,7 @@ public class ClientSession extends RakNetSession {
 				scha.timestamp = System.currentTimeMillis();
 				scha.encode();
 
-				this.sendPacket(scha);
+				this.sendPacket(Reliability.UNRELIABLE, scha);
 				this.setState(SessionState.HANDSHAKING);
 			}
 		} else if (pid == ID_CONNECTED_CLIENT_HANDSHAKE) {

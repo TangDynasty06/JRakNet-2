@@ -1,6 +1,8 @@
 package port.raknet.java.utils;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.util.Random;
 
 import io.netty.bootstrap.Bootstrap;
@@ -170,6 +172,31 @@ public class RakNetUtils implements RakNet {
 	 */
 	public static boolean isServerCompatible(String address, int port) {
 		return isServerCompatible(address, port, 1000L);
+	}
+
+	/**
+	 * Return's the machines current subnet mask
+	 * 
+	 * @return InetAddress
+	 */
+	public static InetAddress getSubnetMask() {
+		try {
+			NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+			int prefix = networkInterface.getInterfaceAddresses().get(1).getNetworkPrefixLength();
+			int shiftby = (1 << 31);
+			for (int i = prefix - 1; i > 0; i--) {
+				shiftby = (shiftby >> 1);
+			}
+			String maskString = Integer.toString((shiftby >> 24) & 255) + "." + Integer.toString((shiftby >> 16) & 255)
+					+ "." + Integer.toString((shiftby >> 8) & 255) + "." + Integer.toString(shiftby & 255);
+			return InetAddress.getByName(maskString);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(getSubnetMask());
 	}
 
 	private static class BootstrapHandler extends SimpleChannelInboundHandler<DatagramPacket> {
