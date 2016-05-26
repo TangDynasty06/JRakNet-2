@@ -18,7 +18,7 @@ public enum Hook {
 	 * <br>
 	 * Parameter 1: The broadcast message (String)
 	 */
-	STATUS_REQUEST,
+	SERVER_PING,
 
 	/**
 	 * Received whenever the server receives a legacy status request <br>

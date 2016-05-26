@@ -9,12 +9,6 @@ import port.raknet.java.protocol.raknet.internal.Acknowledge;
 import port.raknet.java.protocol.raknet.internal.CustomPacket;
 import port.raknet.java.session.ServerSession;
 
-/**
- * The internal Netty handler for the client, handles ACK, NACK, and
- * CustomPackets on its own
- *
- * @author Trent Summerlin
- */
 public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetClient client;
@@ -23,9 +17,10 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		this.client = client;
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-		ServerSession session = client.getSession();
+		ServerSession session = null;
 		Packet packet = new Packet(msg.content().retain());
 		short pid = packet.getId();
 

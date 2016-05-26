@@ -123,9 +123,9 @@ public class RakNetServer implements RakNet {
 				UnconnectedPong pong = new UnconnectedPong();
 				pong.pingId = ping.pingId;
 				pong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.STATUS_REQUEST, options.serverIdentifier,
-						session.getAddress());
-				pong.identifier = parameters[0].toString();
+				Object[] parameters = this.executeHook(Hook.SERVER_PING, session.getAddress(),
+						options.serverIdentifier);
+				pong.identifier = parameters[1].toString();
 				pong.encode();
 
 				session.sendRaw(pong);
@@ -138,7 +138,8 @@ public class RakNetServer implements RakNet {
 				UnconnectedLegacyPong legacyPong = new UnconnectedLegacyPong();
 				legacyPong.pingId = legacyPing.pingId;
 				legacyPong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.LEGACY_PING, options.serverIdentifier, session.getAddress());
+				Object[] parameters = this.executeHook(Hook.LEGACY_PING, options.serverIdentifier,
+						session.getAddress());
 				legacyPong.data = parameters[0].toString();
 				legacyPong.encode();
 
