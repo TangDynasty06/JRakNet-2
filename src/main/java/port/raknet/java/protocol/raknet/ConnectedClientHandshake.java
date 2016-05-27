@@ -6,7 +6,7 @@ import port.raknet.java.protocol.Packet;
 
 public class ConnectedClientHandshake extends Packet {
 
-	public InetSocketAddress address;
+	public InetSocketAddress clientAddress;
 	public long serverTimestamp;
 	public long timestamp;
 
@@ -20,7 +20,7 @@ public class ConnectedClientHandshake extends Packet {
 
 	@Override
 	public void encode() {
-		this.putAddress(address);
+		this.putAddress(clientAddress);
 		for (int i = 0; i < 10; i++) {
 			this.putAddress("255.255.255.255", 19132);
 		}
@@ -30,7 +30,7 @@ public class ConnectedClientHandshake extends Packet {
 
 	@Override
 	public void decode() {
-		this.address = this.getAddress();
+		this.clientAddress = this.getAddress();
 		for (int i = 0; i < 10; i++) {
 			this.getAddress();
 		}

@@ -202,7 +202,7 @@ public class Packet implements RakNet {
 
 	public void putAddress(InetSocketAddress address) {
 		this.putUByte(4);
-		for (String part : address.getHostString().split(Pattern.quote("."))) {
+		for (String part : address.getAddress().getHostAddress().split(Pattern.quote("."))) {
 			this.putByte((byte) ((byte) ~(Integer.parseInt(part)) & 0xFF));
 		}
 		this.putUShort(address.getPort());

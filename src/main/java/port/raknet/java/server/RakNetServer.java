@@ -17,6 +17,7 @@ import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyOne;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyTwo;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestOne;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestTwo;
+import port.raknet.java.protocol.raknet.UnconnectedIncompatibleProtocol;
 import port.raknet.java.protocol.raknet.UnconnectedLegacyPing;
 import port.raknet.java.protocol.raknet.UnconnectedLegacyPong;
 import port.raknet.java.protocol.raknet.UnconnectedPing;
@@ -36,6 +37,7 @@ public class RakNetServer implements RakNet {
 	private boolean running;
 
 	private final long serverId;
+	private final long timestamp;
 	private final RakNetOptions options;
 	private final RakNetScheduler scheduler;
 	private final RakNetServerHandler handler;
@@ -43,13 +45,14 @@ public class RakNetServer implements RakNet {
 
 	public RakNetServer(RakNetOptions options) {
 		this.serverId = new Random().nextLong();
+		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.handler = new RakNetServerHandler(this, 10);
-		this.scheduler = new RakNetScheduler(options);
+		this.scheduler = new RakNetScheduler();
 		if (options.maximumTransferSize % 2 != 0) {
 			throw new RuntimeException("Invalid transfer size, must be divisble by 2!");
 		}
-		this.hooks = Hook.getHooks();
+		this.hooks = new HashMap<Hook, HookRunnable>();
 	}
 
 	/**
@@ -68,6 +71,15 @@ public class RakNetServer implements RakNet {
 	 */
 	public long getServerId() {
 		return this.serverId;
+	}
+
+	/**
+	 * Returns the server timestamp
+	 * 
+	 * @return long
+	 */
+	public long getTimestamp() {
+		return this.timestamp;
 	}
 
 	/**
@@ -99,9 +111,8 @@ public class RakNetServer implements RakNet {
 	 * @return Object[]
 	 */
 	public Object[] executeHook(Hook type, Object... parameters) {
-		HookRunnable hook = hooks.get(type);
-		if (hook != null) {
-			hook.run(parameters);
+		if (hooks.containsKey(type)) {
+			hooks.get(type).run(parameters);
 		}
 		return parameters;
 	}
@@ -159,6 +170,14 @@ public class RakNetServer implements RakNet {
 
 					session.sendRaw(response);
 					session.setState(SessionState.CONNECTING_1);
+				} else if (request.protocol != NETWORK_PROTOCOL) {
+					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol();
+					incompatible.protocol = NETWORK_PROTOCOL;
+					incompatible.serverId = this.serverId;
+					incompatible.encode();
+
+					session.sendRaw(incompatible);
+					handler.removeSession(session, "Incompatible protocol");
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {

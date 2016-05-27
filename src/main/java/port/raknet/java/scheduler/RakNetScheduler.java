@@ -2,8 +2,6 @@ package port.raknet.java.scheduler;
 
 import java.util.ArrayList;
 
-import port.raknet.java.RakNetOptions;
-
 /**
  * Used to run tasks at certain times
  *
@@ -17,7 +15,7 @@ public class RakNetScheduler extends Thread {
 	private final ArrayList<RakNetTask> tasks;
 	private final ArrayList<RakNetRepeatingTask> repeating;
 
-	public RakNetScheduler(RakNetOptions options) {
+	public RakNetScheduler() {
 		this.tasks = new ArrayList<RakNetTask>();
 		this.repeating = new ArrayList<RakNetRepeatingTask>();
 	}

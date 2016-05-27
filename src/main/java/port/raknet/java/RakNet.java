@@ -27,6 +27,7 @@ public interface RakNet {
 	public static final short ID_CONNECTED_SERVER_HANDSHAKE = 0x10;
 	public static final short ID_CONNECTED_CLIENT_HANDSHAKE = 0x13;
 	public static final short ID_CONNECTED_CANCEL_CONNECTION = 0x15;
+	public static final short ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL = 0x1A;
 
 	// Custom Packets
 	public static final short ID_CUSTOM_0 = 0x80;
@@ -49,7 +50,7 @@ public interface RakNet {
 	// Reliability
 	public static final short ID_ACK = 0xC0;
 	public static final short ID_NACK = 0xA0;
-	
+
 	// Channels
 	public static final short MAX_CHANNELS = 32;
 

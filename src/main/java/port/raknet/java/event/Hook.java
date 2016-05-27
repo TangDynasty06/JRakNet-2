@@ -1,7 +1,5 @@
 package port.raknet.java.event;
 
-import java.util.HashMap;
-
 /**
  * Executed when a certain event occurs within the server that might be
  * desirable by the programmer to change it's outcome
@@ -55,18 +53,14 @@ public enum Hook {
 	 * Parameter 0: The RakNetSession (RakNetSession)<br>
 	 * Parameter 1: The EncapsulatedPacket (EncapsulatedPacket)
 	 */
-	PACKET_RECEIVED;
+	PACKET_RECEIVED,
 
-	public static HashMap<Hook, HookRunnable> getHooks() {
-		HashMap<Hook, HookRunnable> hooks = new HashMap<Hook, HookRunnable>();
-		for (Hook hook : Hook.values()) {
-			hooks.put(hook, new HookRunnable() {
-				@Override
-				public void run(Object... parameters) {
-				}
-			});
-		}
-		return hooks;
-	}
+	/**
+	 * Received whenever an exception occurs<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The exception
+	 */
+	EXCEPTION_CAUGHT;
 
 }

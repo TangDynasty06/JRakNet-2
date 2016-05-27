@@ -130,7 +130,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			} else if (pid == ID_NACK) {
 				Acknowledge nack = new Acknowledge(packet);
 				nack.decode();
-				session.checkNACK(nack);
+				session.handleNack(nack);
 			} else {
 				server.handleRaw(packet, session);
 			}

@@ -8,6 +8,19 @@ package port.raknet.java;
  */
 public class RakNetOptions {
 
+	public RakNetOptions() {
+		
+	}
+
+	public RakNetOptions(int serverPort, String serverIdentifier) {
+		this.serverPort = serverPort;
+		this.serverIdentifier = serverIdentifier;
+	}
+
+	public RakNetOptions(int broadcastPort) {
+		this.broadcastPort = broadcastPort;
+	}
+
 	/**
 	 * The port the server runs on
 	 */

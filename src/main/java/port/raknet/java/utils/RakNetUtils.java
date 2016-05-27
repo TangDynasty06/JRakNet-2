@@ -194,10 +194,6 @@ public class RakNetUtils implements RakNet {
 			return null;
 		}
 	}
-	
-	public static void main(String[] args) {
-		System.out.println(getSubnetMask());
-	}
 
 	private static class BootstrapHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 

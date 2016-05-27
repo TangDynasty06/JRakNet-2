@@ -212,7 +212,11 @@ public abstract class RakNetSession implements RakNet {
 	 * @param packet
 	 */
 	public final void sendRaw(Packet packet) {
-		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
+		try {
+			channel.writeAndFlush(new DatagramPacket(packet.buffer(), address)).sync();
+		} catch (InterruptedException e) {
+			// A bad packet send is not the end of the world
+		}
 	}
 
 	/**
@@ -221,7 +225,7 @@ public abstract class RakNetSession implements RakNet {
 	 * @param nack
 	 * @throws UnexpectedPacketException
 	 */
-	public final void checkNACK(Acknowledge nack) throws UnexpectedPacketException {
+	public final void handleNack(Acknowledge nack) throws UnexpectedPacketException {
 		if (nack.getId() == ID_NACK) {
 			int[] packets = nack.packets;
 			for (int i = 0; i < packets.length; i++) {

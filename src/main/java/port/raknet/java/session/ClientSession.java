@@ -76,8 +76,8 @@ public class ClientSession extends RakNetSession {
 
 				ConnectedServerHandshake scha = new ConnectedServerHandshake();
 				scha.clientAddress = this.getSocketAddress();
-				scha.clientId = cchr.timestamp;
-				scha.timestamp = System.currentTimeMillis();
+				scha.timestamp = cchr.timestamp;
+				scha.serverTimestamp = server.getTimestamp();
 				scha.encode();
 
 				this.sendPacket(Reliability.UNRELIABLE, scha);

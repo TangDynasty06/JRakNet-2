@@ -7,8 +7,8 @@ import port.raknet.java.protocol.Packet;
 public class ConnectedServerHandshake extends Packet {
 
 	public InetSocketAddress clientAddress;
-	public long clientId;
 	public long timestamp;
+	public long serverTimestamp;
 
 	public ConnectedServerHandshake(Packet packet) {
 		super(packet);
@@ -25,8 +25,8 @@ public class ConnectedServerHandshake extends Packet {
 		for (int i = 0; i < 10; i++) {
 			this.putAddress("255.255.255.255", 19132);
 		}
-		this.putLong(clientId);
 		this.putLong(timestamp);
+		this.putLong(serverTimestamp);
 	}
 
 	@Override
@@ -36,8 +36,8 @@ public class ConnectedServerHandshake extends Packet {
 		for (int i = 0; i < 10; i++) {
 			this.getAddress(); // Unknown use
 		}
-		this.clientId = this.getLong();
 		this.timestamp = this.getLong();
+		this.serverTimestamp = this.getLong();
 	}
 
 }
