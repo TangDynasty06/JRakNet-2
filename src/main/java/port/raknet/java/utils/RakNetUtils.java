@@ -3,7 +3,6 @@ package port.raknet.java.utils;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.util.Random;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,8 +25,7 @@ import port.raknet.java.protocol.raknet.UnconnectedPong;
  */
 public class RakNetUtils implements RakNet {
 
-	private static final Random generator = new Random();
-	private static final int mtuSize = 538;
+	private static int pingId;
 
 	/**
 	 * Used to quickly send a packet to a sever and get it's response, do
@@ -46,7 +44,8 @@ public class RakNetUtils implements RakNet {
 			Bootstrap b = new Bootstrap();
 			BootstrapHandler handler = new BootstrapHandler();
 			b.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
-					.option(ChannelOption.SO_RCVBUF, mtuSize).option(ChannelOption.SO_SNDBUF, mtuSize).handler(handler);
+					.option(ChannelOption.SO_RCVBUF, MINIMUM_TRANSFER_UNIT)
+					.option(ChannelOption.SO_SNDBUF, MINIMUM_TRANSFER_UNIT).handler(handler);
 			b.bind(0).sync().channel()
 					.writeAndFlush(new DatagramPacket(send.buffer(), new InetSocketAddress(address, port)));
 
@@ -90,7 +89,7 @@ public class RakNetUtils implements RakNet {
 	 */
 	public static String getServerIdentifier(String address, int port, long timeout) {
 		UnconnectedPing psr = new UnconnectedPing();
-		psr.pingId = generator.nextLong();
+		psr.pingId = pingId++;
 		psr.encode();
 
 		Packet sprr = createBootstrapAndSend(address, port, psr, timeout);
@@ -127,7 +126,7 @@ public class RakNetUtils implements RakNet {
 	 */
 	public static boolean isServerCompatible(String address, int port, int protocol, long timeout) {
 		UnconnectedConnectionRequestOne ccoro = new UnconnectedConnectionRequestOne();
-		ccoro.mtuSize = mtuSize;
+		ccoro.mtuSize = MINIMUM_TRANSFER_UNIT;
 		ccoro.protocol = (short) protocol;
 		ccoro.encode();
 

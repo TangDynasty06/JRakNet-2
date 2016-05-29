@@ -1,5 +1,7 @@
 package port.raknet.java.server;
 
+import port.raknet.java.exception.RakNetException;
+
 /**
  * Starts the server on it's own thread
  *
@@ -15,7 +17,12 @@ public class RakNetServerThread extends Thread {
 
 	@Override
 	public void run() {
-		server.startServer();
+		try {
+			server.startServer();
+		} catch (RakNetException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 
 }

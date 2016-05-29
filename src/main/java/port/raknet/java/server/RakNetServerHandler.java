@@ -23,13 +23,11 @@ import port.raknet.java.session.ClientSession;
 public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetServer server;
-	private final int maxSessions;
 	private final ArrayList<InetSocketAddress> blocked;
 	private final HashMap<InetSocketAddress, ClientSession> sessions;
 
-	public RakNetServerHandler(RakNetServer server, int maxSessions) {
+	public RakNetServerHandler(RakNetServer server) {
 		this.server = server;
-		this.maxSessions = maxSessions;
 		this.blocked = new ArrayList<InetSocketAddress>();
 		this.sessions = new HashMap<InetSocketAddress, ClientSession>();
 	}
@@ -106,11 +104,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			// Verify session
 			InetSocketAddress address = msg.sender();
 			if (!sessions.containsKey(address)) {
-				if (sessions.size() < maxSessions) {
-					sessions.put(msg.sender(), new ClientSession(ctx.channel(), address, this, server));
-				} else {
-					System.err.println("Too many clients, rejected " + address + "!");
-				}
+				sessions.put(msg.sender(), new ClientSession(ctx.channel(), address, this, server));
 			}
 
 			// Get session

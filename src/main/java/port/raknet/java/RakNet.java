@@ -12,6 +12,9 @@ public interface RakNet {
 	// Protocol version
 	public static final int NETWORK_PROTOCOL = 7;
 
+	// Transfer size
+	public static final int MINIMUM_TRANSFER_UNIT = 530;
+
 	// Status
 	public static final short ID_UNCONNECTED_PING = 0x01;
 	public static final short ID_UNCONNECTED_LEGACY_PING = 0x02;

@@ -55,12 +55,4 @@ public enum Hook {
 	 */
 	PACKET_RECEIVED,
 
-	/**
-	 * Received whenever an exception occurs<br>
-	 * <br>
-	 * 
-	 * Parameter 0: The exception
-	 */
-	EXCEPTION_CAUGHT;
-
 }

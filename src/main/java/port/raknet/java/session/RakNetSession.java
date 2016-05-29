@@ -237,7 +237,7 @@ public abstract class RakNetSession implements RakNet {
 		}
 	}
 
-	public final void handleCustom0(CustomPacket custom) {
+	public final void handleCustom0(CustomPacket custom) throws RakNetException {
 		// Make sure none of the packets were lost
 		if (custom.seqNumber - receiveSeqNumber > 1) {
 			Acknowledge nack = new Acknowledge(ID_NACK);
@@ -258,12 +258,7 @@ public abstract class RakNetSession implements RakNet {
 
 		// Handle EncapsulatedPackets
 		for (EncapsulatedPacket encapsulated : custom.packets) {
-			try {
-				this.handleEncapsulated0(encapsulated);
-			} catch (RakNetException e) {
-				// e.printStackTrace();
-				break;
-			}
+			this.handleEncapsulated0(encapsulated);
 		}
 	}
 

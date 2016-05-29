@@ -13,4 +13,8 @@ public class RakNetException extends Exception {
 		super(reason);
 	}
 
+	public RakNetException(Throwable cause) {
+		super(cause.getLocalizedMessage());
+	}
+
 }

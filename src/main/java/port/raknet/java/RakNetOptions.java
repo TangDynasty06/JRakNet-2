@@ -9,7 +9,6 @@ package port.raknet.java;
 public class RakNetOptions {
 
 	public RakNetOptions() {
-		
 	}
 
 	public RakNetOptions(int serverPort, String serverIdentifier) {
@@ -37,9 +36,11 @@ public class RakNetOptions {
 	public int broadcastPort = this.serverPort;
 
 	/**
-	 * The maximum amount of data the session can send and receive
+	 * The maximum amount of data <code>RakNetServer</code> will allow for a
+	 * client, this is what <code>RakNetClient</code> will start at as it
+	 * gradually decreases until a response is received
 	 */
-	public int maximumTransferSize = 2048;
+	public int maximumTransferUnit = 2048;
 
 	/**
 	 * How long until a session is disconnected from the server due to

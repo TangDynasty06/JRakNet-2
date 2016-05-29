@@ -69,8 +69,8 @@ public class ServerSession extends RakNetSession {
 			pong.encode();
 
 			this.sendPacket(Reliability.UNRELIABLE, pong);
-		} else {
-			System.out.println("Received game packet 0x" + Integer.toHexString(packet.getId()).toUpperCase());
+		} else if (client.getState() == SessionState.CONNECTED) {
+			client.executeHook(Hook.PACKET_RECEIVED, client.getSession(), encapsulated);
 		}
 	}
 

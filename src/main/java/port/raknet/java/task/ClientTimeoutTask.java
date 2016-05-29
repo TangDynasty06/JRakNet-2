@@ -1,25 +1,26 @@
-package port.raknet.java.server;
+package port.raknet.java.task;
 
 import port.raknet.java.RakNetOptions;
 import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.raknet.ConnectedPing;
+import port.raknet.java.server.RakNetServer;
+import port.raknet.java.server.RakNetServerHandler;
 import port.raknet.java.session.ClientSession;
-import port.raknet.java.session.SessionState;
 
 /**
- * The tracker for the server, used to make sure clients do not timeout
+ * Used by <code>RakNetServer</code> to make sure clients do not timeout
  *
  * @author Trent Summerlin
  */
-public class RakNetServerTask implements Runnable {
-	
+public class ClientTimeoutTask implements Runnable {
+
 	public static final long TICK = 1000L;
-	
+
 	private final RakNetServer server;
 	private final RakNetServerHandler handler;
 	private long pingId;
 
-	public RakNetServerTask(RakNetServer server, RakNetServerHandler handler) {
+	public ClientTimeoutTask(RakNetServer server, RakNetServerHandler handler) {
 		this.server = server;
 		this.handler = handler;
 	}
@@ -37,9 +38,7 @@ public class RakNetServerTask implements Runnable {
 				session.sendPacket(Reliability.UNRELIABLE, ping);
 			}
 			if (session.getLastReceiveTime() >= options.timeout) {
-				if (session.getState() == SessionState.CONNECTED) {
-					handler.removeSession(session, "Timeout");
-				}
+				handler.removeSession(session, "Timeout");
 			}
 		}
 	}

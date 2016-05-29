@@ -2,6 +2,8 @@ package port.raknet.java.client;
 
 import java.net.InetSocketAddress;
 
+import port.raknet.java.exception.RakNetException;
+
 /**
  * Starts a <code>RakNetClient</code> on it's own thread
  *
@@ -19,7 +21,12 @@ public class RakNetClientThread extends Thread {
 
 	@Override
 	public void run() {
-		client.connect(address);
+		try {
+			client.connect(address);
+		} catch (RakNetException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 
 }

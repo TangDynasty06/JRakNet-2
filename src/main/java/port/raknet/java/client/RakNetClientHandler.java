@@ -11,7 +11,7 @@ import port.raknet.java.protocol.raknet.internal.Acknowledge;
 import port.raknet.java.protocol.raknet.internal.CustomPacket;
 
 /**
- * The internal Netty handler for the client, send ACK, NACK, and CustomPackets
+ * The internal Netty handler for the client, sends ACK, NACK, and CustomPackets
  * to the client
  *
  * @author Trent Summerlin
@@ -19,6 +19,7 @@ import port.raknet.java.protocol.raknet.internal.CustomPacket;
 public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetClient client;
+	protected volatile boolean foundMtu;
 
 	public RakNetClientHandler(RakNetClient client) {
 		this.client = client;
@@ -29,6 +30,13 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		InetSocketAddress sender = msg.sender();
 		Packet packet = new Packet(msg.content().retain());
 		short pid = packet.getId();
+
+		// Make sure the server has accepted the MTU
+		if (!foundMtu) {
+			if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
+				this.foundMtu = true;
+			}
+		}
 
 		// Handle internal packets here
 		if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {

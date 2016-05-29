@@ -12,6 +12,7 @@ import port.raknet.java.RakNet;
 import port.raknet.java.RakNetOptions;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
+import port.raknet.java.exception.RakNetException;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyOne;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -25,6 +26,7 @@ import port.raknet.java.protocol.raknet.UnconnectedPong;
 import port.raknet.java.scheduler.RakNetScheduler;
 import port.raknet.java.session.ClientSession;
 import port.raknet.java.session.SessionState;
+import port.raknet.java.task.ClientTimeoutTask;
 
 /**
  * A RakNet server instance, used to handle the main packets and track
@@ -47,9 +49,9 @@ public class RakNetServer implements RakNet {
 		this.serverId = new Random().nextLong();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
-		this.handler = new RakNetServerHandler(this, 10);
+		this.handler = new RakNetServerHandler(this);
 		this.scheduler = new RakNetScheduler();
-		if (options.maximumTransferSize % 2 != 0) {
+		if (options.maximumTransferUnit % 2 != 0) {
 			throw new RuntimeException("Invalid transfer size, must be divisble by 2!");
 		}
 		this.hooks = new HashMap<Hook, HookRunnable>();
@@ -162,10 +164,10 @@ public class RakNetServer implements RakNet {
 				request.decode();
 
 				if (request.magic == true && request.protocol == NETWORK_PROTOCOL
-						&& request.mtuSize <= options.maximumTransferSize) {
+						&& request.mtuSize <= options.maximumTransferUnit) {
 					UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
 					response.serverId = this.serverId;
-					response.mtuSize = request.mtuSize;
+					response.mtuSize = (short) (request.mtuSize + 46);
 					response.encode();
 
 					session.sendRaw(response);
@@ -204,27 +206,26 @@ public class RakNetServer implements RakNet {
 	/**
 	 * Starts the server
 	 */
-	public void startServer() {
+	public void startServer() throws RakNetException {
 		if (running == true) {
-			throw new RuntimeException("Server is already running!");
+			throw new RakNetException("Server is already running!");
 		}
 
 		// Bind socket and start receiving data
 		EventLoopGroup group = new NioEventLoopGroup();
 		try {
-			Bootstrap b = new Bootstrap();
-			b.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
-					.option(ChannelOption.SO_RCVBUF, options.maximumTransferSize)
-					.option(ChannelOption.SO_SNDBUF, options.maximumTransferSize).handler(handler);
-
-			b.bind(options.serverPort);
+			Bootstrap bootstrap = new Bootstrap();
+			bootstrap.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
+					.option(ChannelOption.SO_SNDBUF, options.maximumTransferUnit)
+					.option(ChannelOption.SO_RCVBUF, options.maximumTransferUnit).handler(handler);
+			bootstrap.bind(options.serverPort);
 		} catch (Exception e) {
 			group.shutdownGracefully();
-			e.printStackTrace();
+			throw new RakNetException(e);
 		}
 
 		// Start scheduler
-		scheduler.scheduleRepeatingTask(new RakNetServerTask(this, handler), RakNetServerTask.TICK);
+		scheduler.scheduleRepeatingTask(new ClientTimeoutTask(this, handler), ClientTimeoutTask.TICK);
 		scheduler.start();
 		this.running = true;
 	}
