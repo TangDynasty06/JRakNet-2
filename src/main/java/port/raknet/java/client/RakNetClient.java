@@ -237,7 +237,7 @@ public class RakNetClient implements RakNet {
 	public void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
-				// TODO
+				session.handleAck(ack);
 			}
 		}
 	}

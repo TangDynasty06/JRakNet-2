@@ -220,6 +220,23 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
+	 * Removes all packets in the ACK packet from the recovery queue, as they
+	 * have been acknowledged by the client already.
+	 * 
+	 * @throws UnexpectedPacketException
+	 * 
+	 */
+	public final void handleAck(Acknowledge ack) throws UnexpectedPacketException {
+		if (ack.getId() == ID_ACK) {
+			for (int packet : ack.packets) {
+				recoveryQueue.remove(packet);
+			}
+		} else {
+			throw new UnexpectedPacketException(ID_ACK, ack.getId());
+		}
+	}
+
+	/**
 	 * Resends all packets with the ID's contained in the NACK packet
 	 * 
 	 * @param nack
@@ -230,7 +247,9 @@ public abstract class RakNetSession implements RakNet {
 			int[] packets = nack.packets;
 			for (int i = 0; i < packets.length; i++) {
 				CustomPacket recovered = recoveryQueue.get(packets[i]);
-				this.sendRaw(recovered);
+				if (recovered != null) {
+					this.sendRaw(recovered);
+				}
 			}
 		} else {
 			throw new UnexpectedPacketException(ID_NACK, nack.getId());

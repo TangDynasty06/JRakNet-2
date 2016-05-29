@@ -25,7 +25,7 @@ public class RakNetServerTest {
 		options.serverIdentifier = "MCPE;_IDENTIFIER_;70;0.14.3;0;10";
 		RakNetServer server = new RakNetServer(options);
 
-		// Client disconnected
+		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
 			@Override
 			public void run(Object... parameters) {
@@ -35,7 +35,7 @@ public class RakNetServerTest {
 			}
 		});
 
-		// Client connected
+		// Packet received
 		server.addHook(Hook.PACKET_RECEIVED, new HookRunnable() {
 			@Override
 			public void run(Object... parameters) {
