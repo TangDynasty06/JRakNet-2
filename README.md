@@ -72,4 +72,7 @@ client.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 
 // Attempt to connect to server
 client.connect(new InetSocketAddress(address, port));
+while(client.getState() != SessionState.CONNECTED); // Wait for client to connect before cancelling connection
+client.cancelConnect();
 ```
+This example attempts to connect to the main [LBSG](http://lbsg.net/) server. When it is connected, it cancels the connection and shuts down.
