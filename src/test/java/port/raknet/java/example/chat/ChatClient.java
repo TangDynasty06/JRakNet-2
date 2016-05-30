@@ -1,3 +1,33 @@
+/*
+ *       _   _____            _      _   _          _   
+ *      | | |  __ \          | |    | \ | |        | |  
+ *      | | | |__) |   __ _  | | __ |  \| |   ___  | |_ 
+ *  _   | | |  _  /   / _` | | |/ / | . ` |  / _ \ | __|
+ * | |__| | | | \ \  | (_| | |   <  | |\  | |  __/ | |_ 
+ *  \____/  |_|  \_\  \__,_| |_|\_\ |_| \_|  \___|  \__|
+ *                                                  
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 Trent Summerlin
+
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.  
+ */
 package port.raknet.java.example.chat;
 
 import java.util.Scanner;
@@ -13,6 +43,12 @@ import port.raknet.java.exception.RakNetException;
 import port.raknet.java.protocol.Reliability;
 import port.raknet.java.session.ServerSession;
 
+/**
+ * Used to connect to a <code>ChatServer</code> as well as sending chat messages
+ * to it along with receive messages from it
+ *
+ * @author Trent Summerlin
+ */
 public class ChatClient {
 
 	private final String username;
@@ -23,6 +59,11 @@ public class ChatClient {
 		this.client = new RakNetClient(new RakNetOptions());
 	}
 
+	/**
+	 * Sends a chat message to the server
+	 * 
+	 * @param message
+	 */
 	public void sendChatMessage(String message) {
 		ServerSession session = client.getSession();
 		if (session != null) {
@@ -34,6 +75,13 @@ public class ChatClient {
 		}
 	}
 
+	/**
+	 * Connects the client to the server
+	 * 
+	 * @param address
+	 * @param port
+	 * @throws RakNetException
+	 */
 	public void connect(String address, int port) throws RakNetException {
 		ChatServerHandler handler = new ChatServerHandler();
 		client.connect(address, port);
@@ -46,6 +94,9 @@ public class ChatClient {
 		client.getSession().sendPacket(Reliability.RELIABLE, login);
 	}
 
+	/**
+	 * Disconnects from the server
+	 */
 	public void quit() {
 		ServerSession session = client.getSession();
 		if (session != null) {
