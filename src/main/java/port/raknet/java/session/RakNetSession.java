@@ -91,7 +91,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the client's remote address
+	 * Returns the session's remote address
 	 * 
 	 * @return InetAddress
 	 */
@@ -100,7 +100,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the client's remote port
+	 * Returns the session's remote port
 	 * 
 	 * @return int
 	 */
@@ -109,7 +109,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the client's remote address as a <code>InetSocketAddress</code>
+	 * Returns the session's remote address as a <code>InetSocketAddress</code>
 	 * 
 	 * @return InetSocketAddress
 	 */
@@ -129,7 +129,7 @@ public abstract class RakNetSession implements RakNet {
 	/**
 	 * Sets the session's ID
 	 * 
-	 * @param clientId
+	 * @param sessionId
 	 */
 	public void setSessionId(long sessionId) {
 		this.sessionId = sessionId;
@@ -154,7 +154,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the last time the a packet was received from the client
+	 * Returns the last time the a packet was received from the session
 	 * 
 	 * @return long
 	 */
@@ -163,14 +163,14 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Updates the <code>lastReceiveTime</code> for the client
+	 * Updates the <code>lastReceiveTime</code> for the session
 	 */
 	public void pushLastReceiveTime(long amount) {
 		this.lastReceiveTime += amount;
 	}
 
 	/**
-	 * Resets the <code>lastReceiveTime</code> for the client
+	 * Resets the <code>lastReceiveTime</code> for the session
 	 */
 	public void resetLastReceiveTime() {
 		this.lastReceiveTime = 0L;
@@ -237,7 +237,7 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Sends raw data to the client
+	 * Sends raw data to the session
 	 * 
 	 * @param packet
 	 */
@@ -251,7 +251,7 @@ public abstract class RakNetSession implements RakNet {
 
 	/**
 	 * Removes all packets in the ACK packet from the recovery queue, as they
-	 * have been acknowledged by the client already.
+	 * have already been acknowledged
 	 * 
 	 * @throws UnexpectedPacketException
 	 * 
@@ -264,6 +264,15 @@ public abstract class RakNetSession implements RakNet {
 		} else {
 			throw new UnexpectedPacketException(ID_ACK, ack.getId());
 		}
+	}
+
+	/**
+	 * Returns all packets that have not yet been Acknowledged
+	 * 
+	 * @return CustomPacket[]
+	 */
+	public final CustomPacket[] getRecoveryQueue() {
+		return this.recoveryQueue.values().toArray(new CustomPacket[recoveryQueue.size()]);
 	}
 
 	/**

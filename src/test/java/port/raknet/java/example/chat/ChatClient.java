@@ -35,7 +35,8 @@ import java.util.Scanner;
 import port.raknet.java.RakNetOptions;
 import port.raknet.java.client.RakNetClient;
 import port.raknet.java.event.Hook;
-import port.raknet.java.example.chat.handler.ChatServerHandler;
+import port.raknet.java.example.chat.handler.ChatServerDisconnectHandler;
+import port.raknet.java.example.chat.handler.ChatServerPacketHandler;
 import port.raknet.java.example.chat.protocol.ChatPacket;
 import port.raknet.java.example.chat.protocol.LoginPacket;
 import port.raknet.java.example.chat.protocol.QuitPacket;
@@ -83,10 +84,9 @@ public class ChatClient {
 	 * @throws RakNetException
 	 */
 	public void connect(String address, int port) throws RakNetException {
-		ChatServerHandler handler = new ChatServerHandler();
 		client.connect(address, port);
-		client.addHook(Hook.PACKET_RECEIVED, handler);
-		client.addHook(Hook.SESSION_DISCONNECTED, handler);
+		client.addHook(Hook.PACKET_RECEIVED, new ChatServerPacketHandler());
+		client.addHook(Hook.SESSION_DISCONNECTED, new ChatServerDisconnectHandler());
 
 		LoginPacket login = new LoginPacket();
 		login.username = this.username;

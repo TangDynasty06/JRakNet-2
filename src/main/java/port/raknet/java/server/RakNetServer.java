@@ -144,7 +144,7 @@ public class RakNetServer implements RakNet {
 	 */
 	public Object[] executeHook(Hook hook, Object... parameters) {
 		if (hooks.containsKey(hook)) {
-			hooks.get(hook).run(hook, parameters);
+			hooks.get(hook).run(parameters);
 		}
 		return parameters;
 	}

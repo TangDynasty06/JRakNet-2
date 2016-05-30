@@ -34,7 +34,8 @@ import java.util.HashMap;
 
 import port.raknet.java.RakNetOptions;
 import port.raknet.java.event.Hook;
-import port.raknet.java.example.chat.handler.ChatClientHandler;
+import port.raknet.java.example.chat.handler.ChatClientDisconnectHandler;
+import port.raknet.java.example.chat.handler.ChatClientPacketHandler;
 import port.raknet.java.example.chat.session.ChatClientSession;
 import port.raknet.java.exception.RakNetException;
 import port.raknet.java.server.RakNetServer;
@@ -139,9 +140,8 @@ public class ChatServer {
 
 		// Create and start server
 		RakNetServer server = new RakNetServer(options);
-		ChatClientHandler handler = new ChatClientHandler(this);
-		server.addHook(Hook.PACKET_RECEIVED, handler);
-		server.addHook(Hook.SESSION_DISCONNECTED, handler);
+		server.addHook(Hook.PACKET_RECEIVED, new ChatClientPacketHandler(this));
+		server.addHook(Hook.SESSION_DISCONNECTED, new ChatClientDisconnectHandler(this));
 		server.startServer();
 		System.out.println("Started server on port " + options.serverPort + "!");
 	}
