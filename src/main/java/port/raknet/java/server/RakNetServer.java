@@ -117,20 +117,20 @@ public class RakNetServer implements RakNet {
 	/**
 	 * Sets the HookRunnable for the specified Hook
 	 * 
-	 * @param type
+	 * @param hook
 	 * @param runnable
 	 */
-	public void addHook(Hook type, HookRunnable runnable) {
-		hooks.put(type, runnable);
+	public void addHook(Hook hook, HookRunnable runnable) {
+		hooks.put(hook, runnable);
 	}
 
 	/**
 	 * Removes the current HookRunnable for the specified Hook
 	 * 
-	 * @param type
+	 * @param hook
 	 */
-	public void removeHook(Hook type) {
-		hooks.put(type, null);
+	public void removeHook(Hook hook) {
+		hooks.remove(hook);
 	}
 
 	/**
@@ -138,13 +138,13 @@ public class RakNetServer implements RakNet {
 	 * Object[] is what has been passed in and possibly modified by the
 	 * HookRunnable
 	 * 
-	 * @param type
+	 * @param hook
 	 * @param parameters
 	 * @return Object[]
 	 */
-	public Object[] executeHook(Hook type, Object... parameters) {
-		if (hooks.containsKey(type)) {
-			hooks.get(type).run(parameters);
+	public Object[] executeHook(Hook hook, Object... parameters) {
+		if (hooks.containsKey(hook)) {
+			hooks.get(hook).run(hook, parameters);
 		}
 		return parameters;
 	}

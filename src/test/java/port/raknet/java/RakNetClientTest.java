@@ -53,7 +53,7 @@ public class RakNetClientTest {
 		// Client disconnected
 		client.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				System.out.println("Client has connected to server with address " + session.getSocketAddress());
 			}
@@ -62,7 +62,7 @@ public class RakNetClientTest {
 		// Client connected
 		client.addHook(Hook.PACKET_RECEIVED, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
 				System.out.println("Received packet from server " + session.getSocketAddress() + " with packet ID: 0x"
@@ -73,7 +73,7 @@ public class RakNetClientTest {
 		// Client disconnected
 		client.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				String reason = parameters[1].toString();
 				System.out.println("Server with address " + session.getSocketAddress()

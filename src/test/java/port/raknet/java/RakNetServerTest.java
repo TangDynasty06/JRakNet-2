@@ -58,7 +58,7 @@ public class RakNetServerTest {
 		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				System.out
 						.println("Client from address " + session.getSocketAddress() + " has connected to the server");
@@ -68,7 +68,7 @@ public class RakNetServerTest {
 		// Packet received
 		server.addHook(Hook.PACKET_RECEIVED, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
 				System.out.println("Received packet from client with address " + session.getSocketAddress()
@@ -79,7 +79,7 @@ public class RakNetServerTest {
 		// Client disconnected
 		server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				String reason = parameters[1].toString();
 				System.out.println("Client from address " + session.getSocketAddress()
@@ -90,7 +90,7 @@ public class RakNetServerTest {
 		// Server has been pinged
 		server.addHook(Hook.SERVER_PING, new HookRunnable() {
 			@Override
-			public void run(Object... parameters) {
+			public void run(Hook hook, Object... parameters) {
 				parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier);
 			}
 		});

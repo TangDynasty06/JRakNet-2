@@ -8,6 +8,7 @@
   <packaging>jar</packaging>
 
   <name>JRakNet</name>
+  <description>A RakNet port to Java</description>
   <url>http://github.com/MarfGamer/JRakNet</url>
 
   <properties>

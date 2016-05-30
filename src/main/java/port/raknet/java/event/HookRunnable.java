@@ -35,8 +35,8 @@ package port.raknet.java.event;
  *
  * @author Trent Summerlin
  */
-public abstract class HookRunnable {
+public interface HookRunnable {
 
-	public abstract void run(Object... parameters);
+	public void run(Hook hook, Object... parameters);
 
 }
