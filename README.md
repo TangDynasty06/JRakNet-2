@@ -34,7 +34,7 @@ server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 // Start server
 server.startServer();
 ```
-This can be tested using a Minecraft: Pocket Edition client, simply launch the game and client on "Play". Then, "A RakNet Server" should pop up, just like when someone else is playing on the same network and their name pops up.
+This can be tested using a Minecraft: Pocket Edition client, simply launch the game and click on "Play". Then, "A RakNet Server" should pop up, just like when someone else is playing on the same network and their name pops up.
 
 
 # How to create a client
