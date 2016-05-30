@@ -76,3 +76,5 @@ while(client.getState() != SessionState.CONNECTED); // Wait for client to connec
 client.cancelConnect();
 ```
 This example attempts to connect to the main [LBSG](http://lbsg.net/) server. When it is connected, it cancels the connection and shuts down.
+
+![JRakNet Banner](http://i.imgur.com/t897jIS.png)
