@@ -58,12 +58,12 @@ public class ServerTimeoutTask implements Runnable {
 		ServerSession session = client.getSession();
 		if (session != null) {
 			session.pushLastReceiveTime(TICK);
-			if (session.getLastReceiveTime() / options.timeout == 0.5) {
+			if ((double) (options.timeout - session.getLastReceiveTime()) / options.timeout <= 0.5) {
 				// Ping ID's do not need to match
 				ConnectedPing ping = new ConnectedPing();
 				ping.pingId = pingId++;
 				ping.encode();
-				session.sendPacket(Reliability.UNRELIABLE, ping);
+				session.sendPacket(Reliability.RELIABLE, ping);
 			}
 			if (session.getLastReceiveTime() >= options.timeout) {
 				client.removeSession("Timeout");

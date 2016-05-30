@@ -99,6 +99,8 @@ public class ServerSession extends RakNetSession {
 			pong.encode();
 
 			this.sendPacket(Reliability.UNRELIABLE, pong);
+		} else if (pid == ID_CONNECTED_PONG) {
+			this.resetLastReceiveTime();
 		} else if (client.getState() == SessionState.CONNECTED) {
 			client.executeHook(Hook.PACKET_RECEIVED, client.getSession(), encapsulated);
 		}

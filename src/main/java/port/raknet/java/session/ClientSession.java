@@ -98,7 +98,7 @@ public class ClientSession extends RakNetSession {
 				this.sendPacket(Reliability.UNRELIABLE, sp);
 			}
 		} else if (pid == ID_CONNECTED_PONG) {
-			// Ignore, keep-alive only
+			this.resetLastReceiveTime();
 		} else if (pid == ID_CONNECTED_CLIENT_CONNECT_REQUEST) {
 			if (this.getState() == SessionState.CONNECTING_2) {
 				ConnectedConnectRequest cchr = new ConnectedConnectRequest(packet);

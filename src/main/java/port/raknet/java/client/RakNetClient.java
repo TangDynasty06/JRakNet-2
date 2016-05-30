@@ -61,8 +61,10 @@ import port.raknet.java.protocol.raknet.UnconnectedConnectionRequestTwo;
 import port.raknet.java.protocol.raknet.UnconnectedIncompatibleProtocol;
 import port.raknet.java.protocol.raknet.internal.Acknowledge;
 import port.raknet.java.protocol.raknet.internal.CustomPacket;
+import port.raknet.java.scheduler.RakNetScheduler;
 import port.raknet.java.session.ServerSession;
 import port.raknet.java.session.SessionState;
+import port.raknet.java.task.ServerTimeoutTask;
 
 /**
  * Used to connect and send data to <code>RakNetServers</code> with ease
@@ -72,9 +74,11 @@ import port.raknet.java.session.SessionState;
 public class RakNetClient implements RakNet {
 
 	// Client data
+	private boolean running;
 	private final long clientId;
 	private final long timestamp;
 	private final RakNetOptions options;
+	private final RakNetScheduler scheduler;
 	private final HashMap<Hook, HookRunnable> hooks;
 
 	// Netty data
@@ -86,6 +90,7 @@ public class RakNetClient implements RakNet {
 		this.clientId = new Random().nextLong();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
+		this.scheduler = new RakNetScheduler();
 		this.hooks = new HashMap<Hook, HookRunnable>();
 	}
 
@@ -333,6 +338,13 @@ public class RakNetClient implements RakNet {
 		} catch (Exception e) {
 			e.printStackTrace();
 			group.shutdownGracefully();
+		}
+
+		// Start scheduler
+		if (running == false) {
+			scheduler.scheduleRepeatingTask(new ServerTimeoutTask(this), ServerTimeoutTask.TICK);
+			scheduler.start();
+			this.running = true;
 		}
 	}
 
