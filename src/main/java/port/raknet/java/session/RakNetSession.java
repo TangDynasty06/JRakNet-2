@@ -242,11 +242,7 @@ public abstract class RakNetSession implements RakNet {
 	 * @param packet
 	 */
 	public final void sendRaw(Packet packet) {
-		try {
-			channel.writeAndFlush(new DatagramPacket(packet.buffer(), address)).sync();
-		} catch (InterruptedException e) {
-			// A bad packet send is not the end of the world
-		}
+		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
 	}
 
 	/**
