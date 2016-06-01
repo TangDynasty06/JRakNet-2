@@ -122,9 +122,7 @@ public class ClientSession extends RakNetSession {
 				server.executeHook(Hook.SESSION_CONNECTED, this, System.currentTimeMillis());
 			}
 		} else if (pid == ID_CONNECTED_CANCEL_CONNECTION) {
-			if (this.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
-				handler.removeSession(this, "Client cancelled connection");
-			}
+			handler.removeSession(this, "Client disconnected");
 		} else if (this.getState() == SessionState.CONNECTED) {
 			server.executeHook(Hook.PACKET_RECEIVED, this, encapsulated);
 		}

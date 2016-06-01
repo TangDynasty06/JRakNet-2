@@ -118,17 +118,17 @@ public class RakNetUtils implements RakNet {
 	 * @return String
 	 */
 	public static String getServerIdentifier(String address, int port, long timeout) {
-		UnconnectedPing psr = new UnconnectedPing();
-		psr.pingId = pingId++;
-		psr.encode();
+		UnconnectedPing ping = new UnconnectedPing();
+		ping.pingId = pingId++;
+		ping.encode();
 
-		Packet sprr = createBootstrapAndSend(address, port, psr, timeout);
+		Packet sprr = createBootstrapAndSend(address, port, ping, timeout);
 		if (sprr != null) {
 			if (sprr.getId() == ID_UNCONNECTED_PONG) {
-				UnconnectedPong spr = new UnconnectedPong(sprr);
-				spr.decode();
-				if (spr.magic == true && spr.pingId == psr.pingId) {
-					return spr.identifier;
+				UnconnectedPong pong = new UnconnectedPong(sprr);
+				pong.decode();
+				if (pong.magic == true && pong.pingId == ping.pingId) {
+					return pong.identifier;
 				}
 			}
 		}
@@ -147,6 +147,35 @@ public class RakNetUtils implements RakNet {
 	}
 
 	/**
+	 * Makes sure the server with the specified address is online
+	 * 
+	 * @param address
+	 * @param port
+	 * @param timeout
+	 * @return boolean
+	 */
+	public static boolean isServerOnline(String address, int port, long timeout) {
+		UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
+		request.mtuSize = MINIMUM_TRANSFER_UNIT;
+		request.protocol = NETWORK_PROTOCOL;
+		request.encode();
+
+		Packet response = createBootstrapAndSend(address, port, request, timeout);
+		return (response != null);
+	}
+
+	/**
+	 * Makes sure the server with the specified address is online
+	 * 
+	 * @param address
+	 * @param port
+	 * @return boolean
+	 */
+	public static boolean isServerOnline(String address, int port) {
+		return isServerOnline(address, port, 1000L);
+	}
+
+	/**
 	 * Makes sure the specified protocol is compatible with the server
 	 * 
 	 * @param address
@@ -155,14 +184,15 @@ public class RakNetUtils implements RakNet {
 	 * @return boolean
 	 */
 	public static boolean isServerCompatible(String address, int port, int protocol, long timeout) {
-		UnconnectedConnectionRequestOne ccoro = new UnconnectedConnectionRequestOne();
-		ccoro.mtuSize = MINIMUM_TRANSFER_UNIT;
-		ccoro.protocol = (short) protocol;
-		ccoro.encode();
+		UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
+		request.mtuSize = MINIMUM_TRANSFER_UNIT;
+		request.protocol = (short) protocol;
+		request.encode();
 
-		Packet scopo = createBootstrapAndSend(address, port, ccoro, timeout);
-		if (scopo != null) {
-			return (scopo.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1);
+		Packet response = createBootstrapAndSend(address, port, request, timeout);
+		if (response != null) {
+			return (response.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1
+					&& response.getId() != ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL);
 		}
 		return false;
 	}

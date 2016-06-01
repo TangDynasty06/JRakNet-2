@@ -201,7 +201,7 @@ public class RakNetClient implements RakNet {
 	 * @param packet
 	 * @param sender
 	 */
-	public void handleRaw(Packet packet, InetSocketAddress sender) throws RakNetException {
+	protected void handleRaw(Packet packet, InetSocketAddress sender) throws RakNetException {
 		short pid = packet.getId();
 		if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
 			if (state == SessionState.CONNECTING_1) {
@@ -255,7 +255,7 @@ public class RakNetClient implements RakNet {
 	 * @param custom
 	 * @param sender
 	 */
-	public void handleCustom(CustomPacket custom, InetSocketAddress sender) throws RakNetException {
+	protected void handleCustom(CustomPacket custom, InetSocketAddress sender) throws RakNetException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleCustom0(custom);
@@ -269,7 +269,7 @@ public class RakNetClient implements RakNet {
 	 * @param ack
 	 * @param sender
 	 */
-	public void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
+	protected void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleAck(ack);
@@ -283,7 +283,7 @@ public class RakNetClient implements RakNet {
 	 * @param nack
 	 * @param sender
 	 */
-	public void handleNack(Acknowledge nack, InetSocketAddress sender) throws UnexpectedPacketException {
+	protected void handleNack(Acknowledge nack, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleNack(nack);
@@ -300,7 +300,7 @@ public class RakNetClient implements RakNet {
 		// Disconnect from current session
 		if (session != null) {
 			if (state != SessionState.CONNECTED) {
-				this.cancelConnect();
+				this.disconnect();
 			}
 			this.removeSession("Disconnected");
 		}
@@ -385,7 +385,7 @@ public class RakNetClient implements RakNet {
 	/**
 	 * Cancels the current connection to the server
 	 */
-	public void cancelConnect() {
+	public void disconnect() {
 		if (session != null) {
 			session.sendPacket(Reliability.UNRELIABLE, new ConnectedCancelConnection());
 		}

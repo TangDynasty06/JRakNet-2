@@ -156,7 +156,7 @@ public class RakNetServer implements RakNet {
 	 * @param packet
 	 * @param session
 	 */
-	public void handleRaw(Packet packet, ClientSession session) {
+	protected void handleRaw(Packet packet, ClientSession session) {
 		short pid = packet.getId();
 		if (pid == ID_UNCONNECTED_PING) {
 			UnconnectedPing ping = new UnconnectedPing(packet);
