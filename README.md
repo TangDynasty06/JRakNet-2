@@ -78,6 +78,6 @@ client.cancelConnect(); // Will change to client.disconnect() in next release
 This example attempts to connect to the main [LBSG](http://lbsg.net/) server. When it is connected, it closes the connection and shuts down.
 
 # Notes
-Some DataPacket ID's are reserved by RakNet, these ID's currently consist of 0x00, 0x03, 0x09, 0x10, 0x13, and 0x15. It is recommended that all ID's for game servers and game clients utilizing this library uses ID's for DataPackets greater than 0x1E. For raw packets, RakNet reserves 0x01, 0x02, 0x05, 0x06, 0x07, 0x08, 0x1A, 0x1C, 0x1D, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0xA0, and 0xC0. It is recommended that game servers and game clients do not use raw packets at all, and instead use DataPackets only.
+Some DataPacket ID's are reserved by RakNet. Because of this, it is recommended that all game packets not relating to RakNet begin with their own special ID, Minecraft: Pocket Edition does this. It is also recommended that game servers and game clients do not use raw packets at all.
 
 ![JRakNet Banner](http://i.imgur.com/t897jIS.png)
