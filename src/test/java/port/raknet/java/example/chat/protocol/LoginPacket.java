@@ -30,18 +30,19 @@
  */
 package port.raknet.java.example.chat.protocol;
 
+import port.raknet.java.exception.UnexpectedPacketException;
 import port.raknet.java.protocol.Packet;
 
-public class LoginPacket extends Packet {
+public class LoginPacket extends ChatPacket {
 
 	public String username;
 
-	public LoginPacket(Packet packet) {
+	public LoginPacket(Packet packet) throws UnexpectedPacketException {
 		super(packet);
 	}
 
 	public LoginPacket() {
-		super(Info.ID_LOGIN);
+		super(ID_LOGIN);
 	}
 
 	@Override

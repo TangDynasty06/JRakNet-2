@@ -32,7 +32,7 @@ package port.raknet.java.example.chat.session;
 
 import java.util.ArrayList;
 
-import port.raknet.java.example.chat.protocol.ChatPacket;
+import port.raknet.java.example.chat.protocol.MessagePacket;
 import port.raknet.java.example.chat.protocol.KickPacket;
 import port.raknet.java.protocol.Reliability;
 import port.raknet.java.session.RakNetSession;
@@ -87,7 +87,7 @@ public class ChatClientSession {
 	 * @param message
 	 */
 	public void sendMessage(String message) {
-		ChatPacket chat = new ChatPacket();
+		MessagePacket chat = new MessagePacket();
 		chat.message = message;
 		chat.encode();
 		session.sendPacket(Reliability.RELIABLE, chat);

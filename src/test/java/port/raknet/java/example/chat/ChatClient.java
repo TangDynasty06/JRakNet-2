@@ -37,7 +37,7 @@ import port.raknet.java.client.RakNetClient;
 import port.raknet.java.event.Hook;
 import port.raknet.java.example.chat.handler.ChatServerDisconnectHandler;
 import port.raknet.java.example.chat.handler.ChatServerPacketHandler;
-import port.raknet.java.example.chat.protocol.ChatPacket;
+import port.raknet.java.example.chat.protocol.MessagePacket;
 import port.raknet.java.example.chat.protocol.LoginPacket;
 import port.raknet.java.example.chat.protocol.QuitPacket;
 import port.raknet.java.exception.RakNetException;
@@ -68,7 +68,7 @@ public class ChatClient {
 	public void sendChatMessage(String message) {
 		ServerSession session = client.getSession();
 		if (session != null) {
-			ChatPacket chat = new ChatPacket();
+			MessagePacket chat = new MessagePacket();
 			chat.message = message;
 			chat.encode();
 

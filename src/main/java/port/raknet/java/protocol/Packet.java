@@ -50,7 +50,7 @@ public class Packet implements RakNet {
 			(byte) 0x34, (byte) 0x56, (byte) 0x78 };
 
 	protected final ByteBuf buffer;
-	protected short id;
+	protected final short id;
 
 	public Packet(int id) {
 		this.buffer = Unpooled.buffer();
@@ -58,14 +58,19 @@ public class Packet implements RakNet {
 		this.putUByte(id);
 	}
 
-	public Packet(Packet packet) {
-		this.buffer = packet.buffer;
-		this.id = packet.id;
+	public Packet(int id, int identifier) {
+		this(identifier);
+		this.putUByte(id);
 	}
 
 	public Packet(ByteBuf buffer) {
 		this.buffer = buffer;
 		this.id = this.getUByte();
+	}
+
+	public Packet(Packet packet) {
+		this.buffer = packet.buffer;
+		this.id = packet.id;
 	}
 
 	public final short getId() {

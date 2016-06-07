@@ -71,8 +71,9 @@ public class RakNetServerTest {
 			public void run(Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-				System.out.println("Received packet from client with address " + session.getSocketAddress()
-						+ " with packet ID: 0x" + Integer.toHexString(encapsulated.payload[0] & 0xFF).toUpperCase());
+				System.out.println(
+						"Received packet from client with address " + session.getSocketAddress() + " with packet ID: 0x"
+								+ Integer.toHexString(encapsulated.convertPayload().getId()).toUpperCase());
 			}
 		});
 

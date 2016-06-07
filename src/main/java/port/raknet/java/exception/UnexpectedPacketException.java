@@ -42,14 +42,30 @@ public class UnexpectedPacketException extends RakNetException {
 
 	private static final long serialVersionUID = -3793043367215871424L;
 
+	private final int requiredId;
+
 	public UnexpectedPacketException(int requiredId, int retrievedId) {
 		super("Packet must be " + RakNet.getName(requiredId) + " but instead got a "
 				+ (RakNet.getName(retrievedId) != null ? RakNet.getName(retrievedId) : "unknown packet") + "!");
+		this.requiredId = requiredId;
+	}
+
+	public UnexpectedPacketException(int requiredId) {
+		super("Packet must be 0x" + Integer.toHexString(requiredId).toUpperCase() + "!");
+		this.requiredId = requiredId;
+	}
+
+	public int getRequiredId() {
+		return this.requiredId;
+	}
+
+	public String getRequiredString() {
+		return ("0x" + Integer.toHexString(requiredId).toUpperCase());
 	}
 
 	@Override
 	public String getLocalizedMessage() {
-		return "Packet has wrong ID";
+		return "Packet ID must be " + Integer.toHexString(requiredId).toUpperCase() + "!";
 	}
 
 }

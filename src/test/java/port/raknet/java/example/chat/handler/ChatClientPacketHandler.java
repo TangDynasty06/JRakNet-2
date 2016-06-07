@@ -32,11 +32,12 @@ package port.raknet.java.example.chat.handler;
 
 import port.raknet.java.event.HookRunnable;
 import port.raknet.java.example.chat.ChatServer;
-import port.raknet.java.example.chat.protocol.ChatPacket;
 import port.raknet.java.example.chat.protocol.Info;
 import port.raknet.java.example.chat.protocol.KickPacket;
 import port.raknet.java.example.chat.protocol.LoginPacket;
+import port.raknet.java.example.chat.protocol.MessagePacket;
 import port.raknet.java.example.chat.session.ChatClientSession;
+import port.raknet.java.exception.UnexpectedPacketException;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.Reliability;
 import port.raknet.java.protocol.raknet.internal.EncapsulatedPacket;
@@ -60,36 +61,44 @@ public class ChatClientPacketHandler implements HookRunnable, Info {
 		RakNetSession session = (RakNetSession) parameters[0];
 		EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
 		Packet packet = encapsulated.convertPayload();
-		short pid = packet.getId();
-
 		ChatClientSession client = server.getSession(session);
-		if (pid == ID_LOGIN) {
-			if (!server.hasSession(session)) {
-				LoginPacket login = new LoginPacket(packet);
-				login.decode();
 
-				if (!server.hasUsername(login.username)) {
-					server.addSession(session, client = new ChatClientSession(login.username, session));
-					server.broadcastMessage(client.getUsername() + " has joined the chatroom!");
-				} else {
-					KickPacket kick = new KickPacket();
-					kick.reason = "Client with username already exists!";
-					kick.encode();
-					session.sendPacket(Reliability.RELIABLE, kick);
+		if (packet.getId() == ID_IDENTIFIER) {
+			try {
+				short pid = packet.getUByte();
+
+				if (pid == ID_LOGIN) {
+					if (!server.hasSession(session)) {
+						LoginPacket login = new LoginPacket(packet);
+						login.decode();
+
+						if (!server.hasUsername(login.username)) {
+							server.addSession(session, client = new ChatClientSession(login.username, session));
+							server.broadcastMessage(client.getUsername() + " has joined the chatroom!");
+						} else {
+							KickPacket kick = new KickPacket();
+							kick.reason = "Client with username already exists!";
+							kick.encode();
+							session.sendPacket(Reliability.RELIABLE, kick);
+						}
+					}
+				} else if (pid == ID_CHAT) {
+					if (server.hasSession(session)) {
+						MessagePacket chat = new MessagePacket(packet);
+						chat.decode();
+
+						client.addChatMessage(chat.message);
+						server.broadcastMessage(client.getUsername() + ": " + chat.message);
+					}
+				} else if (pid == ID_QUIT) {
+					if (server.hasSession(session)) {
+						server.broadcastMessage(client.getUsername() + " has left the chatroom!");
+						server.removeSession(session);
+					}
 				}
-			}
-		} else if (pid == ID_CHAT) {
-			if (server.hasSession(session)) {
-				ChatPacket chat = new ChatPacket(packet);
-				chat.decode();
-
-				client.addChatMessage(chat.message);
-				server.broadcastMessage(client.getUsername() + ": " + chat.message);
-			}
-		} else if (pid == ID_QUIT) {
-			if (server.hasSession(session)) {
-				server.broadcastMessage(client.getUsername() + " has left the chatroom!");
-				server.removeSession(session);
+			} catch (UnexpectedPacketException e) {
+				System.out.println(
+						"Received packet with wrong identifier (" + e.getRequiredString() + ")" + " dropping...");
 			}
 		}
 	}

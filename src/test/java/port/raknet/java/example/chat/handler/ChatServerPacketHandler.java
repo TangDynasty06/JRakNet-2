@@ -31,9 +31,10 @@
 package port.raknet.java.example.chat.handler;
 
 import port.raknet.java.event.HookRunnable;
-import port.raknet.java.example.chat.protocol.ChatPacket;
 import port.raknet.java.example.chat.protocol.Info;
 import port.raknet.java.example.chat.protocol.KickPacket;
+import port.raknet.java.example.chat.protocol.MessagePacket;
+import port.raknet.java.exception.UnexpectedPacketException;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.raknet.internal.EncapsulatedPacket;
 
@@ -48,17 +49,25 @@ public class ChatServerPacketHandler implements HookRunnable, Info {
 	public void run(Object... parameters) {
 		EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
 		Packet packet = encapsulated.convertPayload();
-		short pid = packet.getId();
 
-		if (pid == ID_CHAT) {
-			ChatPacket chat = new ChatPacket(packet);
-			chat.decode();
-			System.out.println(chat.message);
-		} else if (pid == ID_KICK) {
-			KickPacket kick = new KickPacket(packet);
-			kick.decode();
-			System.out.println("Kicked from server! (" + kick.reason + ")");
-			System.exit(0);
+		if (packet.getId() == ID_IDENTIFIER) {
+			try {
+				short pid = packet.getUByte();
+
+				if (pid == ID_CHAT) {
+					MessagePacket chat = new MessagePacket(packet);
+					chat.decode();
+					System.out.println(chat.message);
+				} else if (pid == ID_KICK) {
+					KickPacket kick = new KickPacket(packet);
+					kick.decode();
+					System.out.println("Kicked from server! (" + kick.reason + ")");
+					System.exit(0);
+				}
+			} catch (UnexpectedPacketException e) {
+				System.out.println(
+						"Received packet with wrong identifier (" + e.getRequiredString() + ")" + " dropping...");
+			}
 		}
 	}
 

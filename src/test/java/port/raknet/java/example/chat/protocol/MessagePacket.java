@@ -33,26 +33,26 @@ package port.raknet.java.example.chat.protocol;
 import port.raknet.java.exception.UnexpectedPacketException;
 import port.raknet.java.protocol.Packet;
 
-public class KickPacket extends ChatPacket {
+public class MessagePacket extends ChatPacket {
 
-	public String reason;
+	public String message;
 
-	public KickPacket(Packet packet) throws UnexpectedPacketException {
+	public MessagePacket(Packet packet) throws UnexpectedPacketException {
 		super(packet);
 	}
 
-	public KickPacket() {
-		super(ID_KICK);
+	public MessagePacket() {
+		super(ID_CHAT);
 	}
 
 	@Override
 	public void encode() {
-		this.putString(reason);
+		this.putString(message);
 	}
 
 	@Override
 	public void decode() {
-		this.reason = this.getString();
+		this.message = this.getString();
 	}
 
 }
