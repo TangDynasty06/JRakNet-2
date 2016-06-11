@@ -34,13 +34,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Random;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import port.raknet.java.RakNet;
 import port.raknet.java.RakNetOptions;
@@ -52,7 +52,7 @@ import port.raknet.java.exception.RakNetException;
 import port.raknet.java.exception.UnexpectedPacketException;
 import port.raknet.java.protocol.Packet;
 import port.raknet.java.protocol.Reliability;
-import port.raknet.java.protocol.raknet.ConnectedCancelConnection;
+import port.raknet.java.protocol.raknet.ConnectedCloseConnection;
 import port.raknet.java.protocol.raknet.ConnectedConnectRequest;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyOne;
 import port.raknet.java.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -64,7 +64,9 @@ import port.raknet.java.protocol.raknet.internal.CustomPacket;
 import port.raknet.java.scheduler.RakNetScheduler;
 import port.raknet.java.session.ServerSession;
 import port.raknet.java.session.SessionState;
+import port.raknet.java.task.ServerAdvertiseTask;
 import port.raknet.java.task.ServerTimeoutTask;
+import port.raknet.java.utils.RakNetUtils;
 
 /**
  * Used to connect and send data to <code>RakNetServers</code> with ease
@@ -79,23 +81,57 @@ public class RakNetClient implements RakNet {
 	private final long timestamp;
 	private final RakNetOptions options;
 	private final RakNetScheduler scheduler;
+	private final ServerAdvertiseTask advertise;
 	private final HashMap<Hook, HookRunnable> hooks;
 
 	// Netty data
+	private final RakNetClientHandler handler;
+	private final EventLoopGroup group;
+	private final Bootstrap bootstrap;
 	private volatile Channel channel;
+
+	// Session data
 	private volatile ServerSession session;
 	private volatile SessionState state = SessionState.DISCONNECTED;
 
 	public RakNetClient(RakNetOptions options) {
-		this.clientId = new Random().nextLong();
+		this.clientId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.scheduler = new RakNetScheduler();
+		this.advertise = new ServerAdvertiseTask(this);
 		this.hooks = new HashMap<Hook, HookRunnable>();
+
+		// Setup netty channel
+		this.handler = new RakNetClientHandler(this);
+		this.group = new NioEventLoopGroup();
+		this.bootstrap = new Bootstrap();
+		bootstrap.group(group);
+		bootstrap.channel(NioDatagramChannel.class);
+		bootstrap.handler(handler);
+
+		// Start scheduler here so we can discover
+		this.bindChannel();
+		scheduler.scheduleRepeatingTask(advertise);
+		scheduler.start();
 	}
 
+	/**
+	 * Returns the options this instance uses
+	 * 
+	 * @return RakNetOptions
+	 */
 	public RakNetOptions getOptions() {
 		return this.options;
+	}
+
+	/**
+	 * Returns the ClientID which this instance uses
+	 * 
+	 * @return
+	 */
+	public long getClientId() {
+		return this.clientId;
 	}
 
 	/**
@@ -128,18 +164,6 @@ public class RakNetClient implements RakNet {
 		} catch (UnknownHostException e) {
 			return null;
 		}
-	}
-
-	/**
-	 * Removes the current session with the specified reason
-	 * 
-	 * @param reason
-	 */
-	public void removeSession(String reason) {
-		this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
-		this.session = null;
-		this.channel = null;
-		this.setState(SessionState.DISCONNECTED);
 	}
 
 	/**
@@ -245,8 +269,12 @@ public class RakNetClient implements RakNet {
 				throw new IncompatibleProtocolException(ucp.protocol, NETWORK_PROTOCOL);
 			}
 		} else if (pid == ID_UNCONNECTED_PONG) {
-			// TODO
+			advertise.handlePong(packet, sender);
 		}
+	}
+
+	public DiscoveredRakNetServer[] getDiscoveredServers() {
+		return advertise.getDiscoveredServers();
 	}
 
 	/**
@@ -291,6 +319,28 @@ public class RakNetClient implements RakNet {
 		}
 	}
 
+	public void broadcastRaw(Packet packet) {
+		channel.writeAndFlush(new DatagramPacket(packet.buffer(),
+				new InetSocketAddress(RakNetUtils.getSubnetMask(), options.clientBroadcastPort)));
+	}
+
+	/**
+	 * Binds the channel on a new port
+	 */
+	private void bindChannel() {
+		try {
+			if (channel != null) {
+				channel.close();
+				handler.setChannel(null);
+			}
+			this.channel = bootstrap.bind(0).sync().channel();
+			handler.setChannel(channel);
+		} catch (Exception e) {
+			e.printStackTrace();
+			group.shutdownGracefully();
+		}
+	}
+
 	/**
 	 * Connects to a server with the specified address
 	 * 
@@ -298,23 +348,15 @@ public class RakNetClient implements RakNet {
 	 */
 	public void connect(InetSocketAddress address) throws RakNetException {
 		// Disconnect from current session
-		if (session != null) {
-			if (state != SessionState.CONNECTED) {
-				this.disconnect();
-			}
-			this.removeSession("Disconnected");
-		}
+		this.disconnect();
 
-		// Create bootstrap along with handler and set options
-		EventLoopGroup group = new NioEventLoopGroup();
 		try {
+			handler.resetHandler();
+			this.bindChannel();
 			int mtu = options.maximumTransferUnit;
-			RakNetClientHandler handler = new RakNetClientHandler(this);
-			Bootstrap bootstrap = new Bootstrap().group(group).channel(NioDatagramChannel.class);
 			bootstrap.option(ChannelOption.SO_RCVBUF, mtu).option(ChannelOption.SO_SNDBUF, mtu).handler(handler);
 
 			// Do not bind to "localhost", it locks up the handler
-			this.channel = bootstrap.bind(0).sync().channel();
 			this.session = new ServerSession(channel, address, this);
 			this.setState(SessionState.CONNECTING_1);
 
@@ -342,8 +384,7 @@ public class RakNetClient implements RakNet {
 
 		// Start scheduler
 		if (running == false) {
-			scheduler.scheduleRepeatingTask(new ServerTimeoutTask(this), ServerTimeoutTask.TICK);
-			scheduler.start();
+			scheduler.scheduleRepeatingTask(new ServerTimeoutTask(this));
 			this.running = true;
 		}
 	}
@@ -360,6 +401,16 @@ public class RakNetClient implements RakNet {
 	}
 
 	/**
+	 * Connects to a server with the specified discovered server
+	 * 
+	 * @param server
+	 * @throws RakNetException
+	 */
+	public void connect(DiscoveredRakNetServer server) throws RakNetException {
+		this.connect(server.address);
+	}
+
+	/**
 	 * Connects to a server with the specified address on it's own thread
 	 * 
 	 * @param address
@@ -369,6 +420,17 @@ public class RakNetClient implements RakNet {
 		RakNetClientThread thread = new RakNetClientThread(this, address);
 		thread.start();
 		return thread;
+	}
+
+	/**
+	 * Connects to a server with the specified discovered server on it's own
+	 * thread
+	 * 
+	 * @param server
+	 * @return Thread
+	 */
+	public Thread connectThreaded(DiscoveredRakNetServer server) {
+		return this.connectThreaded(server.address);
 	}
 
 	/**
@@ -383,12 +445,34 @@ public class RakNetClient implements RakNet {
 	}
 
 	/**
+	 * Cancels the current connection to the server with the specified reason
+	 * 
+	 * @param reason
+	 */
+	public void disconnect(String reason) {
+		if (session != null) {
+			this.setState(SessionState.DISCONNECTED);
+			session.sendPacket(Reliability.UNRELIABLE, new ConnectedCloseConnection());
+			this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
+		}
+		this.session = null;
+	}
+
+	/**
+	 * Cancels the current connection to the server with the specified error
+	 * being the reason
+	 * 
+	 * @param cause
+	 */
+	public void disconnect(Throwable cause) {
+		this.disconnect();
+	}
+
+	/**
 	 * Cancels the current connection to the server
 	 */
 	public void disconnect() {
-		if (session != null) {
-			session.sendPacket(Reliability.UNRELIABLE, new ConnectedCancelConnection());
-		}
+		this.disconnect("Disconnected");
 	}
 
 }

@@ -28,31 +28,54 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.server;
+package port.raknet.java.exception;
 
-import port.raknet.java.exception.RakNetException;
+import java.net.InetSocketAddress;
+
+import io.netty.channel.Channel;
 
 /**
- * Starts the server on it's own thread
+ * Occurs whenever the handler receives a message from the wrong channel,
+ * supposedly one that has been closed and is no longer being used by the
+ * client.
  *
  * @author Trent Summerlin
  */
-public class RakNetServerThread extends Thread {
+public class InvalidChannelException extends RakNetException {
 
-	private final RakNetServer server;
+	private static final long serialVersionUID = 1338007126886687551L;
 
-	public RakNetServerThread(RakNetServer server) {
-		this.server = server;
+	private final Channel receivedChannel;
+	private final Channel expectedChannel;
+
+	public InvalidChannelException(Channel receivedChannel, Channel expectedChannel) {
+		super("Received message from the wrong channel! Should be with port " + getLocalPort(expectedChannel)
+				+ " but got " + getLocalPort(receivedChannel));
+		this.receivedChannel = receivedChannel;
+		this.expectedChannel = expectedChannel;
+	}
+
+	public Channel getReceivedChannel() {
+		return this.receivedChannel;
+	}
+
+	public Channel getExpectedChanenl() {
+		return this.expectedChannel;
+	}
+
+	/**
+	 * Returns the local port of a channel
+	 * 
+	 * @param channel
+	 * @return int
+	 */
+	private static int getLocalPort(Channel channel) {
+		return ((InetSocketAddress) channel.localAddress()).getPort();
 	}
 
 	@Override
-	public void run() {
-		try {
-			server.start();
-		} catch (RakNetException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
+	public String getLocalizedMessage() {
+		return "Received message on wrong channel";
 	}
 
 }

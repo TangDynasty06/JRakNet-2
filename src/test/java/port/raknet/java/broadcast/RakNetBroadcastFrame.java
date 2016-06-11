@@ -28,81 +28,62 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.example.chat.session;
+package port.raknet.java.broadcast;
 
 import java.util.ArrayList;
 
-import port.raknet.java.example.chat.protocol.KickPacket;
-import port.raknet.java.example.chat.protocol.MessagePacket;
-import port.raknet.java.protocol.Reliability;
-import port.raknet.java.session.RakNetSession;
+import javax.swing.JFrame;
+import javax.swing.JTextPane;
 
 /**
- * Used to handle chat clients
+ * The frame used by <code>RakNetBroadcastTest</code> to neatly display all the
+ * servers that have been discovered
  *
  * @author Trent Summerlin
  */
-public class ChatClientSession {
+public class RakNetBroadcastFrame extends JFrame {
 
-	private final String username;
-	private final RakNetSession session;
-	private final ArrayList<String> chatHistory;
+	private static final long serialVersionUID = -8376161219838261039L;
 
-	public ChatClientSession(String username, RakNetSession session) {
-		this.username = username;
-		this.session = session;
-		this.chatHistory = new ArrayList<String>();
+	private final JTextPane infoPane;
+	private final JTextPane serverPane;
+
+	public RakNetBroadcastFrame() {
+		// Set window options
+		this.setSize(450, 300);
+		this.setResizable(false);
+		this.setTitle("Servers on LAN Network");
+		this.getContentPane().setLayout(null);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// Tells what the user what this window does
+		this.infoPane = new JTextPane();
+		infoPane.setText("These are the MCPE servers that have been found on your network");
+		infoPane.setBounds(10, 10, 425, 20);
+		getContentPane().add(infoPane);
+
+		// Displays all the server
+		this.serverPane = new JTextPane();
+		serverPane.setEditable(false);
+		serverPane.setBounds(10, 40, 425, 220);
+		getContentPane().add(serverPane);
 	}
 
 	/**
-	 * Returns the client's username
+	 * Sets the displayed servers on the frame
 	 * 
-	 * @return String
+	 * @param servers
 	 */
-	public String getUsername() {
-		return this.username;
-	}
-
-	/**
-	 * Returns every message the client has sent to the server
-	 * 
-	 * @return String[]
-	 */
-	public String[] getChatHistory() {
-		return chatHistory.toArray(new String[chatHistory.size()]);
-	}
-
-	/**
-	 * Adds a chat message to the chat history
-	 * 
-	 * @param message
-	 */
-	public void addChatMessage(String message) {
-		chatHistory.add(message);
-	}
-
-	/**
-	 * Sends a chat message to the client
-	 * 
-	 * @param message
-	 */
-	public void sendMessage(String message) {
-		MessagePacket chat = new MessagePacket();
-		chat.message = message;
-		chat.encode();
-		session.sendPacket(Reliability.RELIABLE, chat);
-	}
-
-	/**
-	 * Disconnects the client from the server with the specified reason
-	 * 
-	 * @param reason
-	 */
-	public void disconnect(String reason) {
-		KickPacket kick = new KickPacket();
-		kick.reason = reason;
-		kick.encode();
-		session.sendPacket(Reliability.RELIABLE, kick);
+	public void setServers(ArrayList<String> servers) {
+		StringBuilder serverChars = new StringBuilder();
+		for (int i = 0; i < servers.size(); i++) {
+			DiscoveredMinecraftServer server = new DiscoveredMinecraftServer(servers.get(i));
+			serverChars.append(server.name + " (" + server.version + ") - " + server.online + "/" + server.max);
+			if (i + 1 < servers.size()) {
+				serverChars.append("\n");
+			}
+		}
+		serverPane.setText(serverChars.toString());
 	}
 
 }

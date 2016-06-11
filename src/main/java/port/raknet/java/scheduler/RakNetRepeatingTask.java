@@ -30,21 +30,23 @@
  */
 package port.raknet.java.scheduler;
 
+import port.raknet.java.task.TaskRunnable;
+
 /**
- * A repeating task which continuously executes at the specified times until it
- * is removed manually
+ * A scheduled task which repeatedly runs at the specified interval until it is
+ * cancelled
  *
  * @author Trent Summerlin
  */
 public class RakNetRepeatingTask {
 
-	public final Runnable runnable;
+	public final TaskRunnable runnable;
 	public long waitTime;
 	public final long reset;
 
-	public RakNetRepeatingTask(Runnable runnable, long waitTime) {
+	public RakNetRepeatingTask(TaskRunnable runnable) {
 		this.runnable = runnable;
-		this.waitTime = waitTime;
+		this.waitTime = runnable.getWaitTimeMillis();
 		this.reset = waitTime;
 	}
 

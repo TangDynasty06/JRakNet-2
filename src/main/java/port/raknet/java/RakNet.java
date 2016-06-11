@@ -40,7 +40,7 @@ import java.lang.reflect.Field;
 public interface RakNet {
 
 	// Protocol version
-	public static final int NETWORK_PROTOCOL = 7;
+	public static final int NETWORK_PROTOCOL = 8;
 
 	// Transfer size
 	public static final int MINIMUM_TRANSFER_UNIT = 530;
@@ -59,7 +59,7 @@ public interface RakNet {
 	public static final short ID_CONNECTED_CLIENT_CONNECT_REQUEST = 0x09;
 	public static final short ID_CONNECTED_SERVER_HANDSHAKE = 0x10;
 	public static final short ID_CONNECTED_CLIENT_HANDSHAKE = 0x13;
-	public static final short ID_CONNECTED_CANCEL_CONNECTION = 0x15;
+	public static final short ID_CONNECTED_CLOSE_CONNECTION = 0x15;
 	public static final short ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL = 0x1A;
 
 	// Custom Packets

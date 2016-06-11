@@ -28,10 +28,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java;
+package port.raknet.java.example;
 
-import java.util.Scanner;
+import java.net.InetSocketAddress;
 
+import port.raknet.java.RakNetOptions;
 import port.raknet.java.client.RakNetClient;
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
@@ -39,53 +40,49 @@ import port.raknet.java.exception.RakNetException;
 import port.raknet.java.session.RakNetSession;
 
 /**
- * Used to test <code>RakNetClient</code>, meant for testing with Minecraft:
- * Pocket Edition servers
+ * A simple RakNet client, this example attempts to connect to the main LBSG
+ * server. When it is connected, it closes the connection and shuts down.
  *
  * @author Trent Summerlin
  */
-public class RakNetClientTest {
+public class RakNetClientExample {
 
+	// Server address and port
 	private static final String SERVER_ADDRESS = "sg.lbsg.net";
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
+		// There are no special options needed for clients
 		RakNetClient client = new RakNetClient(new RakNetOptions());
 
-		// Client connected
+		// Server connected
 		client.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
+
 			@Override
 			public void run(Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
-				System.out.println("Client has connected to server with address " + session.getSocketAddress() + ", disconnecting...");
+				System.out.println("Successfully connected to server with address " + session.getSocketAddress());
 				client.disconnect();
-				
 			}
+
 		});
 
-		// Client disconnected
+		// Server disconnected
 		client.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
+
 			@Override
 			public void run(Object... parameters) {
 				RakNetSession session = (RakNetSession) parameters[0];
 				String reason = parameters[1].toString();
-				System.out.println("Server with address " + session.getSocketAddress()
-						+ " has been disconnected for the reason \"" + reason + "\"");
+				System.out.println("Successfully disconnected from server with address " + session.getSocketAddress()
+						+ " for the reason \"" + reason + "\"");
+				System.exit(0);
 			}
+
 		});
 		
-		@SuppressWarnings("resource")
-		Scanner scanner = new Scanner(System.in);
-		System.out.println("Press enter to connect to the server!");
-		while(true) {
-			try {
-				while(!scanner.hasNextLine());
-				scanner.nextLine();
-				client.connect(SERVER_ADDRESS, SERVER_PORT);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		// Attempt to connect to server
+		client.connect(new InetSocketAddress(SERVER_ADDRESS, SERVER_PORT));
 	}
 
 }

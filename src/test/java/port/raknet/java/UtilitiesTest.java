@@ -30,9 +30,9 @@
  */
 package port.raknet.java;
 
-import static port.raknet.java.utils.RakNetUtils.getServerIdentifier;
-import static port.raknet.java.utils.RakNetUtils.getSubnetMask;
-import static port.raknet.java.utils.RakNetUtils.isServerCompatible;
+import static port.raknet.java.utils.RakNetUtils.*;
+
+import port.raknet.java.exception.RakNetException;
 
 /**
  * Used to test <code>RakNetUtils</code>, meant for testing with Minecraft:
@@ -45,10 +45,31 @@ public class UtilitiesTest {
 	private static final String SERVER_ADDRESS = "sg.lbsg.net";
 	private static final int SERVER_PORT = 19132;
 
-	public static void main(String[] args) throws Exception {
-		System.out.println("Server name: " + getServerIdentifier(SERVER_ADDRESS, SERVER_PORT));
+	public static void main(String[] args) throws RakNetException {
+		System.out.println("System RakNet ID: " + getRakNetID());
+		System.out.println("Server identifier: " + removeColors(getServerIdentifier(SERVER_ADDRESS, SERVER_PORT)));
 		System.out.println("Server compatible?: " + isServerCompatible(SERVER_ADDRESS, SERVER_PORT));
-		System.out.println("Local machine subnet mask: " + getSubnetMask());
+		System.out.println("Subnet Mask: " + getSubnetMask());
+	}
+
+	/**
+	 * Used to remove all color codes from a Minecraft: Pocket Edition server
+	 * identifier
+	 * 
+	 * @param identifier
+	 * @return String
+	 */
+	private static final String removeColors(String identifier) {
+		char[] c = identifier.toCharArray();
+		StringBuilder noColor = new StringBuilder();
+		for (int i = 0; i < c.length; i++) {
+			if (c[i] != '\u00A7') {
+				noColor.append(c[i]);
+			} else {
+				i++;
+			}
+		}
+		return noColor.toString();
 	}
 
 }

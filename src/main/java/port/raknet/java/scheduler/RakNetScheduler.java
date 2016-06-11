@@ -32,6 +32,8 @@ package port.raknet.java.scheduler;
 
 import java.util.ArrayList;
 
+import port.raknet.java.task.TaskRunnable;
+
 /**
  * Used to run tasks at certain times
  *
@@ -51,14 +53,37 @@ public class RakNetScheduler extends Thread {
 	}
 
 	/**
-	 * Schedules a task to run once, the wait time is in milliseconds
+	 * Schedules a task to run once
+	 * 
+	 * @param task
+	 * @return int
+	 */
+	public int scheduleTask(TaskRunnable task) {
+		tasks.add(taskId++, new RakNetTask(task));
+		return this.taskId;
+	}
+
+	/**
+	 * Schedules a task to run once
 	 * 
 	 * @param task
 	 * @param wait
+	 * @return int
 	 */
 	public int scheduleTask(Runnable task, long wait) {
-		tasks.add(taskId++, new RakNetTask(task, wait));
-		return this.taskId;
+		return this.scheduleTask(new TaskRunnable() {
+
+			@Override
+			public long getWaitTimeMillis() {
+				return wait;
+			}
+
+			@Override
+			public void run() {
+				task.run();
+			}
+
+		});
 	}
 
 	/**
@@ -75,14 +100,37 @@ public class RakNetScheduler extends Thread {
 	}
 
 	/**
-	 * Schedules a repeating task, the wait time is in milliseconds
+	 * Schedules a repeating task
+	 * 
+	 * @param task
+	 * @return int
+	 */
+	public int scheduleRepeatingTask(TaskRunnable task) {
+		repeating.add(taskId++, new RakNetRepeatingTask(task));
+		return this.taskId;
+	}
+
+	/**
+	 * Schedules a repeating task
 	 * 
 	 * @param task
 	 * @param wait
+	 * @return int
 	 */
 	public int scheduleRepeatingTask(Runnable task, long wait) {
-		repeating.add(taskId++, new RakNetRepeatingTask(task, wait));
-		return this.taskId;
+		return this.scheduleRepeatingTask(new TaskRunnable() {
+
+			@Override
+			public long getWaitTimeMillis() {
+				return wait;
+			}
+
+			@Override
+			public void run() {
+				task.run();
+			}
+
+		});
 	}
 
 	/**

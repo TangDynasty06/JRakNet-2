@@ -28,31 +28,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.server;
+package port.raknet.java.example;
 
+import port.raknet.java.RakNetOptions;
+import port.raknet.java.event.Hook;
+import port.raknet.java.event.HookRunnable;
 import port.raknet.java.exception.RakNetException;
+import port.raknet.java.server.RakNetServer;
+import port.raknet.java.session.RakNetSession;
 
 /**
- * Starts the server on it's own thread
+ * A simple RakNet server, this can be tested using a Minecraft: Pocket Edition
+ * client. Simply launch the game and click on "Play". Then, "A RakNet Server"
+ * should pop up, just like when someone else is playing on the same network and
+ * their name pops up.
  *
  * @author Trent Summerlin
  */
-public class RakNetServerThread extends Thread {
+public class RakNetServerExample {
 
-	private final RakNetServer server;
+	public static void main(String[] args) throws RakNetException {
+		// Create options and set identifier
+		RakNetOptions options = new RakNetOptions();
+		options.serverIdentifier = "MCPE;A RakNet Server;70;0.14.3;0;10";
 
-	public RakNetServerThread(RakNetServer server) {
-		this.server = server;
-	}
+		// Create server and add hooks
+		RakNetServer server = new RakNetServer(options);
 
-	@Override
-	public void run() {
-		try {
-			server.start();
-		} catch (RakNetException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
+		// Client connected
+		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
+			@Override
+			public void run(Object... parameters) {
+				RakNetSession session = (RakNetSession) parameters[0];
+				System.out
+						.println("Client from address " + session.getSocketAddress() + " has connected to the server");
+			}
+		});
+
+		// Client disconnected
+		server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
+			@Override
+			public void run(Object... parameters) {
+				RakNetSession session = (RakNetSession) parameters[0];
+				String reason = parameters[1].toString();
+				System.out.println("Client from address " + session.getSocketAddress()
+						+ " has disconnected from the server for the reason \"" + reason + "\"");
+			}
+		});
+
+		// Start server
+		server.start();
 	}
 
 }

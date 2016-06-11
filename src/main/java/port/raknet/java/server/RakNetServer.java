@@ -31,7 +31,6 @@
 package port.raknet.java.server;
 
 import java.util.HashMap;
-import java.util.Random;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
@@ -57,6 +56,7 @@ import port.raknet.java.scheduler.RakNetScheduler;
 import port.raknet.java.session.ClientSession;
 import port.raknet.java.session.SessionState;
 import port.raknet.java.task.ClientTimeoutTask;
+import port.raknet.java.utils.RakNetUtils;
 
 /**
  * A RakNet server instance, used to handle the main packets and track
@@ -76,19 +76,24 @@ public class RakNetServer implements RakNet {
 	private final HashMap<Hook, HookRunnable> hooks;
 
 	public RakNetServer(RakNetOptions options) {
-		this.serverId = new Random().nextLong();
+		this.serverId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.handler = new RakNetServerHandler(this);
 		this.scheduler = new RakNetScheduler();
-		if (options.maximumTransferUnit % 2 != 0) {
-			throw new RuntimeException("Invalid transfer size, must be divisble by 2!");
-		}
 		this.hooks = new HashMap<Hook, HookRunnable>();
 	}
 
+	public RakNetServer(int serverPort, String serverIdentifier) {
+		this(new RakNetOptions(serverPort, serverIdentifier));
+	}
+
+	public RakNetServer() {
+		this(new RakNetOptions());
+	}
+
 	/**
-	 * Returns the server options which this instance uses
+	 * Returns the options this instance uses
 	 * 
 	 * @return RakNetOptions
 	 */
@@ -236,7 +241,7 @@ public class RakNetServer implements RakNet {
 	/**
 	 * Starts the server
 	 */
-	public void startServer() throws RakNetException {
+	public void start() throws RakNetException {
 		if (running == true) {
 			throw new RakNetException("Server is already running!");
 		}
@@ -255,7 +260,7 @@ public class RakNetServer implements RakNet {
 		}
 
 		// Start scheduler
-		scheduler.scheduleRepeatingTask(new ClientTimeoutTask(this, handler), ClientTimeoutTask.TICK);
+		scheduler.scheduleRepeatingTask(new ClientTimeoutTask(this, handler));
 		scheduler.start();
 		this.running = true;
 	}
@@ -265,7 +270,7 @@ public class RakNetServer implements RakNet {
 	 * 
 	 * @return Thread
 	 */
-	public Thread startThreadedServer() {
+	public Thread startThreaded() {
 		RakNetServerThread thread = new RakNetServerThread(this);
 		thread.start();
 		return thread;

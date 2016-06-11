@@ -28,30 +28,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.server;
+package port.raknet.java.broadcast;
 
-import port.raknet.java.exception.RakNetException;
+import java.util.ArrayList;
+
+import port.raknet.java.RakNetOptions;
+import port.raknet.java.client.DiscoveredRakNetServer;
+import port.raknet.java.client.RakNetClient;
 
 /**
- * Starts the server on it's own thread
+ * Used to discover Minecraft: Pocket Edition servers on the network
  *
  * @author Trent Summerlin
  */
-public class RakNetServerThread extends Thread {
+public class RakNetBroadcastTest {
 
-	private final RakNetServer server;
+	public static void main(String[] args) throws Exception {
+		RakNetClient client = new RakNetClient(new RakNetOptions());
+		RakNetBroadcastFrame frame = new RakNetBroadcastFrame();
+		frame.setVisible(true);
 
-	public RakNetServerThread(RakNetServer server) {
-		this.server = server;
-	}
-
-	@Override
-	public void run() {
-		try {
-			server.start();
-		} catch (RakNetException e) {
-			e.printStackTrace();
-			System.exit(0);
+		while (true) {
+			Thread.sleep(1000); // ConcurrentModificationException is a jerk
+			ArrayList<String> serverName = new ArrayList<String>();
+			for (DiscoveredRakNetServer server : client.getDiscoveredServers()) {
+				if (server.identifier.startsWith("MCPE;")) {
+					serverName.add(server.identifier);
+				}
+			}
+			frame.setServers(serverName);
 		}
 	}
 

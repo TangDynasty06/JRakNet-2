@@ -47,7 +47,7 @@ public class RakNetOptions {
 	}
 
 	public RakNetOptions(int broadcastPort) {
-		this.broadcastPort = broadcastPort;
+		this.clientBroadcastPort = broadcastPort;
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class RakNetOptions {
 	/**
 	 * The port the client will use to find other servers on the network
 	 */
-	public int broadcastPort = this.serverPort;
+	public int clientBroadcastPort = this.serverPort;
 
 	/**
 	 * The maximum amount of data <code>RakNetServer</code> will allow for a

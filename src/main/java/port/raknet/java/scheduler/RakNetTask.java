@@ -30,19 +30,21 @@
  */
 package port.raknet.java.scheduler;
 
+import port.raknet.java.task.TaskRunnable;
+
 /**
- * Used to run a task at a certain time once
+ * A scheduled task which runs after the specified time
  *
  * @author Trent Summerlin
  */
 public class RakNetTask {
 
-	public final Runnable runnable;
+	public final TaskRunnable runnable;
 	public long waitTime;
 
-	public RakNetTask(Runnable runnable, long waitTime) {
+	public RakNetTask(TaskRunnable runnable) {
 		this.runnable = runnable;
-		this.waitTime = waitTime;
+		this.waitTime = runnable.getWaitTimeMillis();
 	}
 
 }

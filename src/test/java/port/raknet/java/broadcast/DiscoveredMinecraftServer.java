@@ -28,30 +28,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.server;
-
-import port.raknet.java.exception.RakNetException;
+package port.raknet.java.broadcast;
 
 /**
- * Starts the server on it's own thread
+ * Represents a Minecraft: Pocket Edition server that has been discovered on the
+ * local network
  *
  * @author Trent Summerlin
  */
-public class RakNetServerThread extends Thread {
+public class DiscoveredMinecraftServer {
 
-	private final RakNetServer server;
+	public final String name;
+	public final int protocol;
+	public final String version;
+	public final int online;
+	public final int max;
 
-	public RakNetServerThread(RakNetServer server) {
-		this.server = server;
+	public DiscoveredMinecraftServer(String name, int protocol, String version, int online, int max) {
+		this.name = name;
+		this.protocol = protocol;
+		this.version = version;
+		this.online = online;
+		this.max = max;
 	}
 
-	@Override
-	public void run() {
+	public DiscoveredMinecraftServer(String identifier) {
+		// Check data
+		String[] chunks = identifier.split(";");
+		if (!chunks[0].equals("MCPE")) {
+			throw new IllegalArgumentException(
+					"Invalid identifier! Must start with \"MCPE\", not \"" + chunks[0] + "\"");
+		}
+
+		// Set data
+		this.name = chunks[1];
+		this.protocol = parseIgnoreError(chunks[2]);
+		this.version = chunks[3];
+		this.online = parseIgnoreError(chunks[4]);
+		this.max = parseIgnoreError(chunks[5]);
+	}
+
+	private static int parseIgnoreError(String parse) {
 		try {
-			server.start();
-		} catch (RakNetException e) {
-			e.printStackTrace();
-			System.exit(0);
+			return Integer.parseInt(parse);
+		} catch (NumberFormatException e) {
+			return -1;
 		}
 	}
 

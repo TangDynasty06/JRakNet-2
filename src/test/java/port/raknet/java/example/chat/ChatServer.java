@@ -142,7 +142,7 @@ public class ChatServer {
 		RakNetServer server = new RakNetServer(options);
 		server.addHook(Hook.PACKET_RECEIVED, new ChatClientPacketHandler(this));
 		server.addHook(Hook.SESSION_DISCONNECTED, new ChatClientDisconnectHandler(this));
-		server.startServer();
+		server.start();
 		System.out.println("Started server on port " + options.serverPort + "!");
 	}
 

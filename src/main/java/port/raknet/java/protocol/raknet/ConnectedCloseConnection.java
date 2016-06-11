@@ -28,31 +28,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.server;
+package port.raknet.java.protocol.raknet;
 
-import port.raknet.java.exception.RakNetException;
+import port.raknet.java.protocol.Packet;
 
-/**
- * Starts the server on it's own thread
- *
- * @author Trent Summerlin
- */
-public class RakNetServerThread extends Thread {
-
-	private final RakNetServer server;
-
-	public RakNetServerThread(RakNetServer server) {
-		this.server = server;
+public class ConnectedCloseConnection extends Packet {
+	
+	public ConnectedCloseConnection() {
+		super(ID_CONNECTED_CLOSE_CONNECTION);
 	}
-
-	@Override
-	public void run() {
-		try {
-			server.start();
-		} catch (RakNetException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
-	}
-
+	
 }

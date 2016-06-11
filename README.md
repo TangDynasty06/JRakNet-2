@@ -5,7 +5,7 @@ This library was meant to be used for Minecraft: Pocket Edition servers and clie
 | Protocol Info      | Version |
 | -------------------|:-------:|
 | Current Protocol   | 8       |
-| Supported Protocol | 7       |
+| Supported Protocol | 8       |
 
 # How to create a server
 
@@ -37,17 +37,17 @@ server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 });
 
 // Start server
-server.startServer();
+server.start();
 ```
-This can be tested using a Minecraft: Pocket Edition client, simply launch the game and click on "Play". Then, "A RakNet Server" should pop up, just like when someone else is playing on the same network and their name pops up.
+A simple RakNet server, this can be tested using a Minecraft: Pocket Edition client. Simply launch the game and click on "Play". Then, "A RakNet Server" should pop up, just like when someone else is playing on the same network and their name pops up.
 
 
 # How to create a client
 
 ```java
 // Server address and port
-String address = "sg.lbsg.net";
-int port = 19132;
+private static final String SERVER_ADDRESS = "sg.lbsg.net";
+private static final int SERVER_PORT = 19132;
 
 // There are no special options needed for clients
 RakNetClient client = new RakNetClient(new RakNetOptions());
@@ -58,7 +58,8 @@ client.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
 	@Override
 	public void run(Object... parameters) {
 		RakNetSession session = (RakNetSession) parameters[0];
-		System.out.println("Connected to server with address " + session.getSocketAddress());
+		System.out.println("Successfully connected to server with address " + session.getSocketAddress());
+		client.disconnect();
 	}
 
 });
@@ -70,17 +71,16 @@ client.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
 	public void run(Object... parameters) {
 		RakNetSession session = (RakNetSession) parameters[0];
 		String reason = parameters[1].toString();
-		System.out.println("Disconnected from server with address " + session.getSocketAddress() + " for the reason \"" + reason + "\"");
+		System.out.println("Successfully disconnected from server with address " + session.getSocketAddress() + " for the reason \"" + reason + "\"");
+		System.exit(0);
 	}
 
 });
 
 // Attempt to connect to server
-client.connect(new InetSocketAddress(address, port));
-while(client.getState() != SessionState.CONNECTED); // Wait for client to connect before cancelling connection
-client.cancelConnect(); // Will change to client.disconnect() in next release
+client.connect(new InetSocketAddress(SERVER_ADDRESS, SERVER_PORT));
 ```
-This example attempts to connect to the main [LBSG](http://lbsg.net/) server. When it is connected, it closes the connection and shuts down.
+A simple RakNet client, this example attempts to connect to the main [LBSG](http://lbsg.net/) server. When it is connected, it closes the connection and shuts down.
 
 # Notes
 Some DataPacket ID's are reserved by RakNet. Because of this, it is recommended that all game packets not relating to RakNet begin with their own special ID, Minecraft: Pocket Edition does this. It is also recommended that game servers and game clients do not use raw packets at all.

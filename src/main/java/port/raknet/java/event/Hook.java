@@ -84,5 +84,15 @@ public enum Hook {
 	 * Parameter 1: The EncapsulatedPacket (EncapsulatedPacket)
 	 */
 	PACKET_RECEIVED,
+	
+	/**
+	 * Received whenever a server exception occurs<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The Exception (Exception)<br>
+	 * Parameter 1: The ChannelHandlerContext (ChannelHandlerContext)<br>
+	 * Parameter 2: The time the error occurred (long)
+	 */
+	HANDLER_EXCEPTION_OCCURED;
 
 }

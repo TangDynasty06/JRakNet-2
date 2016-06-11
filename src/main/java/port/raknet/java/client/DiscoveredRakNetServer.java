@@ -28,14 +28,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.protocol.raknet;
+package port.raknet.java.client;
 
-import port.raknet.java.protocol.Packet;
+import java.net.InetSocketAddress;
 
-public class ConnectedCancelConnection extends Packet {
-	
-	public ConnectedCancelConnection() {
-		super(ID_CONNECTED_CANCEL_CONNECTION);
+/**
+ * Represents a server that has been found on the network by
+ * <code>ServerAdvertiseTask</code>
+ *
+ * @author Trent Summerlin
+ */
+public class DiscoveredRakNetServer {
+
+	public final InetSocketAddress address;
+	public final long serverId;
+	public final String identifier;
+	public int cyclesLeft = 0;
+
+	public DiscoveredRakNetServer(InetSocketAddress address, long serverId, String identifier) {
+		this.address = address;
+		this.serverId = serverId;
+		this.identifier = identifier;
 	}
-	
+
 }

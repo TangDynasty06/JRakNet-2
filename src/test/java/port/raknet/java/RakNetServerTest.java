@@ -34,6 +34,7 @@ import java.util.Scanner;
 
 import port.raknet.java.event.Hook;
 import port.raknet.java.event.HookRunnable;
+import port.raknet.java.exception.RakNetException;
 import port.raknet.java.protocol.raknet.internal.EncapsulatedPacket;
 import port.raknet.java.server.RakNetServer;
 import port.raknet.java.session.RakNetSession;
@@ -48,11 +49,11 @@ public class RakNetServerTest {
 
 	private static String identifier = "A RakNet Server";
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws RakNetException {
 		// Set server options
 		RakNetOptions options = new RakNetOptions();
 		options.serverPort = 19132;
-		options.serverIdentifier = "MCPE;_IDENTIFIER_;70;0.14.3;0;10";
+		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10";
 		RakNetServer server = new RakNetServer(options);
 
 		// Client connected
@@ -96,7 +97,7 @@ public class RakNetServerTest {
 			}
 		});
 
-		server.startThreadedServer();
+		server.startThreaded();
 
 		// Wait for input from console
 		@SuppressWarnings("resource")

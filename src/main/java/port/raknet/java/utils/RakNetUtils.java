@@ -33,6 +33,7 @@ package port.raknet.java.utils;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
@@ -53,9 +54,24 @@ import port.raknet.java.protocol.raknet.UnconnectedPong;
  *
  * @author Trent Summerlin
  */
-public class RakNetUtils implements RakNet {
+public abstract class RakNetUtils implements RakNet {
 
-	private static int pingId;
+	private static long raknetId = getRakNetID();
+
+	/**
+	 * Used to get the ID used by RakNet assigned to this system
+	 * 
+	 * @return long
+	 */
+	public static long getRakNetID() {
+		try {
+			InetAddress localHost = InetAddress.getLocalHost();
+			String systemName = localHost.getHostName();
+			return systemName.hashCode();
+		} catch (UnknownHostException e) {
+			return -1;
+		}
+	}
 
 	/**
 	 * Used to quickly send a packet to a sever and get it's response, do
@@ -119,7 +135,7 @@ public class RakNetUtils implements RakNet {
 	 */
 	public static String getServerIdentifier(String address, int port, long timeout) {
 		UnconnectedPing ping = new UnconnectedPing();
-		ping.pingId = pingId++;
+		ping.pingId = raknetId;
 		ping.encode();
 
 		Packet sprr = createBootstrapAndSend(address, port, ping, timeout);

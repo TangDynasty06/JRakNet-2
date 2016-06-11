@@ -28,31 +28,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package port.raknet.java.server;
-
-import port.raknet.java.exception.RakNetException;
+package port.raknet.java.task;
 
 /**
- * Starts the server on it's own thread
+ * Extended by classes which 
  *
  * @author Trent Summerlin
  */
-public class RakNetServerThread extends Thread {
+public interface TaskRunnable {
 
-	private final RakNetServer server;
-
-	public RakNetServerThread(RakNetServer server) {
-		this.server = server;
-	}
-
-	@Override
-	public void run() {
-		try {
-			server.start();
-		} catch (RakNetException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
-	}
+	public long getWaitTimeMillis();
+	
+	public void run();
 
 }

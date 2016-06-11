@@ -41,9 +41,7 @@ import port.raknet.java.session.ServerSession;
  *
  * @author Trent Summerlin
  */
-public class ServerTimeoutTask implements Runnable {
-
-	public static final long TICK = 1000L;
+public class ServerTimeoutTask implements TaskRunnable {
 
 	private final RakNetClient client;
 	private long pingId;
@@ -53,11 +51,16 @@ public class ServerTimeoutTask implements Runnable {
 	}
 
 	@Override
+	public long getWaitTimeMillis() {
+		return 1000L;
+	}
+
+	@Override
 	public void run() {
 		RakNetOptions options = client.getOptions();
 		ServerSession session = client.getSession();
 		if (session != null) {
-			session.pushLastReceiveTime(TICK);
+			session.pushLastReceiveTime(this.getWaitTimeMillis());
 			if ((double) (options.timeout - session.getLastReceiveTime()) / options.timeout <= 0.5) {
 				// Ping ID's do not need to match
 				ConnectedPing ping = new ConnectedPing();
@@ -66,7 +69,7 @@ public class ServerTimeoutTask implements Runnable {
 				session.sendPacket(Reliability.RELIABLE, ping);
 			}
 			if (session.getLastReceiveTime() >= options.timeout) {
-				client.removeSession("Timeout");
+				client.disconnect("Timeout");
 			}
 		}
 	}
