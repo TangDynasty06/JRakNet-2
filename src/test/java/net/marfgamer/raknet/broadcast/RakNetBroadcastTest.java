@@ -49,7 +49,7 @@ public class RakNetBroadcastTest {
 		frame.setVisible(true);
 
 		while (true) {
-			Thread.sleep(1000); // ConcurrentModificationException is a jerk
+			Thread.sleep(1000); // Pause to stop flickering
 			ArrayList<String> serverName = new ArrayList<String>();
 			for (DiscoveredRakNetServer server : client.getDiscoveredServers()) {
 				if (server.identifier.startsWith("MCPE;")) {

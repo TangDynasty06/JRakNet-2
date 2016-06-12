@@ -273,7 +273,16 @@ public class RakNetClient implements RakNet {
 		}
 	}
 
-	public DiscoveredRakNetServer[] getDiscoveredServers() {
+	/**
+	 * Returns all the discovered servers from the
+	 * <code>ServerAdvertiseTask</code><br>
+	 * This must be <b><font color="#800080">synchronized</font></b> as its
+	 * underlying function call is also
+	 * <b><font color="#800080">synchronized</font></b>
+	 * 
+	 * @return DiscoveredRakNetServer[]
+	 */
+	public synchronized DiscoveredRakNetServer[] getDiscoveredServers() {
 		return advertise.getDiscoveredServers();
 	}
 

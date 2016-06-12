@@ -49,7 +49,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
  */
 public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 
-	private static final int CYCLE_START = 5;
+	private static final int CYCLE_START = 10;
 
 	private final RakNetClient client;
 	private final HashMap<InetSocketAddress, DiscoveredRakNetServer> servers;
@@ -59,7 +59,14 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 		this.servers = new HashMap<InetSocketAddress, DiscoveredRakNetServer>();
 	}
 
-	public void handlePong(Packet packet, InetSocketAddress sender) throws UnexpectedPacketException {
+	/**
+	 * Handles a pong packet and sets the server identifier by address
+	 * 
+	 * @param packet
+	 * @param sender
+	 * @throws UnexpectedPacketException
+	 */
+	public synchronized void handlePong(Packet packet, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (packet.getId() == ID_UNCONNECTED_PONG) {
 			UnconnectedPong pong = new UnconnectedPong(packet);
 			pong.decode();
@@ -73,17 +80,22 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 		}
 	}
 
-	public DiscoveredRakNetServer[] getDiscoveredServers() {
+	/**
+	 * Returns all the discovered servers that have been found on the network
+	 * 
+	 * @return DiscoveredRakNetServer[]
+	 */
+	public synchronized DiscoveredRakNetServer[] getDiscoveredServers() {
 		return servers.values().toArray(new DiscoveredRakNetServer[servers.size()]);
 	}
 
 	@Override
-	public long getWaitTimeMillis() {
+	public synchronized long getWaitTimeMillis() {
 		return 1000L;
 	}
 
 	@Override
-	public void run() {
+	public synchronized void run() {
 		// Broadcast ping to network
 		UnconnectedPing ping = new UnconnectedPing();
 		ping.pingId = client.getClientId();
