@@ -37,6 +37,7 @@ import java.util.Iterator;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
@@ -49,7 +50,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
  */
 public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 
-	private static final int CYCLE_START = 10;
+	private static final int CYCLE_START = 5;
 
 	private final RakNetClient client;
 	private final HashMap<InetSocketAddress, DiscoveredRakNetServer> servers;
@@ -73,6 +74,7 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 
 			if (!servers.containsKey(sender)) {
 				servers.put(sender, new DiscoveredRakNetServer(sender, pong.serverId, pong.identifier));
+				client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender, System.currentTimeMillis());
 			}
 			servers.get(sender).cyclesLeft = CYCLE_START;
 		} else {
@@ -108,6 +110,7 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 			DiscoveredRakNetServer server = iServers.next();
 			if (server.cyclesLeft <= 0) {
 				iServers.remove();
+				client.executeHook(Hook.SERVER_UNDISCOVERED, server, server.address, System.currentTimeMillis());
 			} else {
 				server.cyclesLeft--;
 			}

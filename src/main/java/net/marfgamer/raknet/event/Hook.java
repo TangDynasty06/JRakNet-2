@@ -59,6 +59,28 @@ public enum Hook {
 	LEGACY_PING,
 
 	/**
+	 * Received whenever a server is discovered by the client<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The discovered server (DiscoveredRakNetServer)<br>
+	 * Parameter 1: The address of the discovered server (InetSocketAddress)<br>
+	 * Parameter 2: The time the server was discovered (long)
+	 */
+	SERVER_DISCOVERED,
+
+	/**
+	 * Received whenever a server that was discovered can no longer be found on
+	 * the local network<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The undiscovered server (DiscoveredRakNetServer)<br>
+	 * Parameter 1: The address of the undiscovered server (InetSocketAddress)
+	 * <br>
+	 * Parameter 2: The time the server lost connection (long)
+	 */
+	SERVER_UNDISCOVERED,
+
+	/**
 	 * Received whenever a session is officially connected <br>
 	 * <br>
 	 * Parameter 0: The RakNetSession (RakNetSession)<br>
@@ -84,9 +106,9 @@ public enum Hook {
 	 * Parameter 1: The EncapsulatedPacket (EncapsulatedPacket)
 	 */
 	PACKET_RECEIVED,
-	
+
 	/**
-	 * Received whenever a server exception occurs<br>
+	 * Received whenever a Netty handler exception occurs<br>
 	 * <br>
 	 * 
 	 * Parameter 0: The Exception (Exception)<br>

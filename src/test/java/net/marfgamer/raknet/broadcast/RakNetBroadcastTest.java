@@ -30,11 +30,16 @@
  */
 package net.marfgamer.raknet.broadcast;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 
 import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.event.Hook;
+import net.marfgamer.raknet.event.HookRunnable;
 
 /**
  * Used to discover Minecraft: Pocket Edition servers on the network
@@ -44,20 +49,45 @@ import net.marfgamer.raknet.client.RakNetClient;
 public class RakNetBroadcastTest {
 
 	public static void main(String[] args) throws Exception {
+		HashMap<InetSocketAddress, DiscoveredRakNetServer> discoveredServers = new HashMap<InetSocketAddress, DiscoveredRakNetServer>();
 		RakNetClient client = new RakNetClient(new RakNetOptions());
 		RakNetBroadcastFrame frame = new RakNetBroadcastFrame();
 		frame.setVisible(true);
 
-		while (true) {
-			Thread.sleep(1000); // Pause to stop flickering
-			ArrayList<String> serverName = new ArrayList<String>();
-			for (DiscoveredRakNetServer server : client.getDiscoveredServers()) {
-				if (server.identifier.startsWith("MCPE;")) {
-					serverName.add(server.identifier);
-				}
+		// Server found on local network
+		client.addHook(Hook.SERVER_DISCOVERED, new HookRunnable() {
+
+			@Override
+			public void run(Object... parameters) {
+				DiscoveredRakNetServer server = (DiscoveredRakNetServer) parameters[0];
+				InetSocketAddress address = (InetSocketAddress) parameters[1];
+				discoveredServers.put(address, server);
+				updateFrame(discoveredServers.values(), frame);
 			}
-			frame.setServers(serverName);
+
+		});
+
+		// Server can no longer be found on local network
+		client.addHook(Hook.SERVER_UNDISCOVERED, new HookRunnable() {
+
+			@Override
+			public void run(Object... parameters) {
+				InetSocketAddress address = (InetSocketAddress) parameters[1];
+				discoveredServers.remove(address);
+				updateFrame(discoveredServers.values(), frame);
+			}
+
+		});
+	}
+
+	private static void updateFrame(Collection<DiscoveredRakNetServer> servers, RakNetBroadcastFrame frame) {
+		ArrayList<String> serverName = new ArrayList<String>();
+		for (DiscoveredRakNetServer server : servers) {
+			if (server.identifier.startsWith("MCPE;")) {
+				serverName.add(server.identifier);
+			}
 		}
+		frame.setServers(serverName);
 	}
 
 }
