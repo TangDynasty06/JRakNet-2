@@ -333,6 +333,9 @@ public class RakNetClient implements RakNet {
 				channel.close();
 				handler.setChannel(null);
 			}
+
+			bootstrap.option(ChannelOption.SO_RCVBUF, options.maximumTransferUnit);
+			bootstrap.option(ChannelOption.SO_SNDBUF, options.maximumTransferUnit);
 			this.channel = bootstrap.bind(0).sync().channel();
 			handler.setChannel(channel);
 		} catch (Exception e) {
@@ -354,7 +357,6 @@ public class RakNetClient implements RakNet {
 			handler.resetHandler();
 			this.bindChannel();
 			int mtu = options.maximumTransferUnit;
-			bootstrap.option(ChannelOption.SO_RCVBUF, mtu).option(ChannelOption.SO_SNDBUF, mtu).handler(handler);
 
 			// Do not bind to "localhost", it locks up the handler
 			this.session = new ServerSession(channel, address, this);
@@ -368,7 +370,7 @@ public class RakNetClient implements RakNet {
 
 				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
 				request.mtuSize = (short) mtu;
-				request.protocol = 7;
+				request.protocol = NETWORK_PROTOCOL;
 				request.encode();
 
 				bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);
@@ -465,7 +467,7 @@ public class RakNetClient implements RakNet {
 	 * @param cause
 	 */
 	public void disconnect(Throwable cause) {
-		this.disconnect();
+		this.disconnect(cause.getLocalizedMessage());
 	}
 
 	/**

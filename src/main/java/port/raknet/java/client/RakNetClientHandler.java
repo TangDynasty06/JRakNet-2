@@ -50,7 +50,7 @@ import port.raknet.java.protocol.raknet.internal.CustomPacket;
  *
  * @author Trent Summerlin
  */
-@Sharable // Socket will be bound to a socket multiple timesO
+@Sharable // Socket will be bound to a socket multiple times
 public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetClient client;
@@ -117,6 +117,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		if (cause instanceof IndexOutOfBoundsException) {
 			// A bad packet read will not kill us all
 		} else {
+			client.disconnect(cause);
 			client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, ctx, System.currentTimeMillis());
 		}
 	}
