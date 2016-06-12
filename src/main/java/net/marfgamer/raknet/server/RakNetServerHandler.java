@@ -43,6 +43,7 @@ import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
 import net.marfgamer.raknet.session.ClientSession;
+import net.marfgamer.raknet.session.SessionState;
 
 /**
  * The internal Netty handler for the server, handles ACK, NACK, and
@@ -114,7 +115,13 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 * @param address
 	 */
 	public void removeSession(InetSocketAddress address, String reason) {
-		server.executeHook(Hook.SESSION_DISCONNECTED, sessions.get(address), reason, System.currentTimeMillis());
+		if (sessions.containsKey(address)) {
+			ClientSession session = sessions.get(address);
+			if (session.getState() == SessionState.CONNECTED) {
+				server.executeHook(Hook.SESSION_DISCONNECTED, sessions.get(address), reason,
+						System.currentTimeMillis());
+			}
+		}
 		sessions.remove(address);
 	}
 
