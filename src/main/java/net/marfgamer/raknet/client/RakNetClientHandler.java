@@ -93,6 +93,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			}
 
 			// Handle internal packets here
+			client.pushPacketsThisSecond();
 			if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {
 				CustomPacket custom = new CustomPacket(packet);
 				custom.decode();

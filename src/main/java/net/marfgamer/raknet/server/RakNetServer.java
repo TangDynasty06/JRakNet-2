@@ -56,6 +56,7 @@ import net.marfgamer.raknet.scheduler.RakNetScheduler;
 import net.marfgamer.raknet.session.ClientSession;
 import net.marfgamer.raknet.session.SessionState;
 import net.marfgamer.raknet.task.ClientTimeoutTask;
+import net.marfgamer.raknet.task.ClientUnblockTask;
 import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
@@ -215,6 +216,7 @@ public class RakNetServer implements RakNet {
 
 					session.sendRaw(incompatible);
 					handler.removeSession(session, "Incompatible protocol");
+					handler.blockAddress(session.getAddress(), (300 * 1000L));
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {
@@ -261,6 +263,7 @@ public class RakNetServer implements RakNet {
 
 		// Start scheduler
 		scheduler.scheduleRepeatingTask(new ClientTimeoutTask(this, handler));
+		scheduler.scheduleRepeatingTask(new ClientUnblockTask(this.handler));
 		scheduler.start();
 		this.running = true;
 	}

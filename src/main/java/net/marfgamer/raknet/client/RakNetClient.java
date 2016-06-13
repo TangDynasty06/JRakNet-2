@@ -48,6 +48,7 @@ import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.IncompatibleProtocolException;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
+import net.marfgamer.raknet.exception.PacketOverloadException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
@@ -217,6 +218,21 @@ public class RakNetClient implements RakNet {
 			hooks.get(hook).run(parameters);
 		}
 		return parameters;
+	}
+
+	/**
+	 * Updates the <code>packetsThisSecond</code> for the current session if
+	 * there is one
+	 * 
+	 * @throws PacketOverloadException
+	 */
+	protected void pushPacketsThisSecond() throws PacketOverloadException {
+		if (session != null) {
+			session.pushPacketsThisSecond();
+			if (session.getPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
+				throw new PacketOverloadException(session);
+			}
+		}
 	}
 
 	/**

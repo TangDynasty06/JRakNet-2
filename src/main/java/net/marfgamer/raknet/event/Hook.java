@@ -99,6 +99,24 @@ public enum Hook {
 	SESSION_DISCONNECTED,
 
 	/**
+	 * Received whenever an address has been blocked by the server handler<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The blocked client (BlockedClient)<br>
+	 * Parameter 1: The time the client was blocked (long)
+	 */
+	ADDRESS_BLOCKED,
+
+	/**
+	 * Received whenever an address has been unblocked by the server handler<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The now unblocked client (BlockedClient)<br>
+	 * Parameter 1: The time the client was unblocked (long)
+	 */
+	ADDRESS_UNBLOCKED,
+
+	/**
 	 * Received whenever a packet is received<br>
 	 * <br>
 	 * 

@@ -28,32 +28,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.server;
 
-import net.marfgamer.raknet.RakNet;
+import java.net.InetAddress;
 
 /**
- * Represents a error in JRakNet
+ * Represents a client that has been blocked and contains data such as the
+ * address, reason, and the time left until they are unblocked.
  *
  * @author Trent Summerlin
  */
-public class RakNetException extends Exception implements RakNet {
+public class BlockedAddress {
 
-	private static final long serialVersionUID = 6137150061303840459L;
+	public final InetAddress address;
+	public long time;
 
-	private final String reason;
-
-	public RakNetException(String reason) {
-		super(reason);
-		this.reason = reason;
-	}
-
-	public RakNetException(Throwable cause) {
-		this(cause.getLocalizedMessage());
-	}
-
-	public String getLocalizedMessage() {
-		return this.reason;
+	public BlockedAddress(InetAddress address, long time) {
+		this.address = address;
+		this.time = time;
 	}
 
 }

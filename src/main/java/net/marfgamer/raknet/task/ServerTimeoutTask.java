@@ -60,6 +60,7 @@ public class ServerTimeoutTask implements TaskRunnable {
 		RakNetOptions options = client.getOptions();
 		ServerSession session = client.getSession();
 		if (session != null) {
+			session.resetPacketsThisSecond();
 			session.pushLastReceiveTime(this.getWaitTimeMillis());
 			if ((double) (options.timeout - session.getLastReceiveTime()) / options.timeout <= 0.5) {
 				// Ping ID's do not need to match

@@ -70,7 +70,7 @@ public class RakNetOptions {
 	 * client, this is what <code>RakNetClient</code> will start at as it
 	 * gradually decreases until a response is received
 	 */
-	public int maximumTransferUnit = 2048;
+	public int maximumTransferUnit = 4096;
 
 	/**
 	 * How long until a session is disconnected from the server due to

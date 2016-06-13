@@ -71,6 +71,7 @@ public abstract class RakNetSession implements RakNet {
 	// Packet sequencing data
 	private int sendSeqNumber;
 	private int receiveSeqNumber;
+	private int packetsThisSecond;
 	private long lastReceiveTime;
 
 	// Queue data
@@ -151,6 +152,29 @@ public abstract class RakNetSession implements RakNet {
 	 */
 	public void setMTUSize(short mtuSize) {
 		this.mtuSize = mtuSize;
+	}
+
+	/**
+	 * Returns the amount of packets that have been received this second
+	 * 
+	 * @return int
+	 */
+	public int getPacketsThisSecond() {
+		return this.packetsThisSecond;
+	}
+
+	/**
+	 * Updates the <code>packetstThisSecond</code> for the session
+	 */
+	public void pushPacketsThisSecond() {
+		this.packetsThisSecond++;
+	}
+
+	/**
+	 * Resets the <code>packetThisSecond</code> for the session
+	 */
+	public void resetPacketsThisSecond() {
+		this.packetsThisSecond = 0;
 	}
 
 	/**

@@ -30,8 +30,8 @@
  */
 package net.marfgamer.raknet.server;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -54,22 +54,31 @@ import net.marfgamer.raknet.session.SessionState;
 public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetServer server;
-	private final ArrayList<InetSocketAddress> blocked;
+	private final HashMap<InetAddress, BlockedAddress> blocked;
 	private final HashMap<InetSocketAddress, ClientSession> sessions;
 
 	public RakNetServerHandler(RakNetServer server) {
 		this.server = server;
-		this.blocked = new ArrayList<InetSocketAddress>();
+		this.blocked = new HashMap<InetAddress, BlockedAddress>();
 		this.sessions = new HashMap<InetSocketAddress, ClientSession>();
 	}
 
 	/**
-	 * Blocks the specified address
+	 * Blocks the specified address with the specified reason and the specified
+	 * time in milliseconds
 	 * 
 	 * @param address
+	 * @param reason
+	 * @param time
+	 * @return BlockedClient
 	 */
-	public void blockAddress(InetSocketAddress address) {
-		blocked.add(address);
+	public void blockAddress(InetAddress address, long time) {
+		System.out.println("Blocking " + address + "... (" + blocked.containsKey(address) + ")");
+		if (blocked.containsKey(address) == false) {
+			BlockedAddress client = blocked.put(address, new BlockedAddress(address, time));
+			server.executeHook(Hook.ADDRESS_BLOCKED, client, System.currentTimeMillis());
+			System.out.println("Blocked address and threw hook!");
+		}
 	}
 
 	/**
@@ -77,17 +86,29 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 * 
 	 * @param address
 	 */
-	public void unblockAddress(InetSocketAddress address) {
-		blocked.remove(address);
+	public void unblockAddress(InetAddress address) {
+		if (blocked.containsKey(address)) {
+			server.executeHook(Hook.ADDRESS_UNBLOCKED, blocked.get(address), System.currentTimeMillis());
+			blocked.remove(address);
+		}
 	}
 
 	/**
-	 * Returns the blocked addresses
+	 * Unblocks the specified blocked client
 	 * 
-	 * @return InetSocketAddress
+	 * @param client
 	 */
-	public InetSocketAddress[] getBlockedAddress() {
-		return blocked.toArray(new InetSocketAddress[blocked.size()]);
+	public void unblockAddress(BlockedAddress address) {
+		this.unblockAddress(address.address);
+	}
+
+	/**
+	 * Returns all the blocked clients
+	 * 
+	 * @return BlockedAddress[]
+	 */
+	public BlockedAddress[] getBlockedAddresses() {
+		return blocked.values().toArray(new BlockedAddress[blocked.size()]);
 	}
 
 	/**
@@ -137,7 +158,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-		if (!blocked.contains(msg.sender())) {
+		if (!blocked.containsKey(msg.sender())) {
 			// Verify session
 			InetSocketAddress address = msg.sender();
 			if (!sessions.containsKey(address)) {
@@ -148,6 +169,12 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			ClientSession session = sessions.get(address);
 			Packet packet = new Packet(msg.content().retain());
 			short pid = packet.getId();
+
+			// Make sure we haven't received too many packets too fast
+			session.pushPacketsThisSecond();
+			if (session.getPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
+				this.blockAddress(session.getAddress(), (600 * 1000L));
+			}
 
 			// Handle internal packets here
 			session.resetLastReceiveTime();

@@ -30,30 +30,32 @@
  */
 package net.marfgamer.raknet.exception;
 
-import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.session.RakNetSession;
 
 /**
- * Represents a error in JRakNet
+ * Occurs whenever too many packets are received from one session too fast
  *
  * @author Trent Summerlin
  */
-public class RakNetException extends Exception implements RakNet {
+public class PacketOverloadException extends RakNetException {
 
-	private static final long serialVersionUID = 6137150061303840459L;
+	private static final long serialVersionUID = -4600284275407632090L;
 
-	private final String reason;
+	private final RakNetSession session;
 
-	public RakNetException(String reason) {
-		super(reason);
-		this.reason = reason;
+	public PacketOverloadException(RakNetSession session) {
+		super("Session with address " + session.getSocketAddress() + " sent too many packets! (Over "
+				+ MAX_PACKETS_PER_SECOND + " a second!)");
+		this.session = session;
 	}
 
-	public RakNetException(Throwable cause) {
-		this(cause.getLocalizedMessage());
+	public RakNetSession getSession() {
+		return this.session;
 	}
 
+	@Override
 	public String getLocalizedMessage() {
-		return this.reason;
+		return "Received too many packets";
 	}
 
 }

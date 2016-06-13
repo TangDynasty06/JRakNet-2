@@ -28,32 +28,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.task;
 
-import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.server.BlockedAddress;
+import net.marfgamer.raknet.server.RakNetServerHandler;
 
 /**
- * Represents a error in JRakNet
+ * Used by the server to unblock clients after they have served their time in
+ * the dungeon
  *
  * @author Trent Summerlin
  */
-public class RakNetException extends Exception implements RakNet {
+public class ClientUnblockTask implements TaskRunnable {
 
-	private static final long serialVersionUID = 6137150061303840459L;
+	private final RakNetServerHandler handler;
 
-	private final String reason;
-
-	public RakNetException(String reason) {
-		super(reason);
-		this.reason = reason;
+	public ClientUnblockTask(RakNetServerHandler handler) {
+		this.handler = handler;
 	}
 
-	public RakNetException(Throwable cause) {
-		this(cause.getLocalizedMessage());
+	@Override
+	public long getWaitTimeMillis() {
+		return 1000L;
 	}
 
-	public String getLocalizedMessage() {
-		return this.reason;
+	@Override
+	public void run() {
+		BlockedAddress[] addresses = handler.getBlockedAddresses();
+		for (BlockedAddress address : addresses) {
+			address.time -= this.getWaitTimeMillis();
+			if (address.time <= 0) {
+				handler.unblockAddress(address);
+			}
+		}
 	}
 
 }

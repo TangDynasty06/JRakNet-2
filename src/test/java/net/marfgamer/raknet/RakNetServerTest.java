@@ -32,11 +32,11 @@ package net.marfgamer.raknet;
 
 import java.util.Scanner;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
+import net.marfgamer.raknet.server.BlockedAddress;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.session.RakNetSession;
 
@@ -96,6 +96,29 @@ public class RakNetServerTest {
 			public void run(Object... parameters) {
 				parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier);
 			}
+		});
+
+		// Address blocked
+		server.addHook(Hook.ADDRESS_BLOCKED, new HookRunnable() {
+
+			@Override
+			public void run(Object... parameters) {
+				BlockedAddress address = (BlockedAddress) parameters[0];
+				System.out
+						.println("Blocked address " + address.address + " for " + (address.time / 1000L) + " seconds");
+			}
+
+		});
+
+		// Client unblocked
+		server.addHook(Hook.ADDRESS_UNBLOCKED, new HookRunnable() {
+
+			@Override
+			public void run(Object... parameters) {
+				BlockedAddress address = (BlockedAddress) parameters[0];
+				System.out.println("Unblocked address " + address.address);
+			}
+
 		});
 
 		server.startThreaded();

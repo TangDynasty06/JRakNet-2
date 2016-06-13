@@ -44,6 +44,7 @@ public interface RakNet {
 
 	// Transfer size
 	public static final int MINIMUM_TRANSFER_UNIT = 530;
+	public static final int MAX_PACKETS_PER_SECOND = 500;
 
 	// Status
 	public static final short ID_UNCONNECTED_PING = 0x01;
