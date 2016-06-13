@@ -79,6 +79,8 @@ public abstract class RakNetSession implements RakNet {
 	private int sendMessageIndex;
 	private int[] sendIndex;
 	private int[] receiveIndex;
+	private final ArrayList<Integer> receivedCustoms;
+	private final HashMap<Integer, CustomPacket> reliableQueue;
 	private final HashMap<Integer, CustomPacket> recoveryQueue;
 	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
 
@@ -87,6 +89,8 @@ public abstract class RakNetSession implements RakNet {
 		this.address = address;
 		this.sendIndex = new int[32];
 		this.receiveIndex = new int[32];
+		this.receivedCustoms = new ArrayList<Integer>();
+		this.reliableQueue = new HashMap<Integer, CustomPacket>();
 		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
 		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
 	}
@@ -243,6 +247,9 @@ public abstract class RakNetSession implements RakNet {
 
 			// Send CustomPacket and update Acknowledge queues
 			this.sendRaw(custom);
+			if (encapsulated.reliability.isReliable()) {
+				reliableQueue.put(custom.seqNumber, custom);
+			}
 			recoveryQueue.put(custom.seqNumber, custom);
 		}
 	}
@@ -270,20 +277,12 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Removes all packets in the ACK packet from the recovery queue, as they
-	 * have already been acknowledged
+	 * Returns all reliable packets that have not yet been Acknowledged
 	 * 
-	 * @throws UnexpectedPacketException
-	 * 
+	 * @return CustomPacket[]
 	 */
-	public final void handleAck(Acknowledge ack) throws UnexpectedPacketException {
-		if (ack.getId() == ID_ACK) {
-			for (int packet : ack.packets) {
-				recoveryQueue.remove(packet);
-			}
-		} else {
-			throw new UnexpectedPacketException(ID_ACK, ack.getId());
-		}
+	public CustomPacket[] getReliableQueue() {
+		return this.reliableQueue.values().toArray(new CustomPacket[reliableQueue.size()]);
 	}
 
 	/**
@@ -296,12 +295,30 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
+	 * Removes all packets in the ACK packet from the recovery queue, as they
+	 * have already been acknowledged
+	 * 
+	 * @param ack
+	 * @throws UnexpectedPacketException
+	 */
+	public final synchronized void handleAck(Acknowledge ack) throws UnexpectedPacketException {
+		if (ack.getId() == ID_ACK) {
+			for (int packet : ack.packets) {
+				reliableQueue.remove(packet);
+				recoveryQueue.remove(packet);
+			}
+		} else {
+			throw new UnexpectedPacketException(ID_ACK, ack.getId());
+		}
+	}
+
+	/**
 	 * Resends all packets with the ID's contained in the NACK packet
 	 * 
 	 * @param nack
 	 * @throws UnexpectedPacketException
 	 */
-	public final void handleNack(Acknowledge nack) throws UnexpectedPacketException {
+	public final synchronized void handleNack(Acknowledge nack) throws UnexpectedPacketException {
 		if (nack.getId() == ID_NACK) {
 			int[] packets = nack.packets;
 			for (int i = 0; i < packets.length; i++) {
@@ -328,15 +345,18 @@ public abstract class RakNetSession implements RakNet {
 			this.sendRaw(nack);
 		}
 
-		// Acknowledge packet
+		// Acknowledge packet even if it has been received before
 		Acknowledge ack = new Acknowledge(ID_ACK);
 		ack.packets = new int[] { custom.seqNumber };
 		ack.encode();
 		this.sendRaw(ack);
 
-		// Handle EncapsulatedPackets
-		for (EncapsulatedPacket encapsulated : custom.packets) {
-			this.handleEncapsulated0(encapsulated);
+		// Make sure this packet wasn't already received
+		if (!receivedCustoms.contains(custom.seqNumber)) {
+			for (EncapsulatedPacket encapsulated : custom.packets) {
+				this.handleEncapsulated0(encapsulated);
+			}
+			receivedCustoms.add(custom.seqNumber);
 		}
 	}
 
