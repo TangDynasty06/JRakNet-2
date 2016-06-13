@@ -35,6 +35,7 @@ package net.marfgamer.raknet.event;
  *
  * @author Trent Summerlin
  */
+@FunctionalInterface
 public interface HookRunnable {
 
 	public void run(Object... parameters);

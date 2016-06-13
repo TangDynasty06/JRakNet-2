@@ -33,7 +33,6 @@ package net.marfgamer.raknet;
 import java.util.Scanner;
 
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 import net.marfgamer.raknet.server.BlockedAddress;
@@ -58,67 +57,43 @@ public class RakNetServerTest {
 		RakNetServer server = new RakNetServer(options);
 
 		// Client connected
-		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				System.out
-						.println("Client from address " + session.getSocketAddress() + " has connected to the server");
-			}
+		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			System.out.println("Client from address " + session.getSocketAddress() + " has connected to the server");
 		});
 
 		// Packet received
-		server.addHook(Hook.PACKET_RECEIVED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-				System.out.println(
-						"Received packet from client with address " + session.getSocketAddress() + " with packet ID: 0x"
-								+ Integer.toHexString(encapsulated.convertPayload().getId()).toUpperCase());
-			}
+		server.addHook(Hook.PACKET_RECEIVED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
+			System.out.println("Received packet from client with address " + session.getSocketAddress()
+					+ " with packet ID: 0x" + Integer.toHexString(encapsulated.convertPayload().getId()).toUpperCase());
 		});
 
 		// Client disconnected
-		server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				String reason = parameters[1].toString();
-				System.out.println("Client from address " + session.getSocketAddress()
-						+ " has disconnected from the server for the reason \"" + reason + "\"");
-			}
+		server.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			String reason = parameters[1].toString();
+			System.out.println("Client from address " + session.getSocketAddress()
+					+ " has disconnected from the server for the reason \"" + reason + "\"");
+
 		});
 
 		// Server has been pinged
-		server.addHook(Hook.SERVER_PING, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier);
-			}
+		server.addHook(Hook.SERVER_PING, (Object[] parameters) -> {
+			parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier);
 		});
 
 		// Address blocked
-		server.addHook(Hook.ADDRESS_BLOCKED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				BlockedAddress address = (BlockedAddress) parameters[0];
-				System.out
-						.println("Blocked address " + address.address + " for " + (address.time / 1000L) + " seconds");
-			}
-
+		server.addHook(Hook.ADDRESS_BLOCKED, (Object[] parameters) -> {
+			BlockedAddress address = (BlockedAddress) parameters[0];
+			System.out.println("Blocked address " + address.address + " for " + (address.time / 1000L) + " seconds");
 		});
 
 		// Client unblocked
-		server.addHook(Hook.ADDRESS_UNBLOCKED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				BlockedAddress address = (BlockedAddress) parameters[0];
-				System.out.println("Unblocked address " + address.address);
-			}
-
+		server.addHook(Hook.ADDRESS_UNBLOCKED, (Object[] parameters) -> {
+			BlockedAddress address = (BlockedAddress) parameters[0];
+			System.out.println("Unblocked address " + address.address);
 		});
 
 		server.startThreaded();

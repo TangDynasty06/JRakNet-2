@@ -39,7 +39,6 @@ import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.event.HookRunnable;
 
 /**
  * Used to discover Minecraft: Pocket Edition servers on the network
@@ -55,28 +54,18 @@ public class RakNetBroadcastTest {
 		frame.setVisible(true);
 
 		// Server found on local network
-		client.addHook(Hook.SERVER_DISCOVERED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				DiscoveredRakNetServer server = (DiscoveredRakNetServer) parameters[0];
-				InetSocketAddress address = (InetSocketAddress) parameters[1];
-				discoveredServers.put(address, server);
-				updateFrame(discoveredServers.values(), frame);
-			}
-
+		client.addHook(Hook.SERVER_DISCOVERED, (Object[] parameters) -> {
+			DiscoveredRakNetServer server = (DiscoveredRakNetServer) parameters[0];
+			InetSocketAddress address = (InetSocketAddress) parameters[1];
+			discoveredServers.put(address, server);
+			updateFrame(discoveredServers.values(), frame);
 		});
 
 		// Server can no longer be found on local network
-		client.addHook(Hook.SERVER_UNDISCOVERED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				InetSocketAddress address = (InetSocketAddress) parameters[1];
-				discoveredServers.remove(address);
-				updateFrame(discoveredServers.values(), frame);
-			}
-
+		client.addHook(Hook.SERVER_UNDISCOVERED, (Object[] parameters) -> {
+			InetSocketAddress address = (InetSocketAddress) parameters[1];
+			discoveredServers.remove(address);
+			updateFrame(discoveredServers.values(), frame);
 		});
 	}
 

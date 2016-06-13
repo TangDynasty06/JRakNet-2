@@ -32,10 +32,8 @@ package net.marfgamer.raknet;
 
 import java.util.Scanner;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.session.RakNetSession;
 
@@ -54,33 +52,28 @@ public class RakNetClientTest {
 		RakNetClient client = new RakNetClient(new RakNetOptions());
 
 		// Client connected
-		client.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				System.out.println("Client has connected to server with address " + session.getSocketAddress() + ", disconnecting...");
-				client.disconnect();
-				
-			}
+		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			System.out.println(
+					"Client has connected to server with address " + session.getSocketAddress() + ", disconnecting...");
+			client.disconnect();
 		});
 
 		// Client disconnected
-		client.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				String reason = parameters[1].toString();
-				System.out.println("Server with address " + session.getSocketAddress()
-						+ " has been disconnected for the reason \"" + reason + "\"");
-			}
+		client.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			String reason = parameters[1].toString();
+			System.out.println("Server with address " + session.getSocketAddress()
+					+ " has been disconnected for the reason \"" + reason + "\"");
 		});
-		
+
 		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Press enter to connect to the server!");
-		while(true) {
+		while (true) {
 			try {
-				while(!scanner.hasNextLine());
+				while (!scanner.hasNextLine())
+					;
 				scanner.nextLine();
 				client.connect(SERVER_ADDRESS, SERVER_PORT);
 			} catch (Exception e) {
