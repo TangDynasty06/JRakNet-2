@@ -70,12 +70,11 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 * @param address
 	 * @param reason
 	 * @param time
-	 * @return BlockedClient
 	 */
 	public void blockAddress(InetAddress address, long time) {
 		if (!blocked.containsKey(address)) {
 			blocked.put(address, new BlockedAddress(address, time));
-			server.executeHook(Hook.ADDRESS_BLOCKED, blocked.get(address), System.currentTimeMillis());
+			server.executeHook(Hook.CLIENT_ADDRESS_BLOCKED, blocked.get(address), System.currentTimeMillis());
 		}
 	}
 
@@ -86,13 +85,13 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public void unblockAddress(InetAddress address) {
 		if (blocked.containsKey(address)) {
-			server.executeHook(Hook.ADDRESS_UNBLOCKED, blocked.get(address), System.currentTimeMillis());
+			server.executeHook(Hook.CLIENT_ADDRESS_UNBLOCKED, blocked.get(address), System.currentTimeMillis());
 			blocked.remove(address);
 		}
 	}
 
 	/**
-	 * Unblocks the specified blocked client
+	 * Unblocks the specified blocked address
 	 * 
 	 * @param client
 	 */
@@ -107,6 +106,21 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public BlockedAddress[] getBlockedAddresses() {
 		return blocked.values().toArray(new BlockedAddress[blocked.size()]);
+	}
+
+	/**
+	 * Returns a blocked address depending by its address
+	 * 
+	 * @param address
+	 * @return BlockAddress
+	 */
+	public BlockedAddress getBlockedAddress(InetAddress address) {
+		for (BlockedAddress blocked : getBlockedAddresses()) {
+			if (blocked.address.equals(address)) {
+				return blocked;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -156,7 +170,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-		if (!blocked.containsKey(msg.sender())) {
+		if (!blocked.containsKey(msg.sender().getAddress())) {
 			// Verify session
 			InetSocketAddress address = msg.sender();
 			if (!sessions.containsKey(address)) {

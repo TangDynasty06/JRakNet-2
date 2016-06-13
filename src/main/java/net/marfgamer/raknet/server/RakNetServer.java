@@ -30,6 +30,7 @@
  */
 package net.marfgamer.raknet.server;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 
 import io.netty.bootstrap.Bootstrap;
@@ -156,6 +157,69 @@ public class RakNetServer implements RakNet {
 	}
 
 	/**
+	 * Blocks the specified address with the specified reason and the specified
+	 * time in milliseconds
+	 * 
+	 * @param address
+	 * @param reason
+	 * @param time
+	 */
+	public void blockAddress(InetAddress address, long time) {
+		handler.blockAddress(address, time);
+	}
+
+	/**
+	 * Unblocks the specified address
+	 * 
+	 * @param address
+	 */
+	public void unblockAddress(InetAddress address) {
+		handler.unblockAddress(address);
+	}
+
+	/**
+	 * Unblocks the specified blocked address
+	 * 
+	 * @param address
+	 */
+	public void unblockAddress(BlockedAddress address) {
+		handler.unblockAddress(address);
+	}
+
+	/**
+	 * Returns how much time is left for an address block
+	 * 
+	 * @param address
+	 * @return long
+	 */
+	public long getBlockTime(InetAddress address) {
+		BlockedAddress blocked = handler.getBlockedAddress(address);
+		if (blocked != null) {
+			return blocked.time;
+		}
+		return 0;
+	}
+
+	/**
+	 * Returns all the blocked clients
+	 * 
+	 * @return BlockedAddress[]
+	 */
+	public BlockedAddress[] getBlockedAddresses() {
+		return handler.getBlockedAddresses();
+	}
+
+	/**
+	 * Returns a blocked address depending by its address
+	 * 
+	 * @param address
+	 * @return BlockAddress
+	 */
+	public BlockedAddress getBlockedAddress(InetAddress address) {
+		return handler.getBlockedAddress(address);
+	}
+
+	/**
 	 * Handles a raw packet
 	 * 
 	 * @param pid
@@ -187,7 +251,7 @@ public class RakNetServer implements RakNet {
 				UnconnectedLegacyPong legacyPong = new UnconnectedLegacyPong();
 				legacyPong.pingId = legacyPing.pingId;
 				legacyPong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.LEGACY_PING, options.serverIdentifier,
+				Object[] parameters = this.executeHook(Hook.SERVER_LEGACY_PING, options.serverIdentifier,
 						session.getAddress());
 				legacyPong.data = parameters[0].toString();
 				legacyPong.encode();

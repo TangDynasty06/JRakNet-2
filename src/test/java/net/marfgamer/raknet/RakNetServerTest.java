@@ -85,13 +85,13 @@ public class RakNetServerTest {
 		});
 
 		// Address blocked
-		server.addHook(Hook.ADDRESS_BLOCKED, (Object[] parameters) -> {
+		server.addHook(Hook.CLIENT_ADDRESS_BLOCKED, (Object[] parameters) -> {
 			BlockedAddress address = (BlockedAddress) parameters[0];
 			System.out.println("Blocked address " + address.address + " for " + (address.time / 1000L) + " seconds");
 		});
 
 		// Client unblocked
-		server.addHook(Hook.ADDRESS_UNBLOCKED, (Object[] parameters) -> {
+		server.addHook(Hook.CLIENT_ADDRESS_UNBLOCKED, (Object[] parameters) -> {
 			BlockedAddress address = (BlockedAddress) parameters[0];
 			System.out.println("Unblocked address " + address.address);
 		});
