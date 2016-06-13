@@ -73,11 +73,9 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 * @return BlockedClient
 	 */
 	public void blockAddress(InetAddress address, long time) {
-		System.out.println("Blocking " + address + "... (" + blocked.containsKey(address) + ")");
-		if (blocked.containsKey(address) == false) {
-			BlockedAddress client = blocked.put(address, new BlockedAddress(address, time));
-			server.executeHook(Hook.ADDRESS_BLOCKED, client, System.currentTimeMillis());
-			System.out.println("Blocked address and threw hook!");
+		if (!blocked.containsKey(address)) {
+			blocked.put(address, new BlockedAddress(address, time));
+			server.executeHook(Hook.ADDRESS_BLOCKED, blocked.get(address), System.currentTimeMillis());
 		}
 	}
 
@@ -171,9 +169,9 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			short pid = packet.getId();
 
 			// Make sure we haven't received too many packets too fast
-			session.pushPacketsThisSecond();
-			if (session.getPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
-				this.blockAddress(session.getAddress(), (600 * 1000L));
+			session.pushReceivedPacketsThisSecond();
+			if (session.getReceivedPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
+				this.blockAddress(session.getAddress(), TEN_MINUTES_MILLIS);
 			}
 
 			// Handle internal packets here

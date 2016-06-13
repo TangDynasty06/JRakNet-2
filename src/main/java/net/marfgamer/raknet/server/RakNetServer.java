@@ -216,7 +216,7 @@ public class RakNetServer implements RakNet {
 
 					session.sendRaw(incompatible);
 					handler.removeSession(session, "Incompatible protocol");
-					handler.blockAddress(session.getAddress(), (300 * 1000L));
+					handler.blockAddress(session.getAddress(), FIVE_MINUTES_MILLIS);
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {

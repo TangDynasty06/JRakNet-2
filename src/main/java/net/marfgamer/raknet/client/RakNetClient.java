@@ -228,8 +228,8 @@ public class RakNetClient implements RakNet {
 	 */
 	protected void pushPacketsThisSecond() throws PacketOverloadException {
 		if (session != null) {
-			session.pushPacketsThisSecond();
-			if (session.getPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
+			session.pushReceivedPacketsThisSecond();
+			if (session.getReceivedPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
 				throw new PacketOverloadException(session);
 			}
 		}

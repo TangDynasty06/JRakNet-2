@@ -71,13 +71,13 @@ public abstract class RakNetSession implements RakNet {
 	// Packet sequencing data
 	private int sendSeqNumber;
 	private int receiveSeqNumber;
-	private int packetsThisSecond;
 	private long lastReceiveTime;
+	private int receivedPacketsThisSecond;
 
 	// Queue data
 	private int splitId;
 	private int sendMessageIndex;
-	private int[] sendOrderIndex;
+	private int[] sendIndex;
 	private int[] receiveIndex;
 	private final HashMap<Integer, CustomPacket> recoveryQueue;
 	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
@@ -85,7 +85,7 @@ public abstract class RakNetSession implements RakNet {
 	public RakNetSession(Channel channel, InetSocketAddress address) {
 		this.channel = channel;
 		this.address = address;
-		this.sendOrderIndex = new int[32];
+		this.sendIndex = new int[32];
 		this.receiveIndex = new int[32];
 		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
 		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
@@ -159,22 +159,22 @@ public abstract class RakNetSession implements RakNet {
 	 * 
 	 * @return int
 	 */
-	public int getPacketsThisSecond() {
-		return this.packetsThisSecond;
+	public int getReceivedPacketsThisSecond() {
+		return this.receivedPacketsThisSecond;
 	}
 
 	/**
-	 * Updates the <code>packetstThisSecond</code> for the session
+	 * Updates the <code>receivedPacketsThisSecond</code> for the session
 	 */
-	public void pushPacketsThisSecond() {
-		this.packetsThisSecond++;
+	public void pushReceivedPacketsThisSecond() {
+		this.receivedPacketsThisSecond++;
 	}
 
 	/**
-	 * Resets the <code>packetThisSecond</code> for the session
+	 * Resets the <code>receivedPacketThisSecond</code> for the session
 	 */
-	public void resetPacketsThisSecond() {
-		this.packetsThisSecond = 0;
+	public void resetReceivedPacketsThisSecond() {
+		this.receivedPacketsThisSecond = 0;
 	}
 
 	/**
@@ -231,7 +231,7 @@ public abstract class RakNetSession implements RakNet {
 			}
 
 			if (packet.reliability.isOrdered() || packet.reliability.isSequenced()) {
-				encapsulated.orderIndex = this.sendOrderIndex[encapsulated.orderChannel]++;
+				encapsulated.orderIndex = this.sendIndex[encapsulated.orderChannel]++;
 			} else {
 				encapsulated.orderChannel = 0;
 				encapsulated.orderIndex = 0;

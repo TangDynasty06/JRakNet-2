@@ -63,6 +63,10 @@ public interface RakNet {
 	public static final short ID_CONNECTED_CLOSE_CONNECTION = 0x15;
 	public static final short ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL = 0x1A;
 
+	// Keep-alive and latency testing
+	public static final short ID_CONNECTED_PING = 0x00;
+	public static final short ID_CONNECTED_PONG = 0x03;
+
 	// Custom Packets
 	public static final short ID_CUSTOM_0 = 0x80;
 	public static final short ID_CUSTOM_1 = 0x81;
@@ -88,9 +92,9 @@ public interface RakNet {
 	// Channels
 	public static final short MAX_CHANNELS = 32;
 
-	// Keep-alive and latency testing
-	public static final short ID_CONNECTED_PING = 0x00;
-	public static final short ID_CONNECTED_PONG = 0x03;
+	// Time
+	public static final long FIVE_MINUTES_MILLIS = 300000L;
+	public static final long TEN_MINUTES_MILLIS = 600000L;
 
 	/**
 	 * Used to get a packet name by it's ID
