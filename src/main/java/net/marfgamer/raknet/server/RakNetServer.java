@@ -56,6 +56,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 import net.marfgamer.raknet.scheduler.RakNetScheduler;
 import net.marfgamer.raknet.session.ClientSession;
 import net.marfgamer.raknet.session.SessionState;
+import net.marfgamer.raknet.task.ClientReliabilityTask;
 import net.marfgamer.raknet.task.ClientTimeoutTask;
 import net.marfgamer.raknet.task.ClientUnblockTask;
 import net.marfgamer.raknet.utils.RakNetUtils;
@@ -328,6 +329,7 @@ public class RakNetServer implements RakNet {
 		// Start scheduler
 		scheduler.scheduleRepeatingTask(new ClientTimeoutTask(this, handler));
 		scheduler.scheduleRepeatingTask(new ClientUnblockTask(this.handler));
+		scheduler.scheduleRepeatingTask(new ClientReliabilityTask(this.handler));
 		scheduler.start();
 		this.running = true;
 	}

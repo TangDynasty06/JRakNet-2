@@ -66,6 +66,7 @@ import net.marfgamer.raknet.scheduler.RakNetScheduler;
 import net.marfgamer.raknet.session.ServerSession;
 import net.marfgamer.raknet.session.SessionState;
 import net.marfgamer.raknet.task.ServerAdvertiseTask;
+import net.marfgamer.raknet.task.ServerReliabilityTask;
 import net.marfgamer.raknet.task.ServerTimeoutTask;
 import net.marfgamer.raknet.utils.RakNetUtils;
 
@@ -291,10 +292,7 @@ public class RakNetClient implements RakNet {
 
 	/**
 	 * Returns all the discovered servers from the
-	 * <code>ServerAdvertiseTask</code><br>
-	 * This must be <b><font color="#800080">synchronized</font></b> as its
-	 * underlying function call is also
-	 * <b><font color="#800080">synchronized</font></b>
+	 * <code>ServerAdvertiseTask</code>
 	 * 
 	 * @return DiscoveredRakNetServer[]
 	 */
@@ -322,7 +320,7 @@ public class RakNetClient implements RakNet {
 	 * @param ack
 	 * @param sender
 	 */
-	protected void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
+	protected synchronized void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleAck(ack);
@@ -336,7 +334,8 @@ public class RakNetClient implements RakNet {
 	 * @param nack
 	 * @param sender
 	 */
-	protected void handleNack(Acknowledge nack, InetSocketAddress sender) throws UnexpectedPacketException {
+	protected synchronized void handleNack(Acknowledge nack, InetSocketAddress sender)
+			throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleNack(nack);
@@ -412,6 +411,7 @@ public class RakNetClient implements RakNet {
 		// Start scheduler
 		if (running == false) {
 			scheduler.scheduleRepeatingTask(new ServerTimeoutTask(this));
+			scheduler.scheduleRepeatingTask(new ServerReliabilityTask(this));
 			this.running = true;
 		}
 	}
