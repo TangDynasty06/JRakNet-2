@@ -185,7 +185,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			// Make sure we haven't received too many packets too fast
 			session.pushReceivedPacketsThisSecond();
 			if (session.getReceivedPacketsThisSecond() > MAX_PACKETS_PER_SECOND) {
-				this.blockAddress(session.getAddress(), TEN_MINUTES_MILLIS);
+				this.blockAddress(session.getAddress(), FIVE_MINUTES_MILLIS);
 			}
 
 			// Handle internal packets here

@@ -61,9 +61,9 @@ public class ClientReliabilityTask implements TaskRunnable, RakNet {
 			CustomPacket[] packets = session.getReliableQueue();
 
 			// Make sure client is not trying to do a back-off attack
-			if (packets.length > MAX_PACKETS_IN_QUEUE) {
+			if (packets.length > MAX_RELIABLE_PACKETS_IN_QUEUE) {
 				handler.removeSession(session, "Too many unacknowledged packets!");
-				handler.blockAddress(session.getAddress(), TEN_MINUTES_MILLIS);
+				handler.blockAddress(session.getAddress(), FIVE_MINUTES_MILLIS);
 			} else {
 				// Resend all lost packets
 				for (CustomPacket packet : packets) {

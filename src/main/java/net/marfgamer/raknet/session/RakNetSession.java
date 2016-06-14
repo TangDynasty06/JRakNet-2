@@ -333,18 +333,6 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	public final void handleCustom0(CustomPacket custom) throws RakNetException {
-		// Make sure none of the packets were lost
-		if (custom.seqNumber - receiveSeqNumber > 1) {
-			Acknowledge nack = new Acknowledge(ID_NACK);
-			int[] missing = new int[custom.seqNumber - receiveSeqNumber - 1];
-			for (int i = 0; i < missing.length; i++) {
-				missing[i] = receiveSeqNumber + i + 1;
-			}
-			nack.packets = missing;
-			nack.encode();
-			this.sendRaw(nack);
-		}
-
 		// Acknowledge packet even if it has been received before
 		Acknowledge ack = new Acknowledge(ID_ACK);
 		ack.packets = new int[] { custom.seqNumber };
@@ -353,6 +341,20 @@ public abstract class RakNetSession implements RakNet {
 
 		// Make sure this packet wasn't already received
 		if (!receivedCustoms.contains(custom.seqNumber)) {
+			// Make sure none of the packets were lost
+			if (custom.seqNumber - receiveSeqNumber > 1) {
+				Acknowledge nack = new Acknowledge(ID_NACK);
+				int[] missing = new int[custom.seqNumber - receiveSeqNumber - 1];
+				for (int i = 0; i < missing.length; i++) {
+					missing[i] = receiveSeqNumber + i + 1;
+				}
+				nack.packets = missing;
+				nack.encode();
+				this.sendRaw(nack);
+			}
+			this.receiveSeqNumber = custom.seqNumber;
+
+			// Handle encapsulated packets
 			for (EncapsulatedPacket encapsulated : custom.packets) {
 				this.handleEncapsulated0(encapsulated);
 			}

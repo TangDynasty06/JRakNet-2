@@ -72,11 +72,9 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 			UnconnectedPong pong = new UnconnectedPong(packet);
 			pong.decode();
 
-			if (!servers.containsKey(sender)) {
-				servers.put(sender, new DiscoveredRakNetServer(sender, pong.serverId, pong.identifier));
-				client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender, System.currentTimeMillis());
-			}
+			servers.put(sender, new DiscoveredRakNetServer(sender, pong.serverId, pong.identifier));
 			servers.get(sender).cyclesLeft = CYCLE_START;
+			client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender, System.currentTimeMillis());
 		} else {
 			throw new UnexpectedPacketException(ID_UNCONNECTED_PING, packet.getId());
 		}

@@ -59,7 +59,14 @@ public enum Hook {
 	SERVER_LEGACY_PING,
 
 	/**
-	 * Received whenever a server is discovered by the client<br>
+	 * Received whenever a server is discovered by the client or an identifier
+	 * is updated<br>
+	 * <br>
+	 * Note: When listing discovered servers, store them in a
+	 * <code>HashMap</code> with the key being the address and the value being
+	 * the discovered server. If you use an <code>ArrayList</code>, the same
+	 * server can be added again just by it sending a
+	 * <code>UNCONNECTED_PONG</code> packet<br>
 	 * <br>
 	 * 
 	 * Parameter 0: The discovered server (DiscoveredRakNetServer)<br>

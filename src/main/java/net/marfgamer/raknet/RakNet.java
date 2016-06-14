@@ -45,7 +45,7 @@ public interface RakNet {
 	// Transfer size
 	public static final int MINIMUM_TRANSFER_UNIT = 530;
 	public static final int MAX_PACKETS_PER_SECOND = 500;
-	public static final int MAX_PACKETS_IN_QUEUE = 128;
+	public static final int MAX_RELIABLE_PACKETS_IN_QUEUE = 128;
 
 	// Status
 	public static final short ID_UNCONNECTED_PING = 0x01;
@@ -94,8 +94,8 @@ public interface RakNet {
 	public static final short MAX_CHANNELS = 32;
 
 	// Time
-	public static final long FIVE_MINUTES_MILLIS = 300000L;
-	public static final long TEN_MINUTES_MILLIS = 600000L;
+	public static final long ONE_MINUTES_MILLIS = 60 * 1000L;
+	public static final long FIVE_MINUTES_MILLIS = 300 * 1000L;
 
 	/**
 	 * Used to get a packet name by it's ID
