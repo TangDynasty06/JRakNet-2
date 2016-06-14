@@ -84,7 +84,7 @@ public class ServerSession extends RakNetSession {
 					clientHandshake.timestamp = client.getTimestamp();
 					clientHandshake.encode();
 
-					this.sendPacket(Reliability.UNRELIABLE, clientHandshake);
+					this.sendPacket(Reliability.RELIABLE, clientHandshake);
 				}
 
 				client.setState(SessionState.CONNECTED);
@@ -98,7 +98,7 @@ public class ServerSession extends RakNetSession {
 			pong.pingId = ping.pingId;
 			pong.encode();
 
-			this.sendPacket(Reliability.UNRELIABLE, pong);
+			this.sendPacket(Reliability.RELIABLE, pong);
 		} else if (pid == ID_CONNECTED_PONG) {
 			this.resetLastReceiveTime();
 		} else if (client.getState() == SessionState.CONNECTED) {

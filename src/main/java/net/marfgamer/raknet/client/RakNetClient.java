@@ -274,7 +274,7 @@ public class RakNetClient implements RakNet {
 					ccr.timestamp = this.timestamp;
 					ccr.encode();
 
-					session.sendPacket(Reliability.UNRELIABLE, ccr);
+					session.sendPacket(Reliability.RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
 				}
 			}

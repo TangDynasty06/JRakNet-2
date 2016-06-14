@@ -95,7 +95,7 @@ public class ClientSession extends RakNetSession {
 				ConnectedPong sp = new ConnectedPong();
 				sp.pingId = cp.pingId;
 				sp.encode();
-				this.sendPacket(Reliability.UNRELIABLE, sp);
+				this.sendPacket(Reliability.RELIABLE, sp);
 			}
 		} else if (pid == ID_CONNECTED_PONG) {
 			this.resetLastReceiveTime();
@@ -110,7 +110,7 @@ public class ClientSession extends RakNetSession {
 				scha.serverTimestamp = server.getTimestamp();
 				scha.encode();
 
-				this.sendPacket(Reliability.UNRELIABLE, scha);
+				this.sendPacket(Reliability.RELIABLE, scha);
 				this.setState(SessionState.HANDSHAKING);
 			}
 		} else if (pid == ID_CONNECTED_CLIENT_HANDSHAKE) {
