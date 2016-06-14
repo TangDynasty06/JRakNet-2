@@ -32,7 +32,6 @@ package net.marfgamer.raknet.example;
 
 import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.session.RakNetSession;
@@ -56,24 +55,17 @@ public class RakNetServerExample {
 		RakNetServer server = new RakNetServer(options);
 
 		// Client connected
-		server.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				System.out
-						.println("Client from address " + session.getSocketAddress() + " has connected to the server");
-			}
+		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			System.out.println("Client from address " + session.getSocketAddress() + " has connected to the server");
 		});
 
 		// Client disconnected
-		server.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				String reason = parameters[1].toString();
-				System.out.println("Client from address " + session.getSocketAddress()
-						+ " has disconnected from the server for the reason \"" + reason + "\"");
-			}
+		server.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			String reason = parameters[1].toString();
+			System.out.println("Client from address " + session.getSocketAddress()
+					+ " has disconnected from the server for the reason \"" + reason + "\"");
 		});
 
 		// Start server

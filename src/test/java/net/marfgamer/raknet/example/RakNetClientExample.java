@@ -35,7 +35,6 @@ import java.net.InetSocketAddress;
 import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.session.RakNetSession;
 
@@ -56,31 +55,21 @@ public class RakNetClientExample {
 		RakNetClient client = new RakNetClient(new RakNetOptions());
 
 		// Server connected
-		client.addHook(Hook.SESSION_CONNECTED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				System.out.println("Successfully connected to server with address " + session.getSocketAddress());
-				client.disconnect();
-			}
-
+		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			System.out.println("Successfully connected to server with address " + session.getSocketAddress());
+			client.disconnect();
 		});
 
 		// Server disconnected
-		client.addHook(Hook.SESSION_DISCONNECTED, new HookRunnable() {
-
-			@Override
-			public void run(Object... parameters) {
-				RakNetSession session = (RakNetSession) parameters[0];
-				String reason = parameters[1].toString();
-				System.out.println("Successfully disconnected from server with address " + session.getSocketAddress()
-						+ " for the reason \"" + reason + "\"");
-				System.exit(0);
-			}
-
+		client.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			String reason = parameters[1].toString();
+			System.out.println("Successfully disconnected from server with address " + session.getSocketAddress()
+					+ " for the reason \"" + reason + "\"");
+			System.exit(0);
 		});
-		
+
 		// Attempt to connect to server
 		client.connect(new InetSocketAddress(SERVER_ADDRESS, SERVER_PORT));
 	}
