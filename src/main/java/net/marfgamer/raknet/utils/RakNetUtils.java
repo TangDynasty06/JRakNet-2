@@ -144,7 +144,7 @@ public abstract class RakNetUtils implements RakNet {
 			if (sprr.getId() == ID_UNCONNECTED_PONG) {
 				UnconnectedPong pong = new UnconnectedPong(sprr);
 				pong.decode();
-				if (pong.magic == true && pong.pingId == ping.clientId) {
+				if (pong.magic == true && pong.pingId == ping.pingId) {
 					return pong.identifier;
 				}
 			}
