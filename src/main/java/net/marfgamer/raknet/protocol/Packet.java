@@ -68,6 +68,10 @@ public class Packet implements RakNet {
 		this.id = this.getUByte();
 	}
 
+	public Packet(byte[] data) {
+		this(Unpooled.copiedBuffer(data));
+	}
+
 	public Packet(Packet packet) {
 		this.buffer = packet.buffer;
 		this.id = packet.id;

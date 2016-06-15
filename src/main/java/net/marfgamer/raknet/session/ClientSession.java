@@ -93,7 +93,8 @@ public class ClientSession extends RakNetSession {
 				cp.decode();
 
 				ConnectedPong sp = new ConnectedPong();
-				sp.pingId = cp.pingId;
+				sp.pingTime = cp.pingTime;
+				sp.pongTime = System.currentTimeMillis();
 				sp.encode();
 				this.sendPacket(Reliability.RELIABLE, sp);
 			}

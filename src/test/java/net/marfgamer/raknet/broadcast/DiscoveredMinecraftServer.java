@@ -30,6 +30,8 @@
  */
 package net.marfgamer.raknet.broadcast;
 
+import java.net.InetAddress;
+
 /**
  * Represents a Minecraft: Pocket Edition server that has been discovered on the
  * local network
@@ -38,13 +40,16 @@ package net.marfgamer.raknet.broadcast;
  */
 public class DiscoveredMinecraftServer {
 
+	public final InetAddress address;
 	public final String name;
 	public final int protocol;
 	public final String version;
 	public final int online;
 	public final int max;
 
-	public DiscoveredMinecraftServer(String name, int protocol, String version, int online, int max) {
+	public DiscoveredMinecraftServer(InetAddress address, String name, int protocol, String version, int online,
+			int max) {
+		this.address = address;
 		this.name = name;
 		this.protocol = protocol;
 		this.version = version;
@@ -52,7 +57,7 @@ public class DiscoveredMinecraftServer {
 		this.max = max;
 	}
 
-	public DiscoveredMinecraftServer(String identifier) {
+	public DiscoveredMinecraftServer(InetAddress address, String identifier) {
 		// Check data
 		String[] chunks = identifier.split(";");
 		if (!chunks[0].equals("MCPE")) {
@@ -61,6 +66,7 @@ public class DiscoveredMinecraftServer {
 		}
 
 		// Set data
+		this.address = address;
 		this.name = chunks[1];
 		this.protocol = parseIgnoreError(chunks[2]);
 		this.version = chunks[3];

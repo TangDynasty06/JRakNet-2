@@ -30,6 +30,8 @@
  */
 package net.marfgamer.raknet;
 
+import java.util.ArrayList;
+
 /**
  * Used for setting the options for <code>RakNetServer</code> and
  * <code>RakNetClient</code>
@@ -38,15 +40,21 @@ package net.marfgamer.raknet;
  */
 public class RakNetOptions {
 
+	private final ArrayList<Class<? extends Exception>> ignoredHandlerExceptions;
+
 	public RakNetOptions() {
+		this.ignoredHandlerExceptions = new ArrayList<Class<? extends Exception>>();
+		this.addIgnoredHandlerException(IndexOutOfBoundsException.class);
 	}
 
 	public RakNetOptions(int serverPort, String serverIdentifier) {
+		this();
 		this.serverPort = serverPort;
 		this.serverIdentifier = serverIdentifier;
 	}
 
 	public RakNetOptions(int broadcastPort) {
+		this();
 		this.clientBroadcastPort = broadcastPort;
 	}
 
@@ -77,5 +85,36 @@ public class RakNetOptions {
 	 * inactivity, it is suggested be at least 10,000 MS (10 Seconds)
 	 */
 	public long timeout = 10000L;
+
+	/**
+	 * Adds the specified exception to a list of ignored exceptions that will
+	 * not be thrown if caught in the Netty handler
+	 * 
+	 * @param exceptionClass
+	 */
+	public void addIgnoredHandlerException(Class<? extends Exception> exceptionClass) {
+		ignoredHandlerExceptions.add(exceptionClass);
+	}
+
+	/**
+	 * Removes the specified exception class from the list of ignored exceptions
+	 * that will not be thrown if caught in the Netty handler
+	 * 
+	 * @param exceptionClass
+	 */
+	public void removeIgnoredHandlerException(Class<? extends Exception> exceptionClass) {
+		ignoredHandlerExceptions.remove(exceptionClass);
+	}
+
+	/**
+	 * Returns all the ignore exception types that should not be thrown if
+	 * caught in the Netty handler
+	 * 
+	 * @return Class<? extends Exception>[]
+	 */
+	@SuppressWarnings("unchecked")
+	public Class<? extends Exception>[] getIgnoredHandlerExceptions() {
+		return (Class<? extends Exception>[]) ignoredHandlerExceptions.toArray();
+	}
 
 }

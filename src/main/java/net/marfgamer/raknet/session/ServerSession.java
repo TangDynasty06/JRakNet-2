@@ -95,7 +95,8 @@ public class ServerSession extends RakNetSession {
 			ping.decode();
 
 			ConnectedPong pong = new ConnectedPong();
-			pong.pingId = ping.pingId;
+			pong.pingTime = ping.pingTime;
+			pong.pongTime = System.currentTimeMillis();
 			pong.encode();
 
 			this.sendPacket(Reliability.RELIABLE, pong);

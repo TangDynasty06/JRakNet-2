@@ -34,7 +34,8 @@ import net.marfgamer.raknet.protocol.Packet;
 
 public class ConnectedPong extends Packet {
 
-	public long pingId;
+	public long pingTime;
+	public long pongTime;
 
 	public ConnectedPong(Packet packet) {
 		super(packet);
@@ -46,7 +47,14 @@ public class ConnectedPong extends Packet {
 
 	@Override
 	public void encode() {
-		this.putLong(pingId);
+		this.putLong(pingTime);
+		this.putLong(pongTime);
+	}
+
+	@Override
+	public void decode() {
+		this.pingTime = this.getLong();
+		this.pongTime = this.getLong();
 	}
 
 }

@@ -211,11 +211,14 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		if (cause instanceof IndexOutOfBoundsException) {
-			// A bad packet read will not kill us all
-		} else {
-			server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, ctx, System.currentTimeMillis());
+		// Make sure the exception isn't ignored
+		for (Class<? extends Exception> exceptionClass : server.getOptions().getIgnoredHandlerExceptions()) {
+			if (cause.getClass().isAssignableFrom(exceptionClass)) {
+				return;
+			}
 		}
+
+		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, ctx, System.currentTimeMillis());
 	}
 
 }

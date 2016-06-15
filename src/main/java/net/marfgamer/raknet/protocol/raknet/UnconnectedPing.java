@@ -36,6 +36,7 @@ public class UnconnectedPing extends Packet {
 
 	public long pingId;
 	public boolean magic;
+	public long clientId;
 
 	public UnconnectedPing(Packet packet) {
 		super(packet);
@@ -49,12 +50,14 @@ public class UnconnectedPing extends Packet {
 	public void encode() {
 		this.putLong(pingId);
 		this.putMagic();
+		this.putLong(clientId);
 	}
 
 	@Override
 	public void decode() {
 		this.pingId = this.getLong();
 		this.magic = this.checkMagic();
+		this.clientId = this.getLong();
 	}
 
 }

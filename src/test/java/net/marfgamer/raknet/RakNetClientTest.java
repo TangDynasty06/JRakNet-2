@@ -66,6 +66,11 @@ public class RakNetClientTest {
 			System.out.println("Server with address " + session.getSocketAddress()
 					+ " has been disconnected for the reason \"" + reason + "\"");
 		});
+		
+		// Exception occurred
+		client.addHook(Hook.HANDLER_EXCEPTION_OCCURED, (Object[] parameters) -> {
+			((Exception) parameters[0]).printStackTrace();
+		});
 
 		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);

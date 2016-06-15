@@ -44,7 +44,6 @@ import net.marfgamer.raknet.session.ServerSession;
 public class ServerTimeoutTask implements TaskRunnable {
 
 	private final RakNetClient client;
-	private long pingId;
 
 	public ServerTimeoutTask(RakNetClient client) {
 		this.client = client;
@@ -63,9 +62,8 @@ public class ServerTimeoutTask implements TaskRunnable {
 			session.resetReceivedPacketsThisSecond();
 			session.pushLastReceiveTime(this.getWaitTimeMillis());
 			if ((double) (options.timeout - session.getLastReceiveTime()) / options.timeout <= 0.5) {
-				// Ping ID's do not need to match
 				ConnectedPing ping = new ConnectedPing();
-				ping.pingId = pingId++;
+				ping.pingTime = System.currentTimeMillis();
 				ping.encode();
 				session.sendPacket(Reliability.RELIABLE, ping);
 			}

@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JTextPane;
 
+import net.marfgamer.raknet.client.DiscoveredRakNetServer;
+
 /**
  * The frame used by <code>RakNetBroadcastTest</code> to neatly display all the
  * servers that have been discovered
@@ -74,14 +76,13 @@ public class RakNetBroadcastFrame extends JFrame {
 	 * 
 	 * @param servers
 	 */
-	public void setServers(ArrayList<String> servers) {
+	public void setServers(ArrayList<DiscoveredRakNetServer> servers) {
 		StringBuilder serverChars = new StringBuilder();
 		for (int i = 0; i < servers.size(); i++) {
-			DiscoveredMinecraftServer server = new DiscoveredMinecraftServer(servers.get(i));
-			serverChars.append(server.name + " (" + server.version + ") - " + server.online + "/" + server.max);
-			if (i + 1 < servers.size()) {
-				serverChars.append("\n");
-			}
+			DiscoveredMinecraftServer server = new DiscoveredMinecraftServer(servers.get(i).address.getAddress(),
+					servers.get(i).identifier);
+			serverChars.append(server.name + ": " + server.online + "/" + server.max + " online\n"
+					+ server.address.getHostAddress() + "  -  v" + server.version + "\n\n");
 		}
 		serverPane.setText(serverChars.toString());
 	}

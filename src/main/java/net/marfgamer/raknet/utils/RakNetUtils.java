@@ -135,7 +135,8 @@ public abstract class RakNetUtils implements RakNet {
 	 */
 	public static String getServerIdentifier(String address, int port, long timeout) {
 		UnconnectedPing ping = new UnconnectedPing();
-		ping.pingId = raknetId;
+		ping.pingId = System.currentTimeMillis();
+		ping.clientId = raknetId;
 		ping.encode();
 
 		Packet sprr = createBootstrapAndSend(address, port, ping, timeout);
@@ -143,7 +144,7 @@ public abstract class RakNetUtils implements RakNet {
 			if (sprr.getId() == ID_UNCONNECTED_PONG) {
 				UnconnectedPong pong = new UnconnectedPong(sprr);
 				pong.decode();
-				if (pong.magic == true && pong.pingId == ping.pingId) {
+				if (pong.magic == true && pong.pingId == ping.clientId) {
 					return pong.identifier;
 				}
 			}

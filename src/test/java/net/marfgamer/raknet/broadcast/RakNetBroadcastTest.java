@@ -70,10 +70,10 @@ public class RakNetBroadcastTest {
 	}
 
 	private static void updateFrame(Collection<DiscoveredRakNetServer> servers, RakNetBroadcastFrame frame) {
-		ArrayList<String> serverName = new ArrayList<String>();
+		ArrayList<DiscoveredRakNetServer> serverName = new ArrayList<DiscoveredRakNetServer>();
 		for (DiscoveredRakNetServer server : servers) {
 			if (server.identifier.startsWith("MCPE;")) {
-				serverName.add(server.identifier);
+				serverName.add(server);
 			}
 		}
 		frame.setServers(serverName);

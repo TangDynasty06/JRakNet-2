@@ -53,7 +53,7 @@ public class RakNetServerTest {
 		// Set server options
 		RakNetOptions options = new RakNetOptions();
 		options.serverPort = 19132;
-		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10";
+		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10;_SERVERID_";
 		RakNetServer server = new RakNetServer(options);
 
 		// Client connected
@@ -81,7 +81,8 @@ public class RakNetServerTest {
 
 		// Server has been pinged
 		server.addHook(Hook.SERVER_PING, (Object[] parameters) -> {
-			parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier);
+			parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier).replace("_SERVERID_",
+					Long.toString(server.getServerId()));
 		});
 
 		// Address blocked
@@ -94,6 +95,11 @@ public class RakNetServerTest {
 		server.addHook(Hook.CLIENT_ADDRESS_UNBLOCKED, (Object[] parameters) -> {
 			BlockedAddress address = (BlockedAddress) parameters[0];
 			System.out.println("Unblocked address " + address.address);
+		});
+
+		// Exception occurred
+		server.addHook(Hook.HANDLER_EXCEPTION_OCCURED, (Object[] parameters) -> {
+			((Exception) parameters[0]).printStackTrace();
 		});
 
 		server.startThreaded();
