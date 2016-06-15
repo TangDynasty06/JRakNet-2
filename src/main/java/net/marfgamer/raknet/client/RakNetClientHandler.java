@@ -115,13 +115,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		// Make sure the exception isn't ignored
-		for (Class<? extends Exception> exceptionClass : client.getOptions().getIgnoredHandlerExceptions()) {
-			if (cause.getClass().isAssignableFrom(exceptionClass)) {
-				return;
-			}
-		}
-
+		cause.printStackTrace();
 		client.disconnect(cause);
 		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, ctx, System.currentTimeMillis());
 	}

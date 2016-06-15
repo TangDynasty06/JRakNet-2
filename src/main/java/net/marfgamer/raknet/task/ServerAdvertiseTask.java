@@ -39,7 +39,6 @@ import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 
@@ -67,16 +66,14 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 	 * @param sender
 	 * @throws UnexpectedPacketException
 	 */
-	public synchronized void handlePong(Packet packet, InetSocketAddress sender) throws UnexpectedPacketException {
-		if (packet.getId() == ID_UNCONNECTED_PONG) {
-			UnconnectedPong pong = new UnconnectedPong(packet);
-			pong.decode();
-
+	public synchronized void handlePong(UnconnectedPong pong, InetSocketAddress sender)
+			throws UnexpectedPacketException {
+		if (pong.getId() == ID_UNCONNECTED_PONG) {
 			servers.put(sender, new DiscoveredRakNetServer(sender, pong.serverId, pong.identifier));
 			servers.get(sender).cyclesLeft = CYCLE_START;
 			client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender, System.currentTimeMillis());
 		} else {
-			throw new UnexpectedPacketException(ID_UNCONNECTED_PING, packet.getId());
+			throw new UnexpectedPacketException(ID_UNCONNECTED_PING, pong.getId());
 		}
 	}
 

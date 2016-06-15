@@ -60,6 +60,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedIncompatibleProtocol;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
 import net.marfgamer.raknet.scheduler.RakNetScheduler;
@@ -286,7 +287,13 @@ public class RakNetClient implements RakNet {
 				throw new IncompatibleProtocolException(ucp.protocol, NETWORK_PROTOCOL);
 			}
 		} else if (pid == ID_UNCONNECTED_PONG) {
-			advertise.handlePong(packet, sender);
+			UnconnectedPong pong = new UnconnectedPong(packet);
+			pong.decode();
+
+			// Make sure identifier is not null
+			if (pong.identifier != null) {
+				advertise.handlePong(pong, sender);
+			}
 		}
 	}
 
