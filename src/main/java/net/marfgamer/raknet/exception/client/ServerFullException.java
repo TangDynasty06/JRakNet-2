@@ -28,19 +28,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.exception.client;
+
+import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.session.ServerSession;
 
 /**
- * Occurs when the MTU size goes below the minimum MTU for RakNet
+ * Occurs when the server sends a <code>ID_UNCONNECTD_SERVER_FULL</code> packet
+ * to the client, indicating that the server is currently full
  *
  * @author Trent Summerlin
  */
-public class MaximumTransferUnitException extends RakNetException {
+public class ServerFullException extends RakNetException {
 
-	private static final long serialVersionUID = -6040478416974497890L;
+	private static final long serialVersionUID = 8799225325397090075L;
 
-	public MaximumTransferUnitException() {
-		super("MTU size is too small!");
+	private final RakNetClient client;
+	private final ServerSession server;
+
+	public ServerFullException(RakNetClient client, ServerSession server) {
+		super("Server with address " + server.getSocketAddress() + " is full!");
+		this.client = client;
+		this.server = server;
+	}
+
+	public RakNetClient getClient() {
+		return this.client;
+	}
+
+	public ServerSession getServer() {
+		return this.server;
+	}
+	
+	@Override
+	public String getLocalizedMessage() {
+		return "Server is full";
 	}
 
 }

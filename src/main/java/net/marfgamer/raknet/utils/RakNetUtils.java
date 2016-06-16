@@ -208,8 +208,7 @@ public abstract class RakNetUtils implements RakNet {
 
 		Packet response = createBootstrapAndSend(address, port, request, timeout);
 		if (response != null) {
-			return (response.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1
-					&& response.getId() != ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL);
+			return (response.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1);
 		}
 		return false;
 	}

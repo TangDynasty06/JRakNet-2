@@ -60,14 +60,7 @@ public class UnconnectedPong extends Packet {
 		this.pingId = this.getLong();
 		this.serverId = this.getLong();
 		this.magic = this.checkMagic();
-
-		/*
-		 * This seems to be a glitch either with RakNet protocol 8 or Minecraft:
-		 * Pocket Edition where the identifier is not in the packet.
-		 */
-		if (this.remaining() >= 2) {
-			this.identifier = this.getString();
-		}
+		this.identifier = this.getString();
 	}
 
 }

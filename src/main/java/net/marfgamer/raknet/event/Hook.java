@@ -136,8 +136,9 @@ public enum Hook {
 	 * Received whenever a Netty handler exception occurs<br>
 	 * <br>
 	 * 
-	 * Parameter 0: The Exception (Exception)<br>
-	 * Parameter 1: The ChannelHandlerContext (ChannelHandlerContext)<br>
+	 * Parameter 0: The caught exception (Throwable)<br>
+	 * Parameter 1: The address of who caused the exception (InetSocketAddress)
+	 * <br>
 	 * Parameter 2: The time the error occurred (long)
 	 */
 	HANDLER_EXCEPTION_OCCURED;

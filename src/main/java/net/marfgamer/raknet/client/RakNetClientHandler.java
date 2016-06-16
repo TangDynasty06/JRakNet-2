@@ -43,6 +43,7 @@ import net.marfgamer.raknet.exception.InvalidChannelException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
+import net.marfgamer.raknet.session.ServerSession;
 
 /**
  * The internal Netty handler for the client, sends ACK, NACK, and CustomPackets
@@ -56,6 +57,9 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 	private final RakNetClient client;
 	private volatile Channel channel;
 	protected volatile boolean foundMtu;
+
+	// Used in exception handling
+	private InetSocketAddress lastSender;
 
 	public RakNetClientHandler(RakNetClient client) {
 		this.client = client;
@@ -80,6 +84,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			if (!channel.equals(ctx.channel())) {
 				throw new InvalidChannelException(ctx.channel(), channel);
 			}
+			this.lastSender = msg.sender();
 
 			InetSocketAddress sender = msg.sender();
 			Packet packet = new Packet(msg.content().retain());
@@ -115,9 +120,16 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		cause.printStackTrace();
-		client.disconnect(cause);
-		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, ctx, System.currentTimeMillis());
+		// Only disconnect if it's the server
+		ServerSession session = client.getSession();
+		if (session != null) {
+			if (session.getSocketAddress().equals(lastSender)) {
+				client.disconnect(cause);
+				ctx.close();
+			}
+		}
+		
+		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender, System.currentTimeMillis());
 	}
 
 }

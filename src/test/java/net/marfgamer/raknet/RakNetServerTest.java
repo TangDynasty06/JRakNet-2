@@ -30,6 +30,7 @@
  */
 package net.marfgamer.raknet;
 
+import java.net.InetSocketAddress;
 import java.util.Scanner;
 
 import net.marfgamer.raknet.event.Hook;
@@ -50,10 +51,11 @@ public class RakNetServerTest {
 	private static String identifier = "A RakNet Server";
 
 	public static void main(String[] args) throws RakNetException {
-		// Set server options
+		// Set options and create server
 		RakNetOptions options = new RakNetOptions();
 		options.serverPort = 19132;
 		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10;_SERVERID_";
+		options.serverMaxConnections = 10;
 		RakNetServer server = new RakNetServer(options);
 
 		// Client connected
@@ -76,7 +78,6 @@ public class RakNetServerTest {
 			String reason = parameters[1].toString();
 			System.out.println("Client from address " + session.getSocketAddress()
 					+ " has disconnected from the server for the reason \"" + reason + "\"");
-
 		});
 
 		// Server has been pinged
@@ -97,9 +98,12 @@ public class RakNetServerTest {
 			System.out.println("Unblocked address " + address.address);
 		});
 
-		// Exception occurred
+		// Exception caught
 		server.addHook(Hook.HANDLER_EXCEPTION_OCCURED, (Object[] parameters) -> {
-			((Exception) parameters[0]).printStackTrace();
+			Throwable throwable = (Throwable) parameters[0];
+			InetSocketAddress naughtyAddress = (InetSocketAddress) parameters[1];
+			System.out.println(
+					"Handler exception " + throwable.getClass().getSimpleName() + " caused by " + naughtyAddress);
 		});
 
 		server.startThreaded();
@@ -111,6 +115,9 @@ public class RakNetServerTest {
 		while (true) {
 			if (s.hasNextLine()) {
 				identifier = s.nextLine();
+				if (identifier.length() == 0) {
+					identifier = "A RakNet Server";
+				}
 				System.out.println("Set server name to: " + identifier);
 			}
 		}

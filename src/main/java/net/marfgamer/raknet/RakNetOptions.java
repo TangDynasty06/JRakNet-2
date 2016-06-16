@@ -41,10 +41,11 @@ public class RakNetOptions {
 	public RakNetOptions() {
 	}
 
-	public RakNetOptions(int serverPort, String serverIdentifier) {
+	public RakNetOptions(int serverPort, String serverIdentifier, int serverMaxConnections) {
 		this();
 		this.serverPort = serverPort;
 		this.serverIdentifier = serverIdentifier;
+		this.serverMaxConnections = serverMaxConnections;
 	}
 
 	public RakNetOptions(int broadcastPort) {
@@ -61,6 +62,11 @@ public class RakNetOptions {
 	 * The identifier the server broadcasts when receiving a unconnected ping
 	 */
 	public String serverIdentifier = "";
+
+	/**
+	 * The maximum amount of allowed connections to the server
+	 */
+	public int serverMaxConnections = 10;
 
 	/**
 	 * The port the client will use to find other servers on the network

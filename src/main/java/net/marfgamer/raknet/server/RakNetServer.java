@@ -48,11 +48,11 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestTwo;
-import net.marfgamer.raknet.protocol.raknet.UnconnectedIncompatibleProtocol;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedLegacyPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedLegacyPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedServerFull;
 import net.marfgamer.raknet.scheduler.RakNetScheduler;
 import net.marfgamer.raknet.session.ClientSession;
 import net.marfgamer.raknet.session.SessionState;
@@ -87,8 +87,8 @@ public class RakNetServer implements RakNet {
 		this.hooks = new HashMap<Hook, HookRunnable>();
 	}
 
-	public RakNetServer(int serverPort, String serverIdentifier) {
-		this(new RakNetOptions(serverPort, serverIdentifier));
+	public RakNetServer(int serverPort, String serverIdentifier, int serverMaxConnections) {
+		this(new RakNetOptions(serverPort, serverIdentifier, serverMaxConnections));
 	}
 
 	public RakNetServer() {
@@ -221,6 +221,32 @@ public class RakNetServer implements RakNet {
 	}
 
 	/**
+	 * Returns all the client's that are connected or are connecting to the
+	 * server at the current time
+	 * 
+	 * @return int
+	 */
+	public int getConnections() {
+		int connections = 0;
+		for (ClientSession session : handler.getSessions()) {
+			if (session.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
+				connections++;
+			}
+		}
+		return connections;
+	}
+
+	/**
+	 * Returns the amount of clients that can be connected or be connecting to a
+	 * server at once
+	 * 
+	 * @return
+	 */
+	public int getMaxConnections() {
+		return options.serverMaxConnections;
+	}
+
+	/**
 	 * Handles a raw packet
 	 * 
 	 * @param pid
@@ -266,22 +292,32 @@ public class RakNetServer implements RakNet {
 
 				if (request.magic == true && request.protocol == NETWORK_PROTOCOL
 						&& request.mtuSize <= options.maximumTransferUnit) {
-					UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
-					response.serverId = this.serverId;
-					response.mtuSize = (short) (request.mtuSize + 46);
-					response.encode();
+					if (this.getConnections() >= options.serverMaxConnections) {
+						session.sendRaw(new UnconnectedServerFull());
+						handler.removeSession(session, "Server is full");
+					} else if (request.protocol != NETWORK_PROTOCOL) {
+						/*
+						 * UnconnectedIncompatibleProtocol incompatible = new
+						 * UnconnectedIncompatibleProtocol();
+						 * incompatible.protocol = NETWORK_PROTOCOL;
+						 * incompatible.serverId = this.serverId;
+						 * incompatible.encode();
+						 * 
+						 * session.sendRaw(incompatible);
+						 * handler.removeSession(session,
+						 * "Incompatible protocol");
+						 * handler.blockAddress(session.getAddress(),
+						 * ONE_MINUTES_MILLIS);
+						 */
+					} else {
+						UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
+						response.serverId = this.serverId;
+						response.mtuSize = (short) (request.mtuSize + 46);
+						response.encode();
 
-					session.sendRaw(response);
-					session.setState(SessionState.CONNECTING_1);
-				} else if (request.protocol != NETWORK_PROTOCOL) {
-					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol();
-					incompatible.protocol = NETWORK_PROTOCOL;
-					incompatible.serverId = this.serverId;
-					incompatible.encode();
-
-					session.sendRaw(incompatible);
-					handler.removeSession(session, "Incompatible protocol");
-					handler.blockAddress(session.getAddress(), ONE_MINUTES_MILLIS);
+						session.sendRaw(response);
+						session.setState(SessionState.CONNECTING_1);
+					}
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {

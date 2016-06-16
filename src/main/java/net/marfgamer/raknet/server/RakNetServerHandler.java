@@ -57,6 +57,9 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	private final HashMap<InetAddress, BlockedAddress> blocked;
 	private final HashMap<InetSocketAddress, ClientSession> sessions;
 
+	// Used in exception handling
+	private InetSocketAddress lastSender;
+
 	public RakNetServerHandler(RakNetServer server) {
 		this.server = server;
 		this.blocked = new HashMap<InetAddress, BlockedAddress>();
@@ -176,11 +179,19 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			if (!sessions.containsKey(address)) {
 				sessions.put(msg.sender(), new ClientSession(ctx.channel(), address, this, server));
 			}
+			this.lastSender = msg.sender();
 
 			// Get session
 			ClientSession session = sessions.get(address);
 			Packet packet = new Packet(msg.content().retain());
 			short pid = packet.getId();
+			
+			// 0x19 is incorrect protocol packet!
+			Packet t = new Packet(0x19);
+			t.putUByte(20);
+			t.putMagic();
+			t.putLong(server.getServerId());
+			session.sendRaw(t);
 
 			// Make sure we haven't received too many packets too fast
 			session.pushReceivedPacketsThisSecond();
@@ -211,7 +222,9 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, ctx, System.currentTimeMillis());
+		this.removeSession(this.getSession(lastSender), cause.getLocalizedMessage());
+		this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
+		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender, System.currentTimeMillis());
 	}
 
 }

@@ -28,34 +28,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.exception.client;
+
+import net.marfgamer.raknet.exception.RakNetException;
 
 /**
- * Occurs whenever the server sends an
- * <code>ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL</code> packet
+ * Occurs when the MTU size goes below the minimum MTU for RakNet
  *
  * @author Trent Summerlin
  */
-public class IncompatibleProtocolException extends RakNetException {
+public class MaximumTransferUnitException extends RakNetException {
 
-	private static final long serialVersionUID = 3820073523553233311L;
+	private static final long serialVersionUID = -6040478416974497890L;
 
-	public IncompatibleProtocolException(int serverProtocol, int clientProtocol) {
-		super(createErrorMessage(serverProtocol, clientProtocol));
-	}
-
-	private static String createErrorMessage(int serverProtocol, int clientProtocol) {
-		if (serverProtocol > clientProtocol) {
-			return "Client protocol is " + (serverProtocol - clientProtocol) + " versions behind!";
-		} else if (clientProtocol > serverProtocol) {
-			return "Server protocol is " + (clientProtocol - serverProtocol) + " versions behind!";
-		}
-		return "Unknown protocol error!";
-	}
-
-	@Override
-	public String getLocalizedMessage() {
-		return "Protocols do not match!";
+	public MaximumTransferUnitException() {
+		super("MTU size is too small!");
 	}
 
 }

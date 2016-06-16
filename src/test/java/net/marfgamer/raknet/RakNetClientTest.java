@@ -30,6 +30,7 @@
  */
 package net.marfgamer.raknet;
 
+import java.net.InetSocketAddress;
 import java.util.Scanner;
 
 import net.marfgamer.raknet.client.RakNetClient;
@@ -45,11 +46,13 @@ import net.marfgamer.raknet.session.RakNetSession;
  */
 public class RakNetClientTest {
 
-	private static final String SERVER_ADDRESS = "sg.lbsg.net";
+	private static final String SERVER_ADDRESS = "localhost";
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
-		RakNetClient client = new RakNetClient(new RakNetOptions());
+		// Set options and create client
+		RakNetOptions options = new RakNetOptions();
+		RakNetClient client = new RakNetClient(options);
 
 		// Client connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
@@ -66,10 +69,13 @@ public class RakNetClientTest {
 			System.out.println("Server with address " + session.getSocketAddress()
 					+ " has been disconnected for the reason \"" + reason + "\"");
 		});
-		
-		// Exception occurred
+
+		// Exception caught
 		client.addHook(Hook.HANDLER_EXCEPTION_OCCURED, (Object[] parameters) -> {
-			((Exception) parameters[0]).printStackTrace();
+			Throwable throwable = (Throwable) parameters[0];
+			InetSocketAddress naughtyAddress = (InetSocketAddress) parameters[1];
+			System.out.println(
+					"Handler exception " + throwable.getClass().getSimpleName() + " caused by " + naughtyAddress);
 		});
 
 		@SuppressWarnings("resource")
