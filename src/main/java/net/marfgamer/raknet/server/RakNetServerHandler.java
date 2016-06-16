@@ -185,13 +185,6 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			ClientSession session = sessions.get(address);
 			Packet packet = new Packet(msg.content().retain());
 			short pid = packet.getId();
-			
-			// 0x19 is incorrect protocol packet!
-			Packet t = new Packet(0x19);
-			t.putUByte(20);
-			t.putMagic();
-			t.putLong(server.getServerId());
-			session.sendRaw(t);
 
 			// Make sure we haven't received too many packets too fast
 			session.pushReceivedPacketsThisSecond();

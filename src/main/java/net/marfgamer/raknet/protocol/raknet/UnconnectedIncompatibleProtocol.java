@@ -9,7 +9,6 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016 Trent Summerlin
-
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -28,42 +27,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception.client;
+package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.client.RakNetClient;
-import net.marfgamer.raknet.exception.RakNetException;
-import net.marfgamer.raknet.session.ServerSession;
+import net.marfgamer.raknet.protocol.Packet;
 
-/**
- * Occurs when the server sends a <code>ID_UNCONNECTD_SERVER_FULL</code> packet
- * to the client, indicating that the server is currently full
- *
- * @author Trent Summerlin
- */
-public class ServerFullException extends RakNetException {
+public class UnconnectedIncompatibleProtocol extends Packet {
 
-	private static final long serialVersionUID = 8799225325397090075L;
+	public short protocol;
+	public boolean magic;
+	public long serverId;
 
-	private final RakNetClient client;
-	private final ServerSession server;
-
-	public ServerFullException(RakNetClient client, ServerSession server) {
-		super("Server with address " + server.getSocketAddress() + " is full!");
-		this.client = client;
-		this.server = server;
+	public UnconnectedIncompatibleProtocol(Packet packet) {
+		super(packet);
 	}
 
-	public RakNetClient getClient() {
-		return this.client;
-	}
-
-	public ServerSession getServer() {
-		return this.server;
+	public UnconnectedIncompatibleProtocol() {
+		super(ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL);
 	}
 
 	@Override
-	public String getLocalizedMessage() {
-		return "Server is full!";
+	public void encode() {
+		this.putUByte(protocol);
+		this.putMagic();
+		this.putLong(serverId);
+	}
+
+	@Override
+	public void decode() {
+		this.protocol = this.getUByte();
+		this.magic = this.checkMagic();
+		this.serverId = this.getLong();
 	}
 
 }

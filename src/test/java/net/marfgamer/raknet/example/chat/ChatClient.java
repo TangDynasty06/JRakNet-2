@@ -82,8 +82,9 @@ public class ChatClient {
 	 * @param address
 	 * @param port
 	 * @throws RakNetException
+	 * @throws InterruptedException
 	 */
-	public void connect(String address, int port) throws RakNetException {
+	public void connect(String address, int port) throws RakNetException, InterruptedException {
 		client.connect(address, port);
 		client.addHook(Hook.PACKET_RECEIVED, new ChatServerPacketHandler());
 		client.addHook(Hook.SESSION_DISCONNECTED, new ChatServerDisconnectHandler());
@@ -105,7 +106,7 @@ public class ChatClient {
 		System.exit(0);
 	}
 
-	public static void main(String[] args) throws RakNetException {
+	public static void main(String[] args) throws RakNetException, InterruptedException {
 		@SuppressWarnings("resource")
 		Scanner input = new Scanner(System.in);
 		System.out.print("Enter your username: ");

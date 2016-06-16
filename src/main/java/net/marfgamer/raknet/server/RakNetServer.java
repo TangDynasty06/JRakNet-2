@@ -48,6 +48,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestTwo;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedIncompatibleProtocol;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedLegacyPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedLegacyPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
@@ -295,20 +296,6 @@ public class RakNetServer implements RakNet {
 					if (this.getConnections() >= options.serverMaxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
 						handler.removeSession(session, "Server is full");
-					} else if (request.protocol != NETWORK_PROTOCOL) {
-						/*
-						 * UnconnectedIncompatibleProtocol incompatible = new
-						 * UnconnectedIncompatibleProtocol();
-						 * incompatible.protocol = NETWORK_PROTOCOL;
-						 * incompatible.serverId = this.serverId;
-						 * incompatible.encode();
-						 * 
-						 * session.sendRaw(incompatible);
-						 * handler.removeSession(session,
-						 * "Incompatible protocol");
-						 * handler.blockAddress(session.getAddress(),
-						 * ONE_MINUTES_MILLIS);
-						 */
 					} else {
 						UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
 						response.serverId = this.serverId;
@@ -318,6 +305,14 @@ public class RakNetServer implements RakNet {
 						session.sendRaw(response);
 						session.setState(SessionState.CONNECTING_1);
 					}
+				} else if (request.protocol != NETWORK_PROTOCOL) {
+					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol();
+					incompatible.protocol = NETWORK_PROTOCOL;
+					incompatible.serverId = this.serverId;
+					incompatible.encode();
+
+					session.sendRaw(incompatible);
+					handler.removeSession(session, "Incorrect protocol");
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {

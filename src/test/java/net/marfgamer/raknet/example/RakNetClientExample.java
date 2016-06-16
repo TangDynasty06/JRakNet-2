@@ -50,7 +50,7 @@ public class RakNetClientExample {
 	private static final String SERVER_ADDRESS = "sg.lbsg.net";
 	private static final int SERVER_PORT = 19132;
 
-	public static void main(String[] args) throws RakNetException {
+	public static void main(String[] args) throws RakNetException, InterruptedException {
 		// There are no special options needed for clients
 		RakNetClient client = new RakNetClient(new RakNetOptions());
 

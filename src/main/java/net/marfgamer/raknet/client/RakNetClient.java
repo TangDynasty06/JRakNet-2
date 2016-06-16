@@ -33,6 +33,7 @@ package net.marfgamer.raknet.client;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.netty.bootstrap.Bootstrap;
@@ -49,6 +50,7 @@ import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.PacketOverloadException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
 import net.marfgamer.raknet.exception.client.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.client.ServerFullException;
 import net.marfgamer.raknet.protocol.Packet;
@@ -59,6 +61,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestTwo;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedIncompatibleProtocol;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedServerFull;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
@@ -96,6 +99,7 @@ public class RakNetClient implements RakNet {
 	// Session data
 	private volatile ServerSession session;
 	private volatile SessionState state = SessionState.DISCONNECTED;
+	private volatile ArrayList<RakNetException> connectionErrors = new ArrayList<RakNetException>();
 
 	public RakNetClient(RakNetOptions options) {
 		this.clientId = RakNetUtils.getRakNetID();
@@ -245,13 +249,7 @@ public class RakNetClient implements RakNet {
 	 */
 	protected void handleRaw(Packet packet, InetSocketAddress sender) throws RakNetException {
 		short pid = packet.getId();
-		if (pid == ID_UNCONNECTED_SERVER_FULL) {
-			if (state != SessionState.CONNECTED) {
-				UnconnectedServerFull full = new UnconnectedServerFull(packet);
-				full.decode();
-				throw new ServerFullException(this, session);
-			}
-		} else if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
+		if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
 			if (state == SessionState.CONNECTING_1) {
 				UnconnectedConnectionReplyOne ucro = new UnconnectedConnectionReplyOne(packet);
 				ucro.decode();
@@ -284,6 +282,18 @@ public class RakNetClient implements RakNet {
 					session.sendPacket(Reliability.RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
 				}
+			}
+		} else if (pid == ID_UNCONNECTED_SERVER_FULL) {
+			if (state != SessionState.CONNECTED) {
+				UnconnectedServerFull full = new UnconnectedServerFull(packet);
+				full.decode();
+				connectionErrors.add(new ServerFullException(this, session));
+			}
+		} else if (pid == ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL) {
+			if (state != SessionState.CONNECTED) {
+				UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol(packet);
+				incompatible.decode();
+				connectionErrors.add(new IncompatibleProtocolException(incompatible.protocol, NETWORK_PROTOCOL));
 			}
 		}
 		// TODO: Incompatible protocol
@@ -376,40 +386,42 @@ public class RakNetClient implements RakNet {
 	 * Connects to a server with the specified address
 	 * 
 	 * @param address
+	 * @throws RaknetException
+	 * @throws InterruptedException
 	 */
-	public void connect(InetSocketAddress address) throws RakNetException {
+	public void connect(InetSocketAddress address) throws RakNetException, InterruptedException {
 		// Disconnect from current session
 		this.disconnect();
 
-		try {
-			handler.resetHandler();
-			this.bindChannel();
-			int mtu = options.maximumTransferUnit;
+		handler.resetHandler();
+		this.bindChannel();
+		int mtu = options.maximumTransferUnit;
 
-			// Do not bind to "localhost", it locks up the handler
-			this.session = new ServerSession(channel, address, this);
-			this.setState(SessionState.CONNECTING_1);
+		// Do not bind to "localhost", it locks up the handler
+		this.session = new ServerSession(channel, address, this);
+		this.setState(SessionState.CONNECTING_1);
 
-			// Request connection until response is received or session closed
-			while (!handler.foundMtu && session != null) {
-				if (mtu < MINIMUM_TRANSFER_UNIT) {
-					throw new MaximumTransferUnitException();
-				}
-
-				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
-				request.mtuSize = (short) mtu;
-				request.protocol = NETWORK_PROTOCOL;
-				request.encode();
-
-				bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);
-				session.sendRaw(request);
-
-				mtu -= 100L;
-				Thread.sleep(500L);
+		// Request connection until a condition fails to meet
+		while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
+			if (mtu < MINIMUM_TRANSFER_UNIT) {
+				throw new MaximumTransferUnitException();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			group.shutdownGracefully();
+
+			UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
+			request.mtuSize = (short) mtu;
+			request.protocol = NETWORK_PROTOCOL;
+			request.encode();
+
+			bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);
+			session.sendRaw(request);
+
+			mtu -= 100L;
+			Thread.sleep(500L);
+		}
+
+		// Throw all caught exceptions
+		for (RakNetException exception : connectionErrors) {
+			throw exception;
 		}
 
 		// Start scheduler
@@ -426,8 +438,9 @@ public class RakNetClient implements RakNet {
 	 * @param address
 	 * @param port
 	 * @throws RakNetException
+	 * @throws InterruptedException
 	 */
-	public void connect(String address, int port) throws RakNetException {
+	public void connect(String address, int port) throws RakNetException, InterruptedException {
 		this.connect(new InetSocketAddress(address, port));
 	}
 
@@ -436,8 +449,9 @@ public class RakNetClient implements RakNet {
 	 * 
 	 * @param server
 	 * @throws RakNetException
+	 * @throws InterruptedException
 	 */
-	public void connect(DiscoveredRakNetServer server) throws RakNetException {
+	public void connect(DiscoveredRakNetServer server) throws RakNetException, InterruptedException {
 		this.connect(server.address);
 	}
 

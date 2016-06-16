@@ -59,6 +59,7 @@ public interface RakNet {
 	public static final short ID_UNCONNECTED_CONNECTION_REQUEST_2 = 0x07;
 	public static final short ID_UNCONNECTED_CONNECTION_REPLY_2 = 0x08;
 	public static final short ID_UNCONNECTED_SERVER_FULL = 0x14;
+	public static final short ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL = 0x19;
 	public static final short ID_CONNECTED_CLIENT_CONNECT_REQUEST = 0x09;
 	public static final short ID_CONNECTED_SERVER_HANDSHAKE = 0x10;
 	public static final short ID_CONNECTED_CLIENT_HANDSHAKE = 0x13;

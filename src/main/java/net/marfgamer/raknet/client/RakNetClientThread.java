@@ -32,8 +32,6 @@ package net.marfgamer.raknet.client;
 
 import java.net.InetSocketAddress;
 
-import net.marfgamer.raknet.exception.RakNetException;
-
 /**
  * Starts a <code>RakNetClient</code> on it's own thread
  *
@@ -53,7 +51,7 @@ public class RakNetClientThread extends Thread {
 	public void run() {
 		try {
 			client.connect(address);
-		} catch (RakNetException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}

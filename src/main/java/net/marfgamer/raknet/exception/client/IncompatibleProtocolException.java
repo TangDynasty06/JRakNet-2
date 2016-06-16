@@ -9,7 +9,6 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016 Trent Summerlin
-
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -30,40 +29,34 @@
  */
 package net.marfgamer.raknet.exception.client;
 
-import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.exception.RakNetException;
-import net.marfgamer.raknet.session.ServerSession;
 
 /**
- * Occurs when the server sends a <code>ID_UNCONNECTD_SERVER_FULL</code> packet
- * to the client, indicating that the server is currently full
+ * Occurs whenever the server sends an
+ * <code>ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL</code> packet
  *
  * @author Trent Summerlin
  */
-public class ServerFullException extends RakNetException {
+public class IncompatibleProtocolException extends RakNetException {
 
-	private static final long serialVersionUID = 8799225325397090075L;
+	private static final long serialVersionUID = 3820073523553233311L;
 
-	private final RakNetClient client;
-	private final ServerSession server;
-
-	public ServerFullException(RakNetClient client, ServerSession server) {
-		super("Server with address " + server.getSocketAddress() + " is full!");
-		this.client = client;
-		this.server = server;
+	public IncompatibleProtocolException(int serverProtocol, int clientProtocol) {
+		super(createErrorMessage(serverProtocol, clientProtocol));
 	}
 
-	public RakNetClient getClient() {
-		return this.client;
-	}
-
-	public ServerSession getServer() {
-		return this.server;
+	private static String createErrorMessage(int serverProtocol, int clientProtocol) {
+		if (serverProtocol > clientProtocol) {
+			return "Client protocol is " + (serverProtocol - clientProtocol) + " versions behind!";
+		} else if (clientProtocol > serverProtocol) {
+			return "Server protocol is " + (clientProtocol - serverProtocol) + " versions behind!";
+		}
+		return "Unknown protocol error!";
 	}
 
 	@Override
 	public String getLocalizedMessage() {
-		return "Server is full!";
+		return "Protocols do not match!";
 	}
 
 }

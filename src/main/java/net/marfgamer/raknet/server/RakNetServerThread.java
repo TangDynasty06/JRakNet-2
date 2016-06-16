@@ -30,8 +30,6 @@
  */
 package net.marfgamer.raknet.server;
 
-import net.marfgamer.raknet.exception.RakNetException;
-
 /**
  * Starts the server on it's own thread
  *
@@ -49,7 +47,7 @@ public class RakNetServerThread extends Thread {
 	public void run() {
 		try {
 			server.start();
-		} catch (RakNetException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
