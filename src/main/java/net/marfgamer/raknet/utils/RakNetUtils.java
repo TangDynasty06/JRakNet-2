@@ -174,7 +174,7 @@ public abstract class RakNetUtils implements RakNet {
 	public static boolean isServerOnline(String address, int port, long timeout) {
 		UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
 		request.mtuSize = MINIMUM_TRANSFER_UNIT;
-		request.protocol = UTILITIES_NETWORK_PROTOCOL;
+		request.protocol = CLIENT_NETWORK_PROTOCOL;
 		request.encode();
 
 		Packet response = createBootstrapAndSend(address, port, request, timeout);
@@ -235,7 +235,7 @@ public abstract class RakNetUtils implements RakNet {
 	 * @return boolean
 	 */
 	public static boolean isServerCompatible(String address, int port, long timeout) {
-		return isServerCompatible(address, port, UTILITIES_NETWORK_PROTOCOL, timeout);
+		return isServerCompatible(address, port, CLIENT_NETWORK_PROTOCOL, timeout);
 	}
 
 	/**
