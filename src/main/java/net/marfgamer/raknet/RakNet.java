@@ -43,8 +43,10 @@ import net.marfgamer.raknet.protocol.unknown.PacketX1A;
 public interface RakNet {
 
 	// Protocol version
-	public static final int NETWORK_PROTOCOL = 8;
-
+	public static final int SERVER_NETWORK_PROTOCOL = 8;
+	public static final int CLIENT_NETWORK_PROTOCOL = 8;
+	public static final int UTILITIES_NETWORK_PROTOCOL = 8;
+	
 	// Transfer size
 	public static final int MINIMUM_TRANSFER_UNIT = 530;
 	public static final int MAX_PACKETS_PER_SECOND = 500;

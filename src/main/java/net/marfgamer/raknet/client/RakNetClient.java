@@ -302,8 +302,8 @@ public class RakNetClient implements RakNet {
 				if (state != SessionState.CONNECTED && session.isServer(sender)) {
 					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol(packet);
 					incompatible.decode();
-					connectionErrors
-							.add(new IncompatibleProtocolException(this, incompatible.protocol, NETWORK_PROTOCOL));
+					connectionErrors.add(
+							new IncompatibleProtocolException(this, incompatible.protocol, CLIENT_NETWORK_PROTOCOL));
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_PONG) {
@@ -418,7 +418,7 @@ public class RakNetClient implements RakNet {
 
 			UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
 			request.mtuSize = (short) mtu;
-			request.protocol = NETWORK_PROTOCOL;
+			request.protocol = CLIENT_NETWORK_PROTOCOL;
 			request.encode();
 
 			bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);

@@ -291,7 +291,7 @@ public class RakNetServer implements RakNet {
 				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne(packet);
 				request.decode();
 
-				if (request.magic == true && request.protocol == NETWORK_PROTOCOL
+				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
 						&& request.mtuSize <= options.maximumTransferUnit) {
 					if (this.getConnections() >= options.serverMaxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
@@ -305,9 +305,9 @@ public class RakNetServer implements RakNet {
 						session.sendRaw(response);
 						session.setState(SessionState.CONNECTING_1);
 					}
-				} else if (request.protocol != NETWORK_PROTOCOL) {
+				} else if (request.protocol != SERVER_NETWORK_PROTOCOL) {
 					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol();
-					incompatible.protocol = NETWORK_PROTOCOL;
+					incompatible.protocol = SERVER_NETWORK_PROTOCOL;
 					incompatible.serverId = this.serverId;
 					incompatible.encode();
 
