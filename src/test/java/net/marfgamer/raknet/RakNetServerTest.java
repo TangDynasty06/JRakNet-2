@@ -39,6 +39,7 @@ import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 import net.marfgamer.raknet.server.BlockedAddress;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.session.RakNetSession;
+import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
  * Used to test <code>RakNetServer</code>, meant for testing with Minecraft:
@@ -54,7 +55,7 @@ public class RakNetServerTest {
 		// Set options and create server
 		RakNetOptions options = new RakNetOptions();
 		options.serverPort = 19132;
-		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10;_SERVERID_";
+		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";";
 		options.serverMaxConnections = 10;
 		RakNetServer server = new RakNetServer(options);
 

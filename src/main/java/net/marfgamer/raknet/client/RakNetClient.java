@@ -366,9 +366,22 @@ public class RakNetClient implements RakNet {
 		}
 	}
 
-	public void broadcastRaw(Packet packet) {
-		channel.writeAndFlush(new DatagramPacket(packet.buffer(),
-				new InetSocketAddress(RakNetUtils.getSubnetMask(), options.clientBroadcastPort)));
+	/**
+	 * Broadcasts a packet to the entire local network, returns
+	 * <code>true</code> if the packet was able to send successfully
+	 * 
+	 * @param packet
+	 * @return boolean
+	 */
+	public boolean broadcastRaw(Packet packet) {
+		if (channel != null) {
+			if (channel.isOpen()) {
+				channel.writeAndFlush(new DatagramPacket(packet.buffer(),
+						new InetSocketAddress(RakNetUtils.getSubnetMask(), options.clientBroadcastPort)));
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -376,11 +389,7 @@ public class RakNetClient implements RakNet {
 	 */
 	private void bindChannel() {
 		try {
-			if (channel != null) {
-				channel.close();
-				handler.setChannel(null);
-			}
-
+			this.unbindChannel();
 			bootstrap.option(ChannelOption.SO_RCVBUF, options.maximumTransferUnit);
 			bootstrap.option(ChannelOption.SO_SNDBUF, options.maximumTransferUnit);
 			this.channel = bootstrap.bind(0).sync().channel();
@@ -388,6 +397,16 @@ public class RakNetClient implements RakNet {
 		} catch (Exception e) {
 			e.printStackTrace();
 			group.shutdownGracefully();
+		}
+	}
+
+	/**
+	 * Unbinds the channel and closes it
+	 */
+	private void unbindChannel() {
+		if (channel != null) {
+			channel.close();
+			handler.setChannel(null);
 		}
 	}
 
@@ -432,6 +451,7 @@ public class RakNetClient implements RakNet {
 		for (RakNetException exception : connectionErrors) {
 			group.shutdownGracefully();
 			this.disconnect(exception);
+			this.unbindChannel();
 			throw exception;
 		}
 

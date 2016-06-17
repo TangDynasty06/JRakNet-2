@@ -35,6 +35,7 @@ import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.session.RakNetSession;
+import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
  * A simple RakNet server, this can be tested using a Minecraft: Pocket Edition
@@ -51,7 +52,7 @@ public class RakNetServerExample {
 		RakNetOptions options = new RakNetOptions();
 		options.serverPort = 19132;
 		options.serverMaxConnections = 10;
-		options.serverIdentifier = "MCPE;A RakNet Server;70;0.14.3;0;10";
+		options.serverIdentifier = "MCPE;A RakNet Server;70;0.14.3;0;10;" + RakNetUtils.getRakNetID() + ";";
 
 		// Create server and add hooks
 		RakNetServer server = new RakNetServer(options);
