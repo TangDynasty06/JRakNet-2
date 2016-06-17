@@ -430,6 +430,7 @@ public class RakNetClient implements RakNet {
 
 		// Throw all caught exceptions
 		for (RakNetException exception : connectionErrors) {
+			this.disconnect(exception);
 			throw exception;
 		}
 
@@ -505,9 +506,11 @@ public class RakNetClient implements RakNet {
 	 */
 	public void disconnect(String reason) {
 		if (session != null) {
-			this.setState(SessionState.DISCONNECTED);
 			session.sendPacket(Reliability.UNRELIABLE, new ConnectedCloseConnection());
-			this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
+			if (this.state == SessionState.CONNECTED) {
+				this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
+			}
+			this.setState(SessionState.DISCONNECTED);
 		}
 		this.session = null;
 	}

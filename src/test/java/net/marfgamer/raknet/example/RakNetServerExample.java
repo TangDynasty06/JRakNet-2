@@ -49,6 +49,8 @@ public class RakNetServerExample {
 	public static void main(String[] args) throws RakNetException {
 		// Create options and set identifier
 		RakNetOptions options = new RakNetOptions();
+		options.serverPort = 19132;
+		options.serverMaxConnections = 10;
 		options.serverIdentifier = "MCPE;A RakNet Server;70;0.14.3;0;10";
 
 		// Create server and add hooks
