@@ -52,7 +52,7 @@ public class RakNetServerExample {
 		RakNetOptions options = new RakNetOptions();
 		options.serverPort = 19132;
 		options.serverMaxConnections = 10;
-		options.serverIdentifier = "MCPE;A RakNet Server;70;0.14.3;0;10;" + RakNetUtils.getRakNetID() + ";";
+		options.serverIdentifier = "MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";";
 
 		// Create server and add hooks
 		RakNetServer server = new RakNetServer(options);
