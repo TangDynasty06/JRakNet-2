@@ -430,6 +430,7 @@ public class RakNetClient implements RakNet {
 
 		// Throw all caught exceptions
 		for (RakNetException exception : connectionErrors) {
+			group.shutdownGracefully();
 			this.disconnect(exception);
 			throw exception;
 		}
