@@ -9,6 +9,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016 Trent Summerlin
+
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -30,33 +31,26 @@
 package net.marfgamer.raknet.exception.client;
 
 import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.session.ServerSession;
 
 /**
- * Occurs whenever the server sends an
- * <code>ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL</code> packet
+ * Occurs whenever the server sends
+ * <code>ID_UNCONNECTED_CONNECTION_BANNED</code> to the client, indicating that
+ * they have been banned from connecting to the server
  *
  * @author Trent Summerlin
  */
-public class IncompatibleProtocolException extends RakNetClientException {
+public class ConnectionBannedException extends RakNetClientException {
 
-	private static final long serialVersionUID = 3820073523553233311L;
+	private static final long serialVersionUID = 8440218445920818619L;
 
-	public IncompatibleProtocolException(RakNetClient client, int serverProtocol, int clientProtocol) {
-		super(client, createErrorMessage(serverProtocol, clientProtocol));
-	}
-
-	private static String createErrorMessage(int serverProtocol, int clientProtocol) {
-		if (serverProtocol > clientProtocol) {
-			return "Client protocol is " + (serverProtocol - clientProtocol) + " versions behind!";
-		} else if (clientProtocol > serverProtocol) {
-			return "Server protocol is " + (clientProtocol - serverProtocol) + " versions behind!";
-		}
-		return "Unknown protocol error!";
+	public ConnectionBannedException(RakNetClient client, ServerSession server) {
+		super(client, "Client is banned from server from address " + server.getSocketAddress() + "!");
 	}
 
 	@Override
 	public String getLocalizedMessage() {
-		return "Protocols do not match!";
+		return "Client is banned!";
 	}
 
 }

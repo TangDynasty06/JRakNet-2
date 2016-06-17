@@ -32,6 +32,9 @@ package net.marfgamer.raknet;
 
 import java.lang.reflect.Field;
 
+import net.marfgamer.raknet.protocol.unknown.PacketX04;
+import net.marfgamer.raknet.protocol.unknown.PacketX1A;
+
 /**
  * Contains all the Network ID's for RakNet and the current networking protocol
  *
@@ -59,6 +62,7 @@ public interface RakNet {
 	public static final short ID_UNCONNECTED_CONNECTION_REQUEST_2 = 0x07;
 	public static final short ID_UNCONNECTED_CONNECTION_REPLY_2 = 0x08;
 	public static final short ID_UNCONNECTED_SERVER_FULL = 0x14;
+	public static final short ID_UNCONNECTED_CONNECTION_BANNED = 0x17;
 	public static final short ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL = 0x19;
 	public static final short ID_CONNECTED_CLIENT_CONNECT_REQUEST = 0x09;
 	public static final short ID_CONNECTED_SERVER_HANDSHAKE = 0x10;
@@ -90,6 +94,10 @@ public interface RakNet {
 	// Reliability
 	public static final short ID_ACK = 0xC0;
 	public static final short ID_NACK = 0xA0;
+
+	// Spooky, unknown, mysterious packets
+	public static final PacketX04 UNKNOWN_PACKET_4 = new PacketX04();
+	public static final PacketX1A UNKNOWN_PACKET_26 = new PacketX1A();
 
 	// Channels
 	public static final short MAX_CHANNELS = 32;

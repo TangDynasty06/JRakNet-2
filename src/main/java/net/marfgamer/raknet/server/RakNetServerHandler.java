@@ -40,6 +40,7 @@ import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionBanned;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
 import net.marfgamer.raknet.session.ClientSession;
@@ -209,15 +210,24 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			} else {
 				server.handleRaw(packet, session);
 			}
+		} else {
+			ctx.writeAndFlush(new DatagramPacket(new UnconnectedConnectionBanned().buffer(), msg.sender()));
 		}
-		msg.release(msg.refCnt() - 1);
+
+		while (msg.refCnt() > 1) {
+			msg.release();
+		}
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		this.removeSession(this.getSession(lastSender), cause.getLocalizedMessage());
-		this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
+		ClientSession session = this.getSession(lastSender);
+		if (session != null) {
+			this.removeSession(this.getSession(lastSender), cause.getLocalizedMessage());
+			this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
+		}
 		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender, System.currentTimeMillis());
+		cause.printStackTrace();
 	}
 
 }

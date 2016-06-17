@@ -31,7 +31,6 @@
 package net.marfgamer.raknet.exception.client;
 
 import net.marfgamer.raknet.client.RakNetClient;
-import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.session.ServerSession;
 
 /**
@@ -40,25 +39,12 @@ import net.marfgamer.raknet.session.ServerSession;
  *
  * @author Trent Summerlin
  */
-public class ServerFullException extends RakNetException {
+public class ServerFullException extends RakNetClientException {
 
 	private static final long serialVersionUID = 8799225325397090075L;
 
-	private final RakNetClient client;
-	private final ServerSession server;
-
 	public ServerFullException(RakNetClient client, ServerSession server) {
-		super("Server with address " + server.getSocketAddress() + " is full!");
-		this.client = client;
-		this.server = server;
-	}
-
-	public RakNetClient getClient() {
-		return this.client;
-	}
-
-	public ServerSession getServer() {
-		return this.server;
+		super(client, "Server with address " + server.getSocketAddress() + " is full!");
 	}
 
 	@Override

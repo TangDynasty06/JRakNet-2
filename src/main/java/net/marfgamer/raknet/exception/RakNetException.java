@@ -41,11 +41,11 @@ public class RakNetException extends Exception implements RakNet {
 
 	private static final long serialVersionUID = 6137150061303840459L;
 
-	private final String reason;
+	private final String error;
 
-	public RakNetException(String reason) {
-		super(reason);
-		this.reason = reason;
+	public RakNetException(String error) {
+		super(error);
+		this.error = error;
 	}
 
 	public RakNetException(Throwable cause) {
@@ -53,7 +53,7 @@ public class RakNetException extends Exception implements RakNet {
 	}
 
 	public String getLocalizedMessage() {
-		return this.reason;
+		return this.error;
 	}
 
 }

@@ -92,7 +92,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 
 			// Make sure the server has accepted the MTU
 			if (!foundMtu) {
-				if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
+				if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1 && client.getSession().isServer(sender)) {
 					this.foundMtu = true;
 				}
 			}
@@ -120,7 +120,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		// Only disconnect if it's the server
+		// Disconnect only if it's the server
 		ServerSession session = client.getSession();
 		if (session != null) {
 			if (session.getSocketAddress().equals(lastSender)) {

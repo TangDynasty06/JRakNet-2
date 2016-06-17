@@ -50,6 +50,7 @@ import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.PacketOverloadException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.client.ConnectionBannedException;
 import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
 import net.marfgamer.raknet.exception.client.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.client.ServerFullException;
@@ -57,6 +58,7 @@ import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionBanned;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
@@ -284,20 +286,27 @@ public class RakNetClient implements RakNet {
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_SERVER_FULL) {
-			if (state != SessionState.CONNECTED) {
+			if (state != SessionState.CONNECTED && session.isServer(sender)) {
 				UnconnectedServerFull full = new UnconnectedServerFull(packet);
 				full.decode();
 				connectionErrors.add(new ServerFullException(this, session));
 			}
-		} else if (pid == ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL) {
-			if (state != SessionState.CONNECTED) {
-				UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol(packet);
-				incompatible.decode();
-				connectionErrors.add(new IncompatibleProtocolException(incompatible.protocol, NETWORK_PROTOCOL));
+		} else if (pid == ID_UNCONNECTED_CONNECTION_BANNED) {
+			if (state != SessionState.CONNECTED && session.isServer(sender)) {
+				UnconnectedConnectionBanned banned = new UnconnectedConnectionBanned(packet);
+				banned.decode();
+				connectionErrors.add(new ConnectionBannedException(this, session));
 			}
-		}
-		// TODO: Incompatible protocol
-		else if (pid == ID_UNCONNECTED_PONG) {
+		} else if (pid == ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL) {
+			if (sender.equals(session.getSocketAddress())) {
+				if (state != SessionState.CONNECTED && session.isServer(sender)) {
+					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol(packet);
+					incompatible.decode();
+					connectionErrors
+							.add(new IncompatibleProtocolException(this, incompatible.protocol, NETWORK_PROTOCOL));
+				}
+			}
+		} else if (pid == ID_UNCONNECTED_PONG) {
 			UnconnectedPong pong = new UnconnectedPong(packet);
 			pong.decode();
 			advertise.handlePong(pong, sender);
@@ -404,7 +413,7 @@ public class RakNetClient implements RakNet {
 		// Request connection until a condition fails to meet
 		while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
 			if (mtu < MINIMUM_TRANSFER_UNIT) {
-				throw new MaximumTransferUnitException();
+				throw new MaximumTransferUnitException(this, mtu);
 			}
 
 			UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();

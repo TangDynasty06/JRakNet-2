@@ -9,6 +9,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016 Trent Summerlin
+
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -27,36 +28,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception.client;
+package net.marfgamer.raknet.protocol.unknown;
 
-import net.marfgamer.raknet.client.RakNetClient;
+import java.util.Date;
 
-/**
- * Occurs whenever the server sends an
- * <code>ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL</code> packet
- *
- * @author Trent Summerlin
- */
-public class IncompatibleProtocolException extends RakNetClientException {
+public class PacketX04 extends UnknownPacket {
 
-	private static final long serialVersionUID = 3820073523553233311L;
-
-	public IncompatibleProtocolException(RakNetClient client, int serverProtocol, int clientProtocol) {
-		super(client, createErrorMessage(serverProtocol, clientProtocol));
-	}
-
-	private static String createErrorMessage(int serverProtocol, int clientProtocol) {
-		if (serverProtocol > clientProtocol) {
-			return "Client protocol is " + (serverProtocol - clientProtocol) + " versions behind!";
-		} else if (clientProtocol > serverProtocol) {
-			return "Server protocol is " + (clientProtocol - serverProtocol) + " versions behind!";
-		}
-		return "Unknown protocol error!";
+	@Override
+	public byte getPID() {
+		return 0x04;
 	}
 
 	@Override
-	public String getLocalizedMessage() {
-		return "Protocols do not match!";
+	public Date getTimeDiscovered() {
+		return new Date(1466049600); // June 15, 2016 @ 11:00 PM
+	}
+
+	@Override
+	public String[] getPacketNotes() {
+		return new String[] { "It will disconnect the client", "It is unknown what the exact format is" };
 	}
 
 }

@@ -9,6 +9,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016 Trent Summerlin
+
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -27,36 +28,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception.client;
+package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.protocol.Packet;
 
-/**
- * Occurs whenever the server sends an
- * <code>ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL</code> packet
- *
- * @author Trent Summerlin
- */
-public class IncompatibleProtocolException extends RakNetClientException {
+public class UnconnectedConnectionBanned extends Packet {
 
-	private static final long serialVersionUID = 3820073523553233311L;
-
-	public IncompatibleProtocolException(RakNetClient client, int serverProtocol, int clientProtocol) {
-		super(client, createErrorMessage(serverProtocol, clientProtocol));
+	public UnconnectedConnectionBanned(Packet packet) {
+		super(packet);
 	}
 
-	private static String createErrorMessage(int serverProtocol, int clientProtocol) {
-		if (serverProtocol > clientProtocol) {
-			return "Client protocol is " + (serverProtocol - clientProtocol) + " versions behind!";
-		} else if (clientProtocol > serverProtocol) {
-			return "Server protocol is " + (clientProtocol - serverProtocol) + " versions behind!";
-		}
-		return "Unknown protocol error!";
-	}
-
-	@Override
-	public String getLocalizedMessage() {
-		return "Protocols do not match!";
+	public UnconnectedConnectionBanned() {
+		super(ID_UNCONNECTED_CONNECTION_BANNED);
 	}
 
 }

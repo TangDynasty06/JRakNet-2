@@ -9,6 +9,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2016 Trent Summerlin
+
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -30,33 +31,31 @@
 package net.marfgamer.raknet.exception.client;
 
 import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.exception.RakNetException;
 
 /**
- * Occurs whenever the server sends an
- * <code>ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL</code> packet
+ * An exception which is thrown by <code>RakNetClient</code>
  *
  * @author Trent Summerlin
  */
-public class IncompatibleProtocolException extends RakNetClientException {
+public class RakNetClientException extends RakNetException {
 
-	private static final long serialVersionUID = 3820073523553233311L;
+	private static final long serialVersionUID = -6475877157584949264L;
 
-	public IncompatibleProtocolException(RakNetClient client, int serverProtocol, int clientProtocol) {
-		super(client, createErrorMessage(serverProtocol, clientProtocol));
+	private final RakNetClient client;
+
+	public RakNetClientException(RakNetClient client, String error) {
+		super(error);
+		this.client = client;
 	}
 
-	private static String createErrorMessage(int serverProtocol, int clientProtocol) {
-		if (serverProtocol > clientProtocol) {
-			return "Client protocol is " + (serverProtocol - clientProtocol) + " versions behind!";
-		} else if (clientProtocol > serverProtocol) {
-			return "Server protocol is " + (clientProtocol - serverProtocol) + " versions behind!";
-		}
-		return "Unknown protocol error!";
+	public final RakNetClient getClient() {
+		return this.client;
 	}
 
 	@Override
 	public String getLocalizedMessage() {
-		return "Protocols do not match!";
+		return "A client error occurred!";
 	}
 
 }
