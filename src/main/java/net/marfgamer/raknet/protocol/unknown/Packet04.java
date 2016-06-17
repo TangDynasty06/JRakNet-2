@@ -32,11 +32,11 @@ package net.marfgamer.raknet.protocol.unknown;
 
 import java.util.Date;
 
-public class PacketX1A extends UnknownPacket {
+public class Packet04 extends UnknownPacket {
 
 	@Override
 	public byte getPID() {
-		return 0x1A;
+		return 0x04;
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class PacketX1A extends UnknownPacket {
 
 	@Override
 	public String[] getPacketNotes() {
-		return new String[] { "It is supposedly to tell the client that it's address was recently seen" };
+		return new String[] { "It will disconnect the client", "It is unknown what the exact format is" };
 	}
 
 }
