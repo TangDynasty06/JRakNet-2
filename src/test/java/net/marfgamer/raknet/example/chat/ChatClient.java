@@ -55,7 +55,7 @@ public class ChatClient {
 	private final String username;
 	private final RakNetClient client;
 
-	public ChatClient(String username) {
+	public ChatClient(String username) throws RakNetException {
 		this.username = username;
 		this.client = new RakNetClient(new RakNetOptions());
 	}

@@ -51,8 +51,7 @@ public class RakNetClientTest {
 
 	public static void main(String[] args) throws RakNetException {
 		// Set options and create client
-		RakNetOptions options = new RakNetOptions();
-		RakNetClient client = new RakNetClient(options);
+		RakNetClient client = new RakNetClient();
 
 		// Client connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {

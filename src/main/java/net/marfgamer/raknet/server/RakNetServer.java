@@ -43,6 +43,7 @@ import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.exception.MaximumTransferUnitException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -79,20 +80,25 @@ public class RakNetServer implements RakNet {
 	private final RakNetServerHandler handler;
 	private final HashMap<Hook, HookRunnable> hooks;
 
-	public RakNetServer(RakNetOptions options) {
+	public RakNetServer(RakNetOptions options) throws RakNetException {
 		this.serverId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.handler = new RakNetServerHandler(this);
 		this.scheduler = new RakNetScheduler();
 		this.hooks = new HashMap<Hook, HookRunnable>();
+
+		// Check options
+		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
+			throw new MaximumTransferUnitException(options.maximumTransferUnit);
+		}
 	}
 
-	public RakNetServer(int serverPort, String serverIdentifier, int serverMaxConnections) {
+	public RakNetServer(int serverPort, String serverIdentifier, int serverMaxConnections) throws RakNetException {
 		this(new RakNetOptions(serverPort, serverIdentifier, serverMaxConnections));
 	}
 
-	public RakNetServer() {
+	public RakNetServer() throws RakNetException {
 		this(new RakNetOptions());
 	}
 

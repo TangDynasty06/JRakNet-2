@@ -28,23 +28,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception.client;
-
-import net.marfgamer.raknet.client.RakNetClient;
+package net.marfgamer.raknet.exception;
 
 /**
  * Occurs when the MTU size goes below the minimum MTU for RakNet
  *
  * @author Trent Summerlin
  */
-public class MaximumTransferUnitException extends RakNetClientException {
+public class MaximumTransferUnitException extends RakNetException {
 
 	private static final long serialVersionUID = -6040478416974497890L;
 
 	private final int mtu;
 
-	public MaximumTransferUnitException(RakNetClient client, int mtu) {
-		super(client, "MTU size is too small! It should be at least " + MINIMUM_TRANSFER_UNIT + " but is " + mtu + "!");
+	public MaximumTransferUnitException(int mtu) {
+		super("MTU size is too small! It should be at least " + MINIMUM_TRANSFER_UNIT + " but is " + mtu + "!");
 		this.mtu = mtu;
 	}
 

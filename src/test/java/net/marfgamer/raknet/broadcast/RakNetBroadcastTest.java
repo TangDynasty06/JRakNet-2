@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
@@ -49,8 +48,8 @@ public class RakNetBroadcastTest {
 
 	public static void main(String[] args) throws Exception {
 		HashMap<InetSocketAddress, DiscoveredRakNetServer> discoveredServers = new HashMap<InetSocketAddress, DiscoveredRakNetServer>();
-		RakNetClient client = new RakNetClient(new RakNetOptions());
 		RakNetBroadcastFrame frame = new RakNetBroadcastFrame();
+		RakNetClient client = new RakNetClient();
 		frame.setVisible(true);
 
 		// Server found on local network

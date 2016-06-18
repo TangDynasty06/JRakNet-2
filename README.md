@@ -43,7 +43,7 @@ A simple RakNet server, this can be tested using a Minecraft: Pocket Edition cli
 
 ```java
 // There are no special options needed for clients
-RakNetClient client = new RakNetClient(new RakNetOptions());
+RakNetClient client = new RakNetClient();
 
 // Server connected
 client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {

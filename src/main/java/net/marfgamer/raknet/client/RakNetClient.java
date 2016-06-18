@@ -47,12 +47,12 @@ import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
+import net.marfgamer.raknet.exception.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.PacketOverloadException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.exception.client.ConnectionBannedException;
 import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
-import net.marfgamer.raknet.exception.client.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.client.ServerFullException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
@@ -103,13 +103,18 @@ public class RakNetClient implements RakNet {
 	private volatile SessionState state = SessionState.DISCONNECTED;
 	private volatile ArrayList<RakNetException> connectionErrors = new ArrayList<RakNetException>();
 
-	public RakNetClient(RakNetOptions options) {
+	public RakNetClient(RakNetOptions options) throws RakNetException {
 		this.clientId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.scheduler = new RakNetScheduler();
 		this.advertise = new ServerAdvertiseTask(this);
 		this.hooks = new HashMap<Hook, HookRunnable>();
+
+		// Check options
+		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
+			throw new MaximumTransferUnitException(options.maximumTransferUnit);
+		}
 
 		// Setup netty channel
 		this.handler = new RakNetClientHandler(this);
@@ -123,6 +128,14 @@ public class RakNetClient implements RakNet {
 		this.bindChannel();
 		scheduler.scheduleRepeatingTask(advertise);
 		scheduler.start();
+	}
+
+	public RakNetClient(int broadcastPort) throws RakNetException {
+		this(new RakNetOptions(broadcastPort));
+	}
+
+	public RakNetClient() throws RakNetException {
+		this(new RakNetOptions());
 	}
 
 	/**
@@ -432,7 +445,7 @@ public class RakNetClient implements RakNet {
 		// Request connection until a condition fails to meet
 		while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
 			if (mtu < MINIMUM_TRANSFER_UNIT) {
-				throw new MaximumTransferUnitException(this, mtu);
+				throw new MaximumTransferUnitException(mtu);
 			}
 
 			UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();

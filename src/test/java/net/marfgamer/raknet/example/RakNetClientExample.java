@@ -32,7 +32,6 @@ package net.marfgamer.raknet.example;
 
 import java.net.InetSocketAddress;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.RakNetException;
@@ -52,7 +51,7 @@ public class RakNetClientExample {
 
 	public static void main(String[] args) throws RakNetException, InterruptedException {
 		// There are no special options needed for clients
-		RakNetClient client = new RakNetClient(new RakNetOptions());
+		RakNetClient client = new RakNetClient();
 
 		// Server connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
