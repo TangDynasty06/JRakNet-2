@@ -103,18 +103,13 @@ public class RakNetClient implements RakNet {
 	private volatile SessionState state = SessionState.DISCONNECTED;
 	private volatile ArrayList<RakNetException> connectionErrors = new ArrayList<RakNetException>();
 
-	public RakNetClient(RakNetOptions options) throws RakNetException {
+	public RakNetClient(RakNetOptions options) {
 		this.clientId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.scheduler = new RakNetScheduler();
 		this.advertise = new ServerAdvertiseTask(this);
 		this.hooks = new HashMap<Hook, HookRunnable>();
-
-		// Check options
-		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
-			throw new MaximumTransferUnitException(options.maximumTransferUnit);
-		}
 
 		// Setup netty channel
 		this.handler = new RakNetClientHandler(this);
@@ -130,11 +125,11 @@ public class RakNetClient implements RakNet {
 		scheduler.start();
 	}
 
-	public RakNetClient(int broadcastPort) throws RakNetException {
+	public RakNetClient(int broadcastPort) {
 		this(new RakNetOptions(broadcastPort));
 	}
 
-	public RakNetClient() throws RakNetException {
+	public RakNetClient() {
 		this(new RakNetOptions());
 	}
 
@@ -430,10 +425,16 @@ public class RakNetClient implements RakNet {
 	 * @throws RaknetException
 	 * @throws InterruptedException
 	 */
-	public void connect(InetSocketAddress address) throws RakNetException, InterruptedException {
+	public void connect(InetSocketAddress address) throws RakNetException {
+		// Check options
+		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
+			throw new MaximumTransferUnitException(options.maximumTransferUnit);
+		}
+
 		// Disconnect from current session
 		this.disconnect();
 
+		// Reset channel
 		handler.resetHandler();
 		this.bindChannel();
 		int mtu = options.maximumTransferUnit;
@@ -443,21 +444,26 @@ public class RakNetClient implements RakNet {
 		this.setState(SessionState.CONNECTING_1);
 
 		// Request connection until a condition fails to meet
-		while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
-			if (mtu < MINIMUM_TRANSFER_UNIT) {
-				throw new MaximumTransferUnitException(mtu);
+		try {
+			while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
+				if (mtu < MINIMUM_TRANSFER_UNIT) {
+					throw new MaximumTransferUnitException(mtu);
+				}
+
+				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
+				request.mtuSize = (short) mtu;
+				request.protocol = CLIENT_NETWORK_PROTOCOL;
+				request.encode();
+
+				bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);
+				session.sendRaw(request);
+
+				mtu -= 100L;
+				Thread.sleep(500L);
 			}
-
-			UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
-			request.mtuSize = (short) mtu;
-			request.protocol = CLIENT_NETWORK_PROTOCOL;
-			request.encode();
-
-			bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);
-			session.sendRaw(request);
-
-			mtu -= 100L;
-			Thread.sleep(500L);
+		} catch (Exception e) {
+			group.shutdownGracefully();
+			throw new RakNetException(e);
 		}
 
 		// Throw all caught exceptions

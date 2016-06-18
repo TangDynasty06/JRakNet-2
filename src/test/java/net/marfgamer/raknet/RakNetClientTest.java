@@ -50,7 +50,7 @@ public class RakNetClientTest {
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
-		// Set options and create client
+		// Create client
 		RakNetClient client = new RakNetClient();
 
 		// Client connected

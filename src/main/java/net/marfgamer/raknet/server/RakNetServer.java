@@ -80,25 +80,20 @@ public class RakNetServer implements RakNet {
 	private final RakNetServerHandler handler;
 	private final HashMap<Hook, HookRunnable> hooks;
 
-	public RakNetServer(RakNetOptions options) throws RakNetException {
+	public RakNetServer(RakNetOptions options) {
 		this.serverId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.options = options;
 		this.handler = new RakNetServerHandler(this);
 		this.scheduler = new RakNetScheduler();
 		this.hooks = new HashMap<Hook, HookRunnable>();
-
-		// Check options
-		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
-			throw new MaximumTransferUnitException(options.maximumTransferUnit);
-		}
 	}
 
-	public RakNetServer(int serverPort, String serverIdentifier, int serverMaxConnections) throws RakNetException {
+	public RakNetServer(int serverPort, String serverIdentifier, int serverMaxConnections) {
 		this(new RakNetOptions(serverPort, serverIdentifier, serverMaxConnections));
 	}
 
-	public RakNetServer() throws RakNetException {
+	public RakNetServer() {
 		this(new RakNetOptions());
 	}
 
@@ -348,6 +343,11 @@ public class RakNetServer implements RakNet {
 	public void start() throws RakNetException {
 		if (running == true) {
 			throw new RakNetException("Server is already running!");
+		}
+
+		// Check options
+		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
+			throw new MaximumTransferUnitException(options.maximumTransferUnit);
 		}
 
 		// Bind socket and start receiving data

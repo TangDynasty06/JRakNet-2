@@ -32,7 +32,6 @@ package net.marfgamer.raknet.example.chat;
 
 import java.util.Scanner;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.example.chat.handler.ChatServerDisconnectHandler;
@@ -55,9 +54,9 @@ public class ChatClient {
 	private final String username;
 	private final RakNetClient client;
 
-	public ChatClient(String username) throws RakNetException {
+	public ChatClient(String username) {
 		this.username = username;
-		this.client = new RakNetClient(new RakNetOptions());
+		this.client = new RakNetClient();
 	}
 
 	/**

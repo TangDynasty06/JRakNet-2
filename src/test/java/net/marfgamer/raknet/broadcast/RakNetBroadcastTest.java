@@ -46,7 +46,7 @@ import net.marfgamer.raknet.event.Hook;
  */
 public class RakNetBroadcastTest {
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		HashMap<InetSocketAddress, DiscoveredRakNetServer> discoveredServers = new HashMap<InetSocketAddress, DiscoveredRakNetServer>();
 		RakNetBroadcastFrame frame = new RakNetBroadcastFrame();
 		RakNetClient client = new RakNetClient();
