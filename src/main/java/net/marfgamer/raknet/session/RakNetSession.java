@@ -66,7 +66,8 @@ public abstract class RakNetSession implements RakNet {
 
 	// Session data
 	private long sessionId;
-	private short mtuSize;
+	private short maximumTransferUnit;
+	private long latency;
 
 	// Packet sequencing data
 	private int sendSeqNumber;
@@ -145,17 +146,35 @@ public abstract class RakNetSession implements RakNet {
 	 * 
 	 * @return short
 	 */
-	public short getMTUSize() {
-		return this.mtuSize;
+	public short getMaximumTransferUnit() {
+		return this.maximumTransferUnit;
 	}
 
 	/**
 	 * Sets the session's MTU size
 	 * 
-	 * @param mtuSize
+	 * @param maximumTransferUnit
 	 */
-	public void setMTUSize(short mtuSize) {
-		this.mtuSize = mtuSize;
+	public void setMTUSize(short maximumTransferUnit) {
+		this.maximumTransferUnit = maximumTransferUnit;
+	}
+
+	/**
+	 * Sets the session's latency
+	 * 
+	 * @param latency
+	 */
+	public void setLatency(long latency) {
+		this.latency = latency;
+	}
+
+	/**
+	 * Returns the session's latency
+	 * 
+	 * @return long
+	 */
+	public long getLatency() {
+		return this.latency;
 	}
 
 	/**
@@ -214,8 +233,9 @@ public abstract class RakNetSession implements RakNet {
 	public final void sendEncapsulated(EncapsulatedPacket packet) {
 		// If packet is too big, split it up
 		ArrayList<EncapsulatedPacket> toSend = new ArrayList<EncapsulatedPacket>();
-		if (CustomPacket.DEFAULT_SIZE + EncapsulatedPacket.DEFAULT_SIZE + packet.payload.length > this.mtuSize) {
-			EncapsulatedPacket[] split = SplitPacket.createSplit(packet, mtuSize, splitId++);
+		if (CustomPacket.DEFAULT_SIZE + EncapsulatedPacket.DEFAULT_SIZE
+				+ packet.payload.length > this.maximumTransferUnit) {
+			EncapsulatedPacket[] split = SplitPacket.createSplit(packet, maximumTransferUnit, splitId++);
 			for (EncapsulatedPacket encapsulated : split) {
 				toSend.add(encapsulated);
 			}

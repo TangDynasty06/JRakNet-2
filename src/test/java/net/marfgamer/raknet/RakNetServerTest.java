@@ -52,12 +52,9 @@ public class RakNetServerTest {
 	private static String identifier = "A RakNet Server";
 
 	public static void main(String[] args) throws RakNetException {
-		// Set options and create server
-		RakNetOptions options = new RakNetOptions();
-		options.serverPort = 19132;
-		options.serverIdentifier = "MCPE;_IDENTIFIER_;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";";
-		options.serverMaxConnections = 10;
-		RakNetServer server = new RakNetServer(options);
+		// Create server
+		RakNetServer server = new RakNetServer(19132, 10,
+				"MCPE;_IDENTIFIER_;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";");
 
 		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
@@ -107,6 +104,7 @@ public class RakNetServerTest {
 					"Handler exception " + throwable.getClass().getSimpleName() + " caused by " + naughtyAddress);
 		});
 
+		// Start server
 		server.startThreaded();
 
 		// Wait for input from console

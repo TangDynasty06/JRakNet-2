@@ -28,48 +28,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.task;
-
-import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.client.RakNetClient;
-import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
-import net.marfgamer.raknet.session.ServerSession;
+package net.marfgamer.raknet.latency;
 
 /**
- * Used to make sure all lost packets are sent back to the server. If too many
- * packets have not been acknowledged by the server the client will disconnect.
+ * Used to test the latency feature
  *
  * @author Trent Summerlin
  */
-public class ServerReliabilityTask implements TaskRunnable, RakNet {
-
-	private final RakNetClient client;
-
-	public ServerReliabilityTask(RakNetClient client) {
-		this.client = client;
-	}
-
-	@Override
-	public long getWaitTimeMillis() {
-		return 1500L;
-	}
-
-	@Override
-	public void run() {
-		ServerSession session = client.getSession();
-		if (session != null) {
-			CustomPacket[] packets = session.getReliableQueue();
-
-			// Make sure the server is not trying to do a back-off attack
-			if (packets.length > MAX_RELIABLE_PACKETS_IN_QUEUE) {
-				client.disconnect("Too many packets in queue!");
-			} else {
-				// Resend all lost packets
-				for (CustomPacket packet : packets) {
-					session.sendRaw(packet);
-				}
-			}
-		}
-	}
+public class RakNetLatencyTest {
 
 }

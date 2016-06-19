@@ -51,13 +51,19 @@ public interface RakNet {
 	public static final int MAX_PACKETS_PER_SECOND = 500;
 	public static final int MAX_RELIABLE_PACKETS_IN_QUEUE = 128;
 
-	// Status
+	// Time conversion
+	public static final long SERVER_TIMEOUT = 10 * 1000L;
+	public static final long CLIENT_TIMEOUT = 10 * 1000L;
+	public static final long ONE_MINUTES_MILLIS = 60 * 1000L;
+	public static final long FIVE_MINUTES_MILLIS = 300 * 1000L;
+
+	// Status packets
 	public static final short ID_UNCONNECTED_PING = 0x01;
 	public static final short ID_UNCONNECTED_LEGACY_PING = 0x02;
 	public static final short ID_UNCONNECTED_PONG = 0x1C;
 	public static final short ID_UNCONNECTED_LEGACY_PONG = 0x1D;
 
-	// Connection
+	// Connection packets
 	public static final short ID_UNCONNECTED_CONNECTION_REQUEST_1 = 0x05;
 	public static final short ID_UNCONNECTED_CONNECTION_REPLY_1 = 0x06;
 	public static final short ID_UNCONNECTED_CONNECTION_REQUEST_2 = 0x07;
@@ -70,7 +76,7 @@ public interface RakNet {
 	public static final short ID_CONNECTED_CLIENT_HANDSHAKE = 0x13;
 	public static final short ID_CONNECTED_CLOSE_CONNECTION = 0x15;
 
-	// Keep-alive and latency testing
+	// Keep-alive and latency packets
 	public static final short ID_CONNECTED_PING = 0x00;
 	public static final short ID_CONNECTED_PONG = 0x03;
 
@@ -91,21 +97,15 @@ public interface RakNet {
 	public static final short ID_CUSTOM_D = 0x8D;
 	public static final short ID_CUSTOM_E = 0x8E;
 	public static final short ID_CUSTOM_F = 0x8F;
+	public static final short MAX_CHANNELS = 32;
 
-	// Reliability
+	// Reliability packets
 	public static final short ID_ACK = 0xC0;
 	public static final short ID_NACK = 0xA0;
 
-	// Spooky, unknown, mysterious packets
-	public static final Packet04 UNKNOWN_PACKET_04 = new Packet04();
-	public static final Packet1A UNKNOWN_PACKET_1A = new Packet1A();
-
-	// Channels
-	public static final short MAX_CHANNELS = 32;
-
-	// Time
-	public static final long ONE_MINUTES_MILLIS = 60 * 1000L;
-	public static final long FIVE_MINUTES_MILLIS = 300 * 1000L;
+	// Mysterious packets
+	public static final Packet04 ID_UNKNOWN_PACKET_04 = new Packet04();
+	public static final Packet1A ID_UNKNOWN_PACKET_1A = new Packet1A();
 
 	/**
 	 * Used to get a packet name by it's ID
@@ -125,7 +125,7 @@ public interface RakNet {
 					}
 				}
 			}
-			return null;
+			return "ID_UNKNOWN";
 		} catch (Exception e) {
 			return null;
 		}

@@ -39,11 +39,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
-import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
+import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -58,9 +57,9 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedServerFull;
 import net.marfgamer.raknet.scheduler.RakNetScheduler;
 import net.marfgamer.raknet.session.ClientSession;
 import net.marfgamer.raknet.session.SessionState;
-import net.marfgamer.raknet.task.ClientReliabilityTask;
-import net.marfgamer.raknet.task.ClientTimeoutTask;
 import net.marfgamer.raknet.task.ClientUnblockTask;
+import net.marfgamer.raknet.task.reliability.ClientReliabilityTask;
+import net.marfgamer.raknet.task.timeout.ClientTimeoutTask;
 import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
@@ -71,39 +70,92 @@ import net.marfgamer.raknet.utils.RakNetUtils;
  */
 public class RakNetServer implements RakNet {
 
-	private boolean running;
+	// Server options
+	private final int port;
+	private final int maxConnections;
+	private final String identifier;
+	private final int maxTransferUnit;
+	private final long clientTimeout;
 
+	// Server info
+	private boolean running;
 	private final long serverId;
-	private final long timestamp;
-	private final RakNetOptions options;
+	private final long serverTimestamp;
+	private ClientTimeoutTask timeout;
 	private final RakNetScheduler scheduler;
 	private final RakNetServerHandler handler;
 	private final HashMap<Hook, HookRunnable> hooks;
 
-	public RakNetServer(RakNetOptions options) {
+	public RakNetServer(int port, int maxConnections, String identifier, int maxTransferUnit, long clientTimeout) {
+		// Set server options
+		this.port = port;
+		this.maxConnections = maxConnections;
+		this.identifier = identifier;
+		this.maxTransferUnit = maxTransferUnit;
+		this.clientTimeout = clientTimeout;
+
+		// Generate server info
 		this.serverId = RakNetUtils.getRakNetID();
-		this.timestamp = System.currentTimeMillis();
-		this.options = options;
+		this.serverTimestamp = System.currentTimeMillis();
 		this.handler = new RakNetServerHandler(this);
 		this.scheduler = new RakNetScheduler();
 		this.hooks = new HashMap<Hook, HookRunnable>();
 	}
 
-	public RakNetServer(int serverPort, String serverIdentifier, int serverMaxConnections) {
-		this(new RakNetOptions(serverPort, serverIdentifier, serverMaxConnections));
+	public RakNetServer(int port, int maxConnections, String identifier) {
+		this(port, maxConnections, identifier, RakNetUtils.getNetworkInterfaceMTU(), CLIENT_TIMEOUT);
 	}
 
-	public RakNetServer() {
-		this(new RakNetOptions());
+	public RakNetServer(int port, int maxConnections) {
+		this(port, maxConnections, null);
 	}
 
 	/**
-	 * Returns the options this instance uses
+	 * Returns the port which the server runs on
 	 * 
-	 * @return RakNetOptions
+	 * @return int
 	 */
-	public RakNetOptions getOptions() {
-		return this.options;
+	public int getPort() {
+		return this.port;
+	}
+
+	/**
+	 * Returns the amount of clients that can be connected or be connecting to a
+	 * server at once
+	 * 
+	 * @return int
+	 */
+	public int getMaxConnections() {
+		return this.maxConnections;
+	}
+
+	/**
+	 * Returns the server's identifier
+	 * 
+	 * @return String
+	 */
+	public String getIdentifier() {
+		return this.identifier;
+	}
+
+	/**
+	 * Returns how many bytes can be sent or received before the packet must be
+	 * split
+	 * 
+	 * @return int
+	 */
+	public int getMaxTransferUnit() {
+		return this.maxTransferUnit;
+	}
+
+	/**
+	 * Returns how long before a client is disconnected because of a timeout in
+	 * milliseconds
+	 * 
+	 * @return long
+	 */
+	public long getClientTimeout() {
+		return this.clientTimeout;
 	}
 
 	/**
@@ -120,9 +172,34 @@ public class RakNetServer implements RakNet {
 	 * 
 	 * @return long
 	 */
-	public long getTimestamp() {
-		return this.timestamp;
+	public long getServerTimestamp() {
+		return this.serverTimestamp;
 	}
+
+	/**
+	 * Updates the client latency based on the pong packet
+	 * 
+	 * @param session
+	 * @param pong
+	 * @throws UnexpectedPacketException
+	 */
+	/*public void updateClientLatency(ClientSession session, ConnectedPong pong) throws UnexpectedPacketException {
+		if (timeout != null) {
+			timeout.handleConnectedPong(session, pong);
+		}
+	}
+
+	/**
+	 * Sends an <code>ID_UNCONNECTED_PING</code> to the client to check it's
+	 * latency
+	 * 
+	 * @param session
+	 */
+	/*public void checkClientLatency(ClientSession session) {
+		if (timeout != null) {
+			timeout.sendConnectedPing(session);
+		}
+	}*/
 
 	/**
 	 * Sets the HookRunnable for the specified Hook
@@ -239,16 +316,6 @@ public class RakNetServer implements RakNet {
 	}
 
 	/**
-	 * Returns the amount of clients that can be connected or be connecting to a
-	 * server at once
-	 * 
-	 * @return
-	 */
-	public int getMaxConnections() {
-		return options.serverMaxConnections;
-	}
-
-	/**
 	 * Handles a raw packet
 	 * 
 	 * @param pid
@@ -265,12 +332,14 @@ public class RakNetServer implements RakNet {
 				UnconnectedPong pong = new UnconnectedPong();
 				pong.pingId = ping.pingId;
 				pong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.SERVER_PING, session.getAddress(),
-						options.serverIdentifier);
+				Object[] parameters = this.executeHook(Hook.SERVER_PING, session.getAddress(), this.identifier);
 				pong.identifier = parameters[1].toString();
 				pong.encode();
 
-				session.sendRaw(pong);
+				// Make sure identifier is not null before encoding
+				if (parameters[1] != null) {
+					session.sendRaw(pong);
+				}
 			}
 		} else if (pid == ID_UNCONNECTED_LEGACY_PING) {
 			UnconnectedLegacyPing legacyPing = new UnconnectedLegacyPing(packet);
@@ -280,12 +349,14 @@ public class RakNetServer implements RakNet {
 				UnconnectedLegacyPong legacyPong = new UnconnectedLegacyPong();
 				legacyPong.pingId = legacyPing.pingId;
 				legacyPong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.SERVER_LEGACY_PING, options.serverIdentifier,
-						session.getAddress());
+				Object[] parameters = this.executeHook(Hook.SERVER_LEGACY_PING, this.identifier, session.getAddress());
 				legacyPong.data = parameters[0].toString();
 				legacyPong.encode();
 
-				session.sendRaw(legacyPong);
+				// Make sure identifier is not null before encoding
+				if (parameters[1] != null) {
+					session.sendRaw(legacyPong);
+				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_1) {
 			if (session.getState() == SessionState.DISCONNECTED) {
@@ -293,8 +364,8 @@ public class RakNetServer implements RakNet {
 				request.decode();
 
 				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
-						&& request.mtuSize <= options.maximumTransferUnit) {
-					if (this.getConnections() >= options.serverMaxConnections) {
+						&& request.mtuSize <= this.maxTransferUnit) {
+					if (this.getConnections() >= this.maxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
 						handler.removeSession(session, "Server is full");
 					} else {
@@ -325,7 +396,7 @@ public class RakNetServer implements RakNet {
 					UnconnectedConnectionReplyTwo response = new UnconnectedConnectionReplyTwo();
 					response.serverId = this.serverId;
 					response.clientAddress = session.getSocketAddress();
-					response.mtuSize = session.getMTUSize();
+					response.mtuSize = session.getMaximumTransferUnit();
 					response.encode();
 
 					session.sendRaw(response);
@@ -346,8 +417,8 @@ public class RakNetServer implements RakNet {
 		}
 
 		// Check options
-		if (options.maximumTransferUnit < MINIMUM_TRANSFER_UNIT) {
-			throw new MaximumTransferUnitException(options.maximumTransferUnit);
+		if (this.maxTransferUnit < MINIMUM_TRANSFER_UNIT) {
+			throw new MaximumTransferUnitException(this.maxTransferUnit);
 		}
 
 		// Bind socket and start receiving data
@@ -355,16 +426,16 @@ public class RakNetServer implements RakNet {
 		try {
 			Bootstrap bootstrap = new Bootstrap();
 			bootstrap.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
-					.option(ChannelOption.SO_SNDBUF, options.maximumTransferUnit)
-					.option(ChannelOption.SO_RCVBUF, options.maximumTransferUnit).handler(handler);
-			bootstrap.bind(options.serverPort);
+					.option(ChannelOption.SO_SNDBUF, this.maxTransferUnit)
+					.option(ChannelOption.SO_RCVBUF, this.maxTransferUnit).handler(handler);
+			bootstrap.bind(this.port);
 		} catch (Exception e) {
 			group.shutdownGracefully();
 			throw new RakNetException(e);
 		}
 
 		// Start scheduler
-		scheduler.scheduleRepeatingTask(new ClientTimeoutTask(this, handler));
+		scheduler.scheduleRepeatingTask(this.timeout = new ClientTimeoutTask(this, handler));
 		scheduler.scheduleRepeatingTask(new ClientUnblockTask(this.handler));
 		scheduler.scheduleRepeatingTask(new ClientReliabilityTask(this.handler));
 		scheduler.start();

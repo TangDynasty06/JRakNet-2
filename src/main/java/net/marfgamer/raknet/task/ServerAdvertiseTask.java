@@ -66,7 +66,7 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 	 * @param sender
 	 * @throws UnexpectedPacketException
 	 */
-	public synchronized void handlePong(UnconnectedPong pong, InetSocketAddress sender)
+	public synchronized void handleUnconnectedPong(UnconnectedPong pong, InetSocketAddress sender)
 			throws UnexpectedPacketException {
 		if (pong.getId() == ID_UNCONNECTED_PONG) {
 			servers.put(sender, new DiscoveredRakNetServer(sender, pong.serverId, pong.identifier));

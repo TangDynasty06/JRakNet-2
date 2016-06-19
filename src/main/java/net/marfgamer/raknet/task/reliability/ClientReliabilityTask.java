@@ -28,47 +28,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.task;
+package net.marfgamer.raknet.task.reliability;
 
-import net.marfgamer.raknet.RakNetOptions;
-import net.marfgamer.raknet.client.RakNetClient;
-import net.marfgamer.raknet.protocol.Reliability;
-import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
-import net.marfgamer.raknet.session.ServerSession;
+import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
+import net.marfgamer.raknet.server.RakNetServerHandler;
+import net.marfgamer.raknet.session.ClientSession;
+import net.marfgamer.raknet.task.TaskRunnable;
 
 /**
- * Used by <code>RakNetClient</code> to make sure the server does not timeout
- *
+ * Used to make sure all packets lost are resent to the receivers. If too many
+ * packets have not been acknowledged by the client it is kicked and its address
+ * is blocked for ten minutes.
+ * 
  * @author Trent Summerlin
  */
-public class ServerTimeoutTask implements TaskRunnable {
+public class ClientReliabilityTask implements TaskRunnable, RakNet {
 
-	private final RakNetClient client;
+	private final RakNetServerHandler handler;
 
-	public ServerTimeoutTask(RakNetClient client) {
-		this.client = client;
+	public ClientReliabilityTask(RakNetServerHandler handler) {
+		this.handler = handler;
 	}
 
 	@Override
 	public long getWaitTimeMillis() {
-		return 1000L;
+		return 1500L;
 	}
 
 	@Override
 	public void run() {
-		RakNetOptions options = client.getOptions();
-		ServerSession session = client.getSession();
-		if (session != null) {
-			session.resetReceivedPacketsThisSecond();
-			session.pushLastReceiveTime(this.getWaitTimeMillis());
-			if ((double) (options.timeout - session.getLastReceiveTime()) / options.timeout <= 0.5) {
-				ConnectedPing ping = new ConnectedPing();
-				ping.pingTime = System.currentTimeMillis();
-				ping.encode();
-				session.sendPacket(Reliability.RELIABLE, ping);
-			}
-			if (session.getLastReceiveTime() >= options.timeout) {
-				client.disconnect("Timeout");
+		for (ClientSession session : handler.getSessions()) {
+			CustomPacket[] packets = session.getReliableQueue();
+
+			// Make sure client is not trying to do a back-off attack
+			if (packets.length > MAX_RELIABLE_PACKETS_IN_QUEUE) {
+				handler.removeSession(session, "Too many unacknowledged packets!");
+				handler.blockAddress(session.getAddress(), FIVE_MINUTES_MILLIS);
+			} else {
+				// Resend all lost packets
+				for (CustomPacket packet : packets) {
+					session.sendRaw(packet);
+				}
 			}
 		}
 	}

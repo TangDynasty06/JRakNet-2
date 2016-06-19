@@ -33,7 +33,9 @@ package net.marfgamer.raknet.utils;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
@@ -71,6 +73,35 @@ public abstract class RakNetUtils implements RakNet {
 		} catch (UnknownHostException e) {
 			return -1;
 		}
+	}
+
+	/**
+	 * Used to get the maximum transfer unit on the device based on the network
+	 * interface address
+	 * 
+	 * @return int
+	 */
+	public static int getNetworkInterfaceMTU() {
+		try {
+			Enumeration<NetworkInterface> ni = NetworkInterface.getNetworkInterfaces();
+			while (ni.hasMoreElements()) {
+				NetworkInterface networkInterface = ni.nextElement();
+				Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+				while (addresses.hasMoreElements()) {
+					InetAddress address = addresses.nextElement();
+					if (address.equals(InetAddress.getLocalHost())) {
+						return networkInterface.getMTU();
+					}
+				}
+			}
+			return MINIMUM_TRANSFER_UNIT; // We couldn't find a match
+		} catch (SocketException | UnknownHostException e) {
+			return MINIMUM_TRANSFER_UNIT; // An error occurred
+		}
+	}
+
+	public static void main(String[] args) {
+		System.out.println(getNetworkInterfaceMTU());
 	}
 
 	/**

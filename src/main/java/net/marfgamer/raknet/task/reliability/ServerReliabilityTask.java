@@ -28,26 +28,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.task;
+package net.marfgamer.raknet.task.reliability;
 
 import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
-import net.marfgamer.raknet.server.RakNetServerHandler;
-import net.marfgamer.raknet.session.ClientSession;
+import net.marfgamer.raknet.session.ServerSession;
+import net.marfgamer.raknet.task.TaskRunnable;
 
 /**
- * Used to make sure all packets lost are resent to the receivers. If too many
- * packets have not been acknowledged by the client it is kicked and its address
- * is blocked for ten minutes.
- * 
+ * Used to make sure all lost packets are sent back to the server. If too many
+ * packets have not been acknowledged by the server the client will disconnect.
+ *
  * @author Trent Summerlin
  */
-public class ClientReliabilityTask implements TaskRunnable, RakNet {
+public class ServerReliabilityTask implements TaskRunnable, RakNet {
 
-	private final RakNetServerHandler handler;
+	private final RakNetClient client;
 
-	public ClientReliabilityTask(RakNetServerHandler handler) {
-		this.handler = handler;
+	public ServerReliabilityTask(RakNetClient client) {
+		this.client = client;
 	}
 
 	@Override
@@ -57,13 +57,13 @@ public class ClientReliabilityTask implements TaskRunnable, RakNet {
 
 	@Override
 	public void run() {
-		for (ClientSession session : handler.getSessions()) {
+		ServerSession session = client.getSession();
+		if (session != null) {
 			CustomPacket[] packets = session.getReliableQueue();
 
-			// Make sure client is not trying to do a back-off attack
+			// Make sure the server is not trying to do a back-off attack
 			if (packets.length > MAX_RELIABLE_PACKETS_IN_QUEUE) {
-				handler.removeSession(session, "Too many unacknowledged packets!");
-				handler.blockAddress(session.getAddress(), FIVE_MINUTES_MILLIS);
+				client.disconnect("Too many packets in queue!");
 			} else {
 				// Resend all lost packets
 				for (CustomPacket packet : packets) {

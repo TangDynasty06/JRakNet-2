@@ -35,6 +35,7 @@ import java.net.InetSocketAddress;
 import io.netty.channel.Channel;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
+import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
@@ -62,6 +63,7 @@ public class ServerSession extends RakNetSession {
 	 * address
 	 * 
 	 * @param address
+	 * @return boolean
 	 */
 	public boolean isServer(InetSocketAddress address) {
 		return this.getSocketAddress().equals(address);
@@ -88,6 +90,7 @@ public class ServerSession extends RakNetSession {
 				}
 
 				client.setState(SessionState.CONNECTED);
+				// TODO client.checkServerLatency();
 				client.executeHook(Hook.SESSION_CONNECTED, client.getSession(), System.currentTimeMillis());
 			}
 		} else if (pid == ID_CONNECTED_PING) {
@@ -101,7 +104,9 @@ public class ServerSession extends RakNetSession {
 
 			this.sendPacket(Reliability.RELIABLE, pong);
 		} else if (pid == ID_CONNECTED_PONG) {
-			this.resetLastReceiveTime();
+			ConnectedPong pong = new ConnectedPong();
+			pong.decode();
+			// TODO client.updateServerLatency(pong);
 		} else if (client.getState() == SessionState.CONNECTED) {
 			client.executeHook(Hook.PACKET_RECEIVED, client.getSession(), encapsulated);
 		}

@@ -85,20 +85,23 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 				throw new InvalidChannelException(ctx.channel(), channel);
 			}
 			this.lastSender = msg.sender();
-
 			InetSocketAddress sender = msg.sender();
+
+			// Get packet
 			Packet packet = new Packet(msg.content().retain());
 			short pid = packet.getId();
 
-			// Make sure the server has accepted the MTU
-			if (!foundMtu) {
-				if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1 && client.getSession().isServer(sender)) {
-					this.foundMtu = true;
+			// Handle internal packets here
+			if (client.isServer(sender)) {
+				client.resetLastReceiveTime();
+				client.pushPacketsThisSecond();
+
+				if (!foundMtu) {
+					if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
+						this.foundMtu = true;
+					}
 				}
 			}
-
-			// Handle internal packets here
-			client.pushPacketsThisSecond();
 			if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {
 				CustomPacket custom = new CustomPacket(packet);
 				custom.decode();

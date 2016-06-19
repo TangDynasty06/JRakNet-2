@@ -30,9 +30,9 @@
  */
 package net.marfgamer.raknet.example;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.session.RakNetSession;
 import net.marfgamer.raknet.utils.RakNetUtils;
@@ -48,19 +48,22 @@ import net.marfgamer.raknet.utils.RakNetUtils;
 public class RakNetServerExample {
 
 	public static void main(String[] args) throws RakNetException {
-		// Create options and set identifier
-		RakNetOptions options = new RakNetOptions();
-		options.serverPort = 19132;
-		options.serverMaxConnections = 10;
-		options.serverIdentifier = "MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";";
-
 		// Create server and add hooks
-		RakNetServer server = new RakNetServer(options);
+		RakNetServer server = new RakNetServer(19132, 10,
+				"MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";");
 
 		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
 			RakNetSession session = (RakNetSession) parameters[0];
 			System.out.println("Client from address " + session.getSocketAddress() + " has connected to the server");
+		});
+
+		// Packet received
+		server.addHook(Hook.PACKET_RECEIVED, (Object[] parameters) -> {
+			RakNetSession session = (RakNetSession) parameters[0];
+			EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
+			System.out.println("Client from address " + session.getSocketAddress() + " sent packet with ID 0x"
+					+ Integer.toHexString(encapsulated.payload[0]).toUpperCase());
 		});
 
 		// Client disconnected

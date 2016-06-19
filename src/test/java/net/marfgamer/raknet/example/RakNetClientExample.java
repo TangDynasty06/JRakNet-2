@@ -50,7 +50,7 @@ public class RakNetClientExample {
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
-		// There are no special options needed for clients
+		// Create client
 		RakNetClient client = new RakNetClient();
 
 		// Server connected
@@ -69,7 +69,7 @@ public class RakNetClientExample {
 			System.exit(0);
 		});
 
-		// Attempt to connect to server
+		// Connect to server
 		client.connect(new InetSocketAddress(SERVER_ADDRESS, SERVER_PORT));
 	}
 

@@ -34,6 +34,7 @@ import java.net.InetSocketAddress;
 
 import io.netty.channel.Channel;
 import net.marfgamer.raknet.event.Hook;
+import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
@@ -99,7 +100,11 @@ public class ClientSession extends RakNetSession {
 				this.sendPacket(Reliability.RELIABLE, sp);
 			}
 		} else if (pid == ID_CONNECTED_PONG) {
-			this.resetLastReceiveTime();
+			if (this.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
+				ConnectedPong pong = new ConnectedPong(packet);
+				pong.decode();
+				// TODO server.updateClientLatency(this, pong);
+			}
 		} else if (pid == ID_CONNECTED_CLIENT_CONNECT_REQUEST) {
 			if (this.getState() == SessionState.CONNECTING_2) {
 				ConnectedConnectRequest cchr = new ConnectedConnectRequest(packet);
@@ -108,7 +113,7 @@ public class ClientSession extends RakNetSession {
 				ConnectedServerHandshake scha = new ConnectedServerHandshake();
 				scha.clientAddress = this.getSocketAddress();
 				scha.timestamp = cchr.timestamp;
-				scha.serverTimestamp = server.getTimestamp();
+				scha.serverTimestamp = server.getServerTimestamp();
 				scha.encode();
 
 				this.sendPacket(Reliability.RELIABLE, scha);
@@ -120,6 +125,7 @@ public class ClientSession extends RakNetSession {
 				cch.decode();
 
 				this.setState(SessionState.CONNECTED);
+				// TODO server.checkClientLatency(this);
 				server.executeHook(Hook.SESSION_CONNECTED, this, System.currentTimeMillis());
 			}
 		} else if (pid == ID_CONNECTED_CLOSE_CONNECTION) {

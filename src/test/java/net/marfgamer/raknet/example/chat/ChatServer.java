@@ -32,7 +32,6 @@ package net.marfgamer.raknet.example.chat;
 
 import java.util.HashMap;
 
-import net.marfgamer.raknet.RakNetOptions;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.example.chat.handler.ChatClientDisconnectHandler;
 import net.marfgamer.raknet.example.chat.handler.ChatClientPacketHandler;
@@ -134,16 +133,12 @@ public class ChatServer {
 	 * @throws RakNetException
 	 */
 	public void startServer() throws RakNetException {
-		// Set options
-		RakNetOptions options = new RakNetOptions();
-		options.serverPort = this.port;
-
 		// Create and start server
-		RakNetServer server = new RakNetServer(options);
+		RakNetServer server = new RakNetServer(this.port, 50);
 		server.addHook(Hook.PACKET_RECEIVED, new ChatClientPacketHandler(this));
 		server.addHook(Hook.SESSION_DISCONNECTED, new ChatClientDisconnectHandler(this));
 		server.start();
-		System.out.println("Started server on port " + options.serverPort + "!");
+		System.out.println("Started server on port " + server.getPort() + "!");
 	}
 
 	public static void main(String[] args) throws RakNetException {

@@ -77,6 +77,7 @@ public class RakNetClientTest {
 					"Handler exception " + throwable.getClass().getSimpleName() + " caused by " + naughtyAddress);
 		});
 
+		// Connect client to server
 		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Press enter to connect to the server!");
