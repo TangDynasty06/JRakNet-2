@@ -34,9 +34,7 @@ import java.net.InetSocketAddress;
 
 import io.netty.channel.Channel;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
-import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
@@ -56,6 +54,7 @@ public class ClientSession extends RakNetSession {
 	private final RakNetServerHandler handler;
 	private final RakNetServer server;
 	private SessionState state;
+	private long latency;
 
 	public ClientSession(Channel channel, InetSocketAddress address, RakNetServerHandler handler, RakNetServer server) {
 		super(channel, address);
@@ -82,6 +81,24 @@ public class ClientSession extends RakNetSession {
 		this.state = state;
 	}
 
+	/**
+	 * Returns the session's latency
+	 * 
+	 * @return long
+	 */
+	public long getLatency() {
+		return this.latency;
+	}
+
+	/**
+	 * Sets the session's latency
+	 * 
+	 * @param latency
+	 */
+	public void setLatency(long latency) {
+		this.latency = latency;
+	}
+
 	@Override
 	public void handleEncapsulated(EncapsulatedPacket encapsulated) {
 		Packet packet = encapsulated.convertPayload();
@@ -90,20 +107,21 @@ public class ClientSession extends RakNetSession {
 		// Handled depending on ClientState
 		if (pid == ID_CONNECTED_PING) {
 			if (this.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
-				ConnectedPing cp = new ConnectedPing(packet);
-				cp.decode();
+				ConnectedPing ping = new ConnectedPing(packet);
+				ping.decode();
 
-				ConnectedPong sp = new ConnectedPong();
-				sp.pingTime = cp.pingTime;
-				sp.pongTime = System.currentTimeMillis();
-				sp.encode();
-				this.sendPacket(Reliability.RELIABLE, sp);
+				ConnectedPong pong = new ConnectedPong();
+				pong.pingTime = ping.pingTime;
+				pong.pongTime = System.currentTimeMillis();
+				pong.encode();
+				
+				this.sendPacket(RELIABLE, pong);
 			}
 		} else if (pid == ID_CONNECTED_PONG) {
 			if (this.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
 				ConnectedPong pong = new ConnectedPong(packet);
 				pong.decode();
-				// TODO server.updateClientLatency(this, pong);
+				server.updateClientLatency(this, pong);
 			}
 		} else if (pid == ID_CONNECTED_CLIENT_CONNECT_REQUEST) {
 			if (this.getState() == SessionState.CONNECTING_2) {
@@ -116,7 +134,7 @@ public class ClientSession extends RakNetSession {
 				scha.serverTimestamp = server.getServerTimestamp();
 				scha.encode();
 
-				this.sendPacket(Reliability.RELIABLE, scha);
+				this.sendPacket(RELIABLE, scha);
 				this.setState(SessionState.HANDSHAKING);
 			}
 		} else if (pid == ID_CONNECTED_CLIENT_HANDSHAKE) {
@@ -125,7 +143,7 @@ public class ClientSession extends RakNetSession {
 				cch.decode();
 
 				this.setState(SessionState.CONNECTED);
-				// TODO server.checkClientLatency(this);
+				server.checkClientLatency(this);
 				server.executeHook(Hook.SESSION_CONNECTED, this, System.currentTimeMillis());
 			}
 		} else if (pid == ID_CONNECTED_CLOSE_CONNECTION) {

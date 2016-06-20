@@ -32,6 +32,7 @@ package net.marfgamer.raknet;
 
 import java.lang.reflect.Field;
 
+import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.unknown.Packet04;
 import net.marfgamer.raknet.protocol.unknown.Packet1A;
 
@@ -102,6 +103,16 @@ public interface RakNet {
 	// Reliability packets
 	public static final short ID_ACK = 0xC0;
 	public static final short ID_NACK = 0xA0;
+
+	// Reliability types
+	public static final Reliability UNRELIABLE = Reliability.UNRELIABLE;
+	public static final Reliability UNRELIABLE_SEQUENCED = Reliability.UNRELIABLE_SEQUENCED;
+	public static final Reliability RELIABLE = Reliability.RELIABLE;
+	public static final Reliability RELIABLE_ORDERED = Reliability.RELIABLE_ORDERED;
+	public static final Reliability RELIABLE_SEQUENCED = Reliability.RELIABLE_SEQUENCED;
+	public static final Reliability UNRELIABLE_WITH_ACK_RECEIPT = Reliability.UNRELIABLE_WITH_ACK_RECEIPT;
+	public static final Reliability RELIABLE_WITH_ACK_RECEIPT = Reliability.RELIABLE_WITH_ACK_RECEIPT;
+	public static final Reliability RELIABLE_ORDERED_WITH_ACK_RECEIPT = Reliability.RELIABLE_ORDERED_WITH_ACK_RECEIPT;
 
 	// Mysterious packets
 	public static final Packet04 ID_UNKNOWN_PACKET_04 = new Packet04();

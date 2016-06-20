@@ -33,8 +33,9 @@ package net.marfgamer.raknet.task.timeout;
 import java.util.HashMap;
 
 import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.protocol.Reliability;
+import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
+import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.server.RakNetServerHandler;
 import net.marfgamer.raknet.session.ClientSession;
@@ -64,15 +65,27 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 	 * @param session
 	 * @param pong
 	 */
-	/*
-	 * public void handleConnectedPong(ClientSession session, ConnectedPong
-	 * pong) throws UnexpectedPacketException { if (pong.getId() ==
-	 * ID_CONNECTED_PONG) { if (latencyTimes.containsKey(session)) { long
-	 * pingTime = latencyTimes.get(session).pingTime; if (pong.pingTime ==
-	 * pingTime) { session.setLatency(System.currentTimeMillis() - pingTime); }
-	 * } } else { throw new UnexpectedPacketException(ID_CONNECTED_PONG,
-	 * pong.getId()); } }
-	 */
+
+	public void handleConnectedPong(ClientSession session, ConnectedPong pong) throws UnexpectedPacketException {
+		if (pong.getId() == ID_CONNECTED_PONG) {
+			if (latencyTimes.containsKey(session)) {
+				long pingTime = latencyTimes.get(session).pingTime;
+				System.out.println(pong.pingTime + " - " + pingTime);
+				if (pong.pingTime == pingTime) {
+					long latency = pong.pingTime - pingTime;
+					if (latency >= 0) {
+						session.setLatency(latency);
+					} else {
+						handler.removeSession(session, "Invalid pong");
+					}
+				} else {
+					handler.removeSession(session, "Invalid pong");
+				}
+			}
+		} else {
+			throw new UnexpectedPacketException(ID_CONNECTED_PONG, pong.getId());
+		}
+	}
 
 	/**
 	 * Sends a <code>ID_CONNECTED_PING</code> to the client and gets data ready
@@ -84,7 +97,7 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 		ConnectedPing ping = new ConnectedPing();
 		ping.pingTime = System.currentTimeMillis();
 		ping.encode();
-		session.sendPacket(Reliability.RELIABLE, ping);
+		session.sendPacket(RELIABLE, ping);
 		latencyTimes.put(session, ping);
 	}
 

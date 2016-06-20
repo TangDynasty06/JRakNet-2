@@ -67,7 +67,6 @@ public abstract class RakNetSession implements RakNet {
 	// Session data
 	private long sessionId;
 	private short maximumTransferUnit;
-	private long latency;
 
 	// Packet sequencing data
 	private int sendSeqNumber;
@@ -157,24 +156,6 @@ public abstract class RakNetSession implements RakNet {
 	 */
 	public void setMTUSize(short maximumTransferUnit) {
 		this.maximumTransferUnit = maximumTransferUnit;
-	}
-
-	/**
-	 * Sets the session's latency
-	 * 
-	 * @param latency
-	 */
-	public void setLatency(long latency) {
-		this.latency = latency;
-	}
-
-	/**
-	 * Returns the session's latency
-	 * 
-	 * @return long
-	 */
-	public long getLatency() {
-		return this.latency;
 	}
 
 	/**

@@ -33,11 +33,10 @@ package net.marfgamer.raknet.session;
 import java.net.InetSocketAddress;
 
 import io.netty.channel.Channel;
+import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
-import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
@@ -49,7 +48,7 @@ import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
  *
  * @author Trent Summerlin
  */
-public class ServerSession extends RakNetSession {
+public class ServerSession extends RakNetSession implements RakNet {
 
 	private final RakNetClient client;
 
@@ -74,7 +73,23 @@ public class ServerSession extends RakNetSession {
 		Packet packet = encapsulated.convertPayload();
 		short pid = packet.getId();
 
-		if (pid == ID_CONNECTED_SERVER_HANDSHAKE) {
+		if (pid == ID_CONNECTED_PING) {
+			ConnectedPing ping = new ConnectedPing(packet);
+			ping.decode();
+
+			ConnectedPong pong = new ConnectedPong();
+			pong.pingTime = ping.pingTime;
+			pong.pongTime = System.currentTimeMillis();
+			pong.encode();
+
+			this.sendPacket(RELIABLE, pong);
+		} else if (pid == ID_CONNECTED_PONG) {
+			/*
+			 * This has been handled through the ACK since SOME servers don't
+			 * respond with CONNECTED_PONG at all, but rather only an ACK packet
+			 * *cough* PocketMine-MP's RakLib *cough*
+			 */
+		} else if (pid == ID_CONNECTED_SERVER_HANDSHAKE) {
 			if (client.getState() == SessionState.HANDSHAKING) {
 				ConnectedServerHandshake serverHandshake = new ConnectedServerHandshake(packet);
 				serverHandshake.decode();
@@ -86,27 +101,12 @@ public class ServerSession extends RakNetSession {
 					clientHandshake.timestamp = client.getTimestamp();
 					clientHandshake.encode();
 
-					this.sendPacket(Reliability.RELIABLE, clientHandshake);
+					this.sendPacket(RELIABLE, clientHandshake);
 				}
 
 				client.setState(SessionState.CONNECTED);
-				// TODO client.checkServerLatency();
 				client.executeHook(Hook.SESSION_CONNECTED, client.getSession(), System.currentTimeMillis());
 			}
-		} else if (pid == ID_CONNECTED_PING) {
-			ConnectedPing ping = new ConnectedPing(packet);
-			ping.decode();
-
-			ConnectedPong pong = new ConnectedPong();
-			pong.pingTime = ping.pingTime;
-			pong.pongTime = System.currentTimeMillis();
-			pong.encode();
-
-			this.sendPacket(Reliability.RELIABLE, pong);
-		} else if (pid == ID_CONNECTED_PONG) {
-			ConnectedPong pong = new ConnectedPong();
-			pong.decode();
-			// TODO client.updateServerLatency(pong);
 		} else if (client.getState() == SessionState.CONNECTED) {
 			client.executeHook(Hook.PACKET_RECEIVED, client.getSession(), encapsulated);
 		}

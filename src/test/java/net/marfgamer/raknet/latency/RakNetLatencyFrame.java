@@ -30,33 +30,57 @@
  */
 package net.marfgamer.raknet.latency;
 
-import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.server.RakNetServer;
-import net.marfgamer.raknet.utils.RakNetUtils;
+import javax.swing.JFrame;
+import javax.swing.JTextPane;
+
+import net.marfgamer.raknet.session.ClientSession;
 
 /**
- * Used to test the latency feature
+ * The frame used by <code>RakNetLatencyTest</code> to display the latency of
+ * each client by their address
  *
  * @author Trent Summerlin
  */
-public class RakNetLatencyTest {
+public class RakNetLatencyFrame extends JFrame {
 
-	public static void main(String[] args) {
-		RakNetLatencyFrame frame = new RakNetLatencyFrame();
-		RakNetServer server = new RakNetServer(19132, 10,
-				"MCPE;A RakNet Latency Test;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";");
-		server.startThreaded();
-		frame.setVisible(true);
-		
-		// Client connected
-		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
-			frame.setClients(server.getClients());
-		});
-		
-		// Client disconnected
-		server.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
-			frame.setClients(server.getClients());
-		});
+	private static final long serialVersionUID = -4981385799018471709L;
+
+	private final JTextPane infoPane;
+	private final JTextPane serverPane;
+
+	public RakNetLatencyFrame() {
+		// Set window options
+		this.setSize(450, 300);
+		this.setResizable(false);
+		this.setTitle("Client latencies");
+		this.getContentPane().setLayout(null);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// Tells what the user what this window does
+		this.infoPane = new JTextPane();
+		infoPane.setText("These are the latencies of every connected client");
+		infoPane.setBounds(10, 10, 425, 20);
+		getContentPane().add(infoPane);
+
+		// Displays all the server
+		this.serverPane = new JTextPane();
+		serverPane.setEditable(false);
+		serverPane.setBounds(10, 40, 425, 220);
+		getContentPane().add(serverPane);
+	}
+
+	/**
+	 * Sets the displayed servers on the frame
+	 * 
+	 * @param servers
+	 */
+	public void setClients(ClientSession[] clients) {
+		StringBuilder serverChars = new StringBuilder();
+		for (int i = 0; i < clients.length; i++) {
+			ClientSession session = clients[i];
+			serverChars.append(session.getSocketAddress() + " - " + session.getLatency() + "\n");
+		}
+		serverPane.setText(serverChars.toString());
 	}
 
 }

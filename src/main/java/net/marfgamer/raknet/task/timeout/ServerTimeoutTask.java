@@ -32,7 +32,6 @@ package net.marfgamer.raknet.task.timeout;
 
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.RakNetClient;
-import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
 import net.marfgamer.raknet.session.ServerSession;
 import net.marfgamer.raknet.task.TaskRunnable;
@@ -45,35 +44,9 @@ import net.marfgamer.raknet.task.TaskRunnable;
 public class ServerTimeoutTask implements TaskRunnable, RakNet {
 
 	private final RakNetClient client;
-	private ConnectedPing ping;
 
 	public ServerTimeoutTask(RakNetClient client) {
 		this.client = client;
-	}
-
-	/*public void handledConnectedPong(ConnectedPong pong) throws UnexpectedPacketException {
-		ServerSession session = client.getSession();
-		if (pong.getId() == ID_CONNECTED_PONG) {
-			if (ping != null) {
-				if (pong.pingTime == ping.pingTime) {
-					session.setLatency(System.currentTimeMillis() - ping.pingTime);
-					System.out.println("SERVER LATENCY: " + session.getLatency());
-				}
-			}
-		} else {
-			throw new UnexpectedPacketException(ID_CONNECTED_PONG, pong.getId());
-		}
-	}*/
-
-	public void sendConnectedPing() {
-		ServerSession session = client.getSession();
-		if (session != null) {
-			ConnectedPing ping = new ConnectedPing();
-			ping.pingTime = System.currentTimeMillis();
-			ping.encode();
-			session.sendPacket(Reliability.RELIABLE, ping);
-			this.ping = ping;
-		}
 	}
 
 	@Override
@@ -89,7 +62,12 @@ public class ServerTimeoutTask implements TaskRunnable, RakNet {
 			session.pushLastReceiveTime(this.getWaitTimeMillis());
 			if ((double) (client.getServerTimeout() - session.getLastReceiveTime())
 					/ client.getServerTimeout() <= 0.5) {
-				this.sendConnectedPing();
+				if (session != null) {
+					ConnectedPing ping = new ConnectedPing();
+					ping.pingTime = System.currentTimeMillis();
+					ping.encode();
+					session.sendPacket(RELIABLE, ping);
+				}
 			}
 			if (session.getLastReceiveTime() >= client.getServerTimeout()) {
 				client.disconnect("Timeout");

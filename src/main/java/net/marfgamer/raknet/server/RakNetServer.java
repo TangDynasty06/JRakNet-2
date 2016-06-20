@@ -31,6 +31,7 @@
 package net.marfgamer.raknet.server;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import io.netty.bootstrap.Bootstrap;
@@ -43,7 +44,9 @@ import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
@@ -183,9 +186,13 @@ public class RakNetServer implements RakNet {
 	 * @param pong
 	 * @throws UnexpectedPacketException
 	 */
-	/*public void updateClientLatency(ClientSession session, ConnectedPong pong) throws UnexpectedPacketException {
+	public void updateClientLatency(ClientSession session, ConnectedPong pong) {
 		if (timeout != null) {
-			timeout.handleConnectedPong(session, pong);
+			try {
+				timeout.handleConnectedPong(session, pong);
+			} catch (UnexpectedPacketException e) {
+				handler.removeSession(session, "Invalid pong packet!");
+			}
 		}
 	}
 
@@ -195,11 +202,11 @@ public class RakNetServer implements RakNet {
 	 * 
 	 * @param session
 	 */
-	/*public void checkClientLatency(ClientSession session) {
+	public void checkClientLatency(ClientSession session) {
 		if (timeout != null) {
 			timeout.sendConnectedPing(session);
 		}
-	}*/
+	}
 
 	/**
 	 * Sets the HookRunnable for the specified Hook
@@ -267,6 +274,25 @@ public class RakNetServer implements RakNet {
 	}
 
 	/**
+	 * Kicks the specified client with the specified reason
+	 * 
+	 * @param session
+	 * @param reason
+	 */
+	public void kickClient(ClientSession session, String reason) {
+		handler.removeSession(session, reason);
+	}
+
+	/**
+	 * Kicks the specified client
+	 * 
+	 * @param session
+	 */
+	public void kickClient(ClientSession session) {
+		this.kickClient(session, "Kicked from server");
+	}
+
+	/**
 	 * Returns how much time is left for an address block
 	 * 
 	 * @param address
@@ -300,12 +326,27 @@ public class RakNetServer implements RakNet {
 	}
 
 	/**
+	 * Returns all the client's that are connected to the server
+	 * 
+	 * @return ClientSession[]
+	 */
+	public ClientSession[] getClients() {
+		ArrayList<ClientSession> connected = new ArrayList<ClientSession>();
+		for (ClientSession session : handler.getSessions()) {
+			if (session.getState() == SessionState.CONNECTED) {
+				connected.add(session);
+			}
+		}
+		return connected.toArray(new ClientSession[connected.size()]);
+	}
+
+	/**
 	 * Returns all the client's that are connected or are connecting to the
 	 * server at the current time
 	 * 
 	 * @return int
 	 */
-	public int getConnections() {
+	public int getConnectionCount() {
 		int connections = 0;
 		for (ClientSession session : handler.getSessions()) {
 			if (session.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
@@ -365,7 +406,7 @@ public class RakNetServer implements RakNet {
 
 				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
 						&& request.mtuSize <= this.maxTransferUnit) {
-					if (this.getConnections() >= this.maxConnections) {
+					if (this.getConnectionCount() >= this.maxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
 						handler.removeSession(session, "Server is full");
 					} else {
@@ -426,7 +467,7 @@ public class RakNetServer implements RakNet {
 		try {
 			Bootstrap bootstrap = new Bootstrap();
 			bootstrap.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
-					.option(ChannelOption.SO_SNDBUF, this.maxTransferUnit)
+					.option(ChannelOption.SO_REUSEADDR, false).option(ChannelOption.SO_SNDBUF, this.maxTransferUnit)
 					.option(ChannelOption.SO_RCVBUF, this.maxTransferUnit).handler(handler);
 			bootstrap.bind(this.port);
 		} catch (Exception e) {

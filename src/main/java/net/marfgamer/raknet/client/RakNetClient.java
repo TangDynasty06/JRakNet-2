@@ -54,7 +54,6 @@ import net.marfgamer.raknet.exception.client.ConnectionBannedException;
 import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
 import net.marfgamer.raknet.exception.client.ServerFullException;
 import net.marfgamer.raknet.protocol.Packet;
-import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionBanned;
@@ -92,7 +91,6 @@ public class RakNetClient implements RakNet {
 	private final long timestamp;
 	private final RakNetScheduler scheduler;
 	private final ServerAdvertiseTask advertise;
-	private final ServerTimeoutTask timeout;
 	private final HashMap<Hook, HookRunnable> hooks;
 
 	// Netty info
@@ -123,13 +121,14 @@ public class RakNetClient implements RakNet {
 		this.group = new NioEventLoopGroup();
 		this.bootstrap = new Bootstrap();
 		bootstrap.group(group);
+		bootstrap.option(ChannelOption.SO_REUSEADDR, false);
 		bootstrap.channel(NioDatagramChannel.class);
 		bootstrap.handler(handler);
 		this.bindChannel();
 
 		// Start scheduler here so we can discover
 		scheduler.scheduleRepeatingTask(this.advertise = new ServerAdvertiseTask(this));
-		scheduler.scheduleRepeatingTask(this.timeout = new ServerTimeoutTask(this));
+		scheduler.scheduleRepeatingTask(new ServerTimeoutTask(this));
 		scheduler.scheduleRepeatingTask(new ServerReliabilityTask(this));
 		scheduler.start();
 	}
@@ -210,6 +209,24 @@ public class RakNetClient implements RakNet {
 		} catch (UnknownHostException e) {
 			return null;
 		}
+	}
+
+	/**
+	 * Returns the server the client is currently connected to
+	 * 
+	 * @return ServerSession
+	 */
+	public ServerSession getServer() {
+		return this.session;
+	}
+
+	/**
+	 * Returns whether or not the client is connected to the server
+	 * 
+	 * @return boolean
+	 */
+	public boolean isConnected() {
+		return (this.state == SessionState.CONNECTED && session != null);
 	}
 
 	/**
@@ -318,7 +335,7 @@ public class RakNetClient implements RakNet {
 					ccr.timestamp = this.timestamp;
 					ccr.encode();
 
-					session.sendPacket(Reliability.RELIABLE, ccr);
+					session.sendPacket(RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
 				}
 			}
@@ -359,32 +376,6 @@ public class RakNetClient implements RakNet {
 	public synchronized DiscoveredRakNetServer[] getDiscoveredServers() {
 		return advertise.getDiscoveredServers();
 	}
-
-	/**
-	 * Updates the server latency based on the pong packet
-	 * 
-	 * @param pong
-	 * @throws UnexpectedPacketException
-	 */
-	/*
-	 * public void updateServerLatency(ConnectedPong pong) throws
-	 * UnexpectedPacketException { if (session != null) {
-	 * timeout.handledConnectedPong(pong); } }
-	 */
-
-	/**
-	 * Sends an <code>ID_UNCONNECTED_PING</code> to the server to check it's
-	 * latency
-	 * 
-	 * @param session
-	 */
-	/*
-	 * public void checkServerLatency() { if (session != null) { ConnectedPing
-	 * ping = new ConnectedPing(); ping.pingTime = System.currentTimeMillis();
-	 * ping.encode();
-	 * 
-	 * session.sendPacket(Reliability.RELIABLE, ping); } }
-	 */
 
 	/**
 	 * Returns whether or not the address is the same address as the server's
@@ -617,7 +608,7 @@ public class RakNetClient implements RakNet {
 	 */
 	public void disconnect(String reason) {
 		if (session != null) {
-			session.sendPacket(Reliability.UNRELIABLE, new ConnectedCloseConnection());
+			session.sendPacket(UNRELIABLE, new ConnectedCloseConnection());
 			if (this.state == SessionState.CONNECTED) {
 				this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
 			}

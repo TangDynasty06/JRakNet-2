@@ -40,6 +40,7 @@ import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionBanned;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
@@ -77,6 +78,9 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public void blockAddress(InetAddress address, long time) {
 		if (!blocked.containsKey(address)) {
+			if (sessions.containsKey(address)) {
+				this.removeSession(sessions.get(address), "Address blocked");
+			}
 			blocked.put(address, new BlockedAddress(address, time));
 			server.executeHook(Hook.CLIENT_ADDRESS_BLOCKED, blocked.get(address), System.currentTimeMillis());
 		}
@@ -153,13 +157,12 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public void removeSession(InetSocketAddress address, String reason) {
 		if (sessions.containsKey(address)) {
-			ClientSession session = sessions.get(address);
+			ClientSession session = sessions.remove(address);
+			session.sendPacket(RELIABLE, new ConnectedCloseConnection());
 			if (session.getState() == SessionState.CONNECTED) {
-				server.executeHook(Hook.SESSION_DISCONNECTED, sessions.get(address), reason,
-						System.currentTimeMillis());
+				server.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
 			}
 		}
-		sessions.remove(address);
 	}
 
 	/**
@@ -174,6 +177,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 
 	@Override
 	protected final void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+		// Make sure client address is not blocked
 		if (!blocked.containsKey(msg.sender().getAddress())) {
 			// Verify session
 			InetSocketAddress address = msg.sender();
@@ -212,8 +216,10 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			}
 		} else {
 			ctx.writeAndFlush(new DatagramPacket(new UnconnectedConnectionBanned().buffer(), msg.sender()));
+			ctx.writeAndFlush(new DatagramPacket(new ConnectedCloseConnection().buffer(), msg.sender()));
 		}
 
+		// Release message
 		while (msg.refCnt() > 1) {
 			msg.release();
 		}
@@ -227,7 +233,6 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
 		}
 		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender, System.currentTimeMillis());
-		cause.printStackTrace();
 	}
 
 }

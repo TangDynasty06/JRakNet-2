@@ -36,7 +36,7 @@ package net.marfgamer.raknet.protocol;
  * @author Trent Summerlin
  */
 public enum Reliability {
-	
+
 	// For the love of god, do not CTRL+SHIFT+F this
 	UNRELIABLE(0, false, false, false),
 	UNRELIABLE_SEQUENCED(1, false, false, true),
