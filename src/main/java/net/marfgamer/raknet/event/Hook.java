@@ -86,6 +86,15 @@ public enum Hook {
 	SERVER_UNDISCOVERED,
 
 	/**
+	 * Received whenever a server shuts down<br>
+	 * <br?
+	 * 
+	 * Parameter 0: The RakNetServer (RakNetServer)<br>
+	 * Parameter 1: The reason the server shutdown (String)
+	 */
+	SERVER_SHUTDOWN,
+
+	/**
 	 * Received whenever an address has been blocked by the server handler<br>
 	 * <br>
 	 * 

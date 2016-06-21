@@ -475,4 +475,24 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 		return thread;
 	}
 
+	/**
+	 * Stops the server with the specified reason
+	 * 
+	 * @param reason
+	 */
+	public void shutdown(String reason) {
+		scheduler.shutdown();
+		for (ClientSession session : handler.getSessions()) {
+			handler.removeSession(session, reason);
+		}
+		this.executeHook(Hook.SERVER_SHUTDOWN, this, reason);
+	}
+
+	/**
+	 * Stops the server
+	 */
+	public void shutdown() {
+		this.shutdown("Server closed");
+	}
+
 }

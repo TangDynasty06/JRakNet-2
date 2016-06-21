@@ -41,6 +41,7 @@ import net.marfgamer.raknet.task.TaskRunnable;
  */
 public class RakNetScheduler extends Thread {
 
+	private boolean shouldRun;
 	private boolean running;
 	private int taskId;
 
@@ -156,35 +157,40 @@ public class RakNetScheduler extends Thread {
 		long last = System.currentTimeMillis();
 
 		// Start loop
-		while (true) {
+		while (shouldRun) {
 			long current = System.currentTimeMillis();
 			long difference = (current - last);
 
 			// Update tasks
-			synchronized (tasks) {
-				for (int i = 0; i < tasks.size(); i++) {
-					RakNetTask scheduledTask = tasks.get(i);
-					scheduledTask.waitTime -= difference;
-					if (scheduledTask.waitTime <= 0) {
-						scheduledTask.runnable.run();
-						tasks.remove(scheduledTask);
-					}
-					
-					// Update repeating tasks
-					for (int j = 0; j < repeating.size(); j++) {
-						RakNetRepeatingTask repeatingTask = repeating.get(j);
-						repeatingTask.waitTime -= difference;
-						if (repeatingTask.waitTime <= 0) {
-							repeatingTask.runnable.run();
-							repeatingTask.waitTime = repeatingTask.reset;
-						}
-					}
+			for (int i = 0; i < tasks.size(); i++) {
+				RakNetTask scheduledTask = tasks.get(i);
+				scheduledTask.waitTime -= difference;
+				if (scheduledTask.waitTime <= 0) {
+					scheduledTask.runnable.run();
+					tasks.remove(scheduledTask);
+				}
+			}
+
+			// Update repeating tasks
+			for (int j = 0; j < repeating.size(); j++) {
+				RakNetRepeatingTask repeatingTask = repeating.get(j);
+				repeatingTask.waitTime -= difference;
+				if (repeatingTask.waitTime <= 0) {
+					repeatingTask.runnable.run();
+					repeatingTask.waitTime = repeatingTask.reset;
 				}
 			}
 
 			// Update time
 			last = current;
 		}
+	}
+	
+	/**
+	 * Stops the scheduler
+	 */
+	public void shutdown() {
+		this.shouldRun = false;
 	}
 
 }

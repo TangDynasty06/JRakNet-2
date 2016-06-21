@@ -35,7 +35,7 @@ import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
- * Used to test the latency feature
+ * Used to make sure the latency feature works properly
  *
  * @author Trent Summerlin
  */
@@ -47,23 +47,21 @@ public class RakNetLatencyTest {
 				"MCPE;A RakNet Latency Test;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";");
 		server.startThreaded();
 		frame.setVisible(true);
-		
+
 		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
 			frame.setClients(server.getClients());
 		});
-		
+
 		// Client disconnected
 		server.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
 			frame.setClients(server.getClients());
 		});
-		
-		// Latency update
-		
-		while(true) {
-			Thread.sleep(1000);
+
+		// Latency updated
+		server.addHook(Hook.LATENCY_UPDATED, (Object[] parameters) -> {
 			frame.setClients(server.getClients());
-		}
+		});
 	}
 
 }

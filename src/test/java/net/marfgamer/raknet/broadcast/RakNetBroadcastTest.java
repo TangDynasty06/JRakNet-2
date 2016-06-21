@@ -32,7 +32,6 @@ package net.marfgamer.raknet.broadcast;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,7 +40,11 @@ import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 
 /**
- * Used to discover Minecraft: Pocket Edition servers on the network
+ * Used to make sure discover Minecraft: Pocket Edition servers on the network
+ * works properly<br>
+ * <br>
+ * Note: While it might look like the player count is wrong, this is a problem
+ * with MCPE v0.15.0 protocol 80/81 and has nothing to do with JRakNet
  *
  * @author Trent Summerlin
  */
@@ -50,7 +53,7 @@ public class RakNetBroadcastTest {
 	public static void main(String[] args) {
 		ConcurrentHashMap<InetSocketAddress, DiscoveredRakNetServer> discoveredServers = new ConcurrentHashMap<InetSocketAddress, DiscoveredRakNetServer>();
 		RakNetBroadcastFrame frame = new RakNetBroadcastFrame();
-		RakNetClient client = new RakNetClient();
+		RakNetClient client = new RakNetClient(19132);
 		frame.setVisible(true);
 
 		// Server found on local network
@@ -59,7 +62,6 @@ public class RakNetBroadcastTest {
 			InetSocketAddress address = (InetSocketAddress) parameters[1];
 			discoveredServers.put(address, server);
 			updateFrame(discoveredServers.values(), frame);
-			System.out.println("Discovered server!");
 		});
 
 		// Server can no longer be found on local network
@@ -68,7 +70,6 @@ public class RakNetBroadcastTest {
 			discoveredServers.remove(address);
 			updateFrame(discoveredServers.values(), frame);
 		});
-		
 	}
 
 	private static void updateFrame(Collection<DiscoveredRakNetServer> servers, RakNetBroadcastFrame frame) {

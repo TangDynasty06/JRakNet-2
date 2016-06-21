@@ -92,13 +92,12 @@ public class ServerAdvertiseTask implements TaskRunnable, MessageIdentifiers {
 
 	@Override
 	public void run() {
-		/*// Broadcast ping to network
+		// Broadcast ping to network
 		UnconnectedPing ping = new UnconnectedPing();
 		ping.pingId = System.currentTimeMillis();
 		ping.clientId = client.getClientId();
 		ping.encode();
-		
-		System.out.println(client.broadcastRaw(ping));
+		client.broadcastRaw(ping);
 
 		// Make sure servers haven't timed-out
 		Iterator<DiscoveredRakNetServer> iServers = servers.values().iterator();
@@ -110,8 +109,7 @@ public class ServerAdvertiseTask implements TaskRunnable, MessageIdentifiers {
 			} else {
 				server.cyclesLeft--;
 			}
-		}*/
-		System.out.println("Advertise");
+		}
 	}
 
 }

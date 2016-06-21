@@ -485,7 +485,9 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				return true;
 			}
 		}
-		System.out.println("Broadcasting");
+		System.out.println((channel != null) + " <- Channel exists?");
+		System.out.println(channel.isOpen() + " <- Chanel open?");
+		System.out.println((discoverPort > 0) + "Valid discover port?");
 		return false;
 	}
 
