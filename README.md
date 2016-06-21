@@ -71,4 +71,4 @@ This project has a twitter page, [@JRakNet](https://twitter.com/JRakNet). There 
 # Notes
 Some DataPacket ID's are reserved by RakNet. Because of this, it is recommended that all game packets not relating to RakNet begin with their own special ID, Minecraft: Pocket Edition does this. It is also recommended that game servers and game clients do not use raw packets at all.
 
-![JRakNet Banner](http://i.imgur.com/t897jIS.png)
+![JRakNet Banner by Luke Wilson](http://i.imgur.com/UUjMJFa.jpg)
