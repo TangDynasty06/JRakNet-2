@@ -28,27 +28,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.protocol;
+package net.marfgamer.raknet.protocol.raknet.internal;
 
-import io.netty.buffer.ByteBuf;
+import java.util.ArrayList;
+
+import net.marfgamer.raknet.utils.ArrayUtils;
 
 /**
- * Used to read and write special RakNet types without having to have a
- * <code>Packet</code> object
+ * A packet that has been split up into multiple packets since it was too big to
+ * be sent at once
  *
  * @author Trent Summerlin
  */
-public interface Bytable {
+public class SplitPacket {
 
-	public default int readLTriad(ByteBuf buffer) {
-		return (0xFF & buffer.readByte()) | (0xFF00 & (buffer.readByte() << 8))
-				| (0xFF0000 & (buffer.readByte() << 16));
-	}
+	public static EncapsulatedPacket[] createSplit(EncapsulatedPacket packet, int mtuSize, int splitId) {
+		byte[][] splitData = ArrayUtils.splitArray(packet.payload, mtuSize - CustomPacket.DEFAULT_SIZE);
+		ArrayList<EncapsulatedPacket> packets = new ArrayList<EncapsulatedPacket>();
+		for (int i = 0; i < splitData.length; i++) {
+			// Copy packet data
+			EncapsulatedPacket encapsulated = new EncapsulatedPacket();
+			encapsulated.messageIndex = packet.messageIndex;
+			encapsulated.orderChannel = packet.orderChannel;
+			encapsulated.orderIndex = packet.orderIndex;
 
-	public default void writeLTriad(ByteBuf buffer, int t) {
-		buffer.writeByte(t << 0);
-		buffer.writeByte(t << 8);
-		buffer.writeByte(t << 16);
+			// Set split data
+			encapsulated.split = true;
+			encapsulated.splitIndex = i;
+			encapsulated.splitId = splitId;
+			encapsulated.splitCount = splitData.length;
+
+			// Set payload data
+			encapsulated.payload = splitData[i];
+			packets.add(encapsulated);
+		}
+		return packets.toArray(new EncapsulatedPacket[packets.size()]);
 	}
 
 }

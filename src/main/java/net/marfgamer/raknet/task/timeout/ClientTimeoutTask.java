@@ -32,9 +32,10 @@ package net.marfgamer.raknet.task.timeout;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
+import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.server.RakNetServer;
@@ -47,7 +48,7 @@ import net.marfgamer.raknet.task.TaskRunnable;
  *
  * @author Trent Summerlin
  */
-public class ClientTimeoutTask implements TaskRunnable, RakNet {
+public class ClientTimeoutTask implements TaskRunnable, MessageIdentifiers {
 
 	private final RakNetServer server;
 	private final RakNetServerHandler handler;
@@ -93,7 +94,7 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 		ConnectedPing ping = new ConnectedPing();
 		ping.pingTime = (System.currentTimeMillis() - server.getServerTimestamp());
 		ping.encode();
-		session.sendPacket(RELIABLE, ping);
+		session.sendPacket(Reliability.RELIABLE, ping);
 		latencyTimes.put(session, new PingData(System.currentTimeMillis(), ping));
 	}
 

@@ -46,6 +46,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
@@ -56,7 +57,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
  *
  * @author Trent Summerlin
  */
-public abstract class RakNetUtils implements RakNet {
+public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 
 	private static long raknetId = getRakNetID();
 

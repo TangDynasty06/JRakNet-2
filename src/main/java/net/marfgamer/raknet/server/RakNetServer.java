@@ -45,6 +45,7 @@ import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
@@ -69,7 +70,7 @@ import net.marfgamer.raknet.utils.RakNetUtils;
  *
  * @author Trent Summerlin
  */
-public class RakNetServer implements RakNet {
+public class RakNetServer implements RakNet, MessageIdentifiers {
 
 	// Server options
 	private final int port;

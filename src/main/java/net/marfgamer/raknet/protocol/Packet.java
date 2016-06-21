@@ -36,18 +36,13 @@ import java.util.regex.Pattern;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.marfgamer.raknet.RakNet;
 
 /**
  * Used to read and write data for packets with ease
  *
  * @author Trent Summerlin
  */
-public class Packet implements RakNet {
-
-	public final static byte[] MAGIC = new byte[] { (byte) 0x00, (byte) 0xFF, (byte) 0xFF, 0x00, (byte) 0xFE,
-			(byte) 0xFE, (byte) 0xFE, (byte) 0xFE, (byte) 0xFD, (byte) 0xFD, (byte) 0xFD, (byte) 0xFD, (byte) 0x12,
-			(byte) 0x34, (byte) 0x56, (byte) 0x78 };
+public class Packet implements MessageIdentifiers {
 
 	protected final ByteBuf buffer;
 	protected final short id;

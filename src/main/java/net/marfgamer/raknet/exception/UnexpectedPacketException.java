@@ -30,7 +30,7 @@
  */
 package net.marfgamer.raknet.exception;
 
-import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 
 /**
  * Thrown when a handler is expecting a packet and receives something else
@@ -45,8 +45,10 @@ public class UnexpectedPacketException extends RakNetException {
 	private final int requiredId;
 
 	public UnexpectedPacketException(int requiredId, int retrievedId) {
-		super("Packet must be " + RakNet.getName(requiredId) + " but instead got a "
-				+ (RakNet.getName(retrievedId) != null ? RakNet.getName(retrievedId) : "unknown packet") + "!");
+		super("Packet must be " + MessageIdentifiers.getPacketName(requiredId) + " but instead got a "
+				+ (MessageIdentifiers.getPacketName(retrievedId) != null ? MessageIdentifiers.getPacketName(retrievedId)
+						: "unknown packet")
+				+ "!");
 		this.requiredId = requiredId;
 	}
 

@@ -34,11 +34,11 @@ import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 
@@ -47,7 +47,7 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
  *
  * @author Trent Summerlin
  */
-public class ServerAdvertiseTask implements TaskRunnable, RakNet {
+public class ServerAdvertiseTask implements TaskRunnable, MessageIdentifiers {
 
 	private static final int CYCLE_START = 5;
 
@@ -92,12 +92,13 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 
 	@Override
 	public void run() {
-		// Broadcast ping to network
+		/*// Broadcast ping to network
 		UnconnectedPing ping = new UnconnectedPing();
 		ping.pingId = System.currentTimeMillis();
 		ping.clientId = client.getClientId();
 		ping.encode();
-		client.broadcastRaw(ping);
+		
+		System.out.println(client.broadcastRaw(ping));
 
 		// Make sure servers haven't timed-out
 		Iterator<DiscoveredRakNetServer> iServers = servers.values().iterator();
@@ -109,7 +110,8 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 			} else {
 				server.cyclesLeft--;
 			}
-		}
+		}*/
+		System.out.println("Advertise");
 	}
 
 }

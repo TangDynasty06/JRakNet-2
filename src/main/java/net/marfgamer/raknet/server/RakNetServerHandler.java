@@ -39,7 +39,9 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionBanned;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
@@ -53,7 +55,8 @@ import net.marfgamer.raknet.session.SessionState;
  *
  * @author Trent Summerlin
  */
-public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
+public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPacket>
+		implements RakNet, MessageIdentifiers {
 
 	private final RakNetServer server;
 	private final ConcurrentHashMap<InetSocketAddress, ClientSession> sessions;
@@ -95,7 +98,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	public void removeSession(InetSocketAddress address, String reason) {
 		if (sessions.containsKey(address)) {
 			ClientSession session = sessions.remove(address);
-			session.sendPacket(RELIABLE, new ConnectedCloseConnection());
+			session.sendPacket(Reliability.RELIABLE, new ConnectedCloseConnection());
 			if (session.getState() == SessionState.CONNECTED) {
 				server.executeHook(Hook.SESSION_DISCONNECTED, session, reason);
 			}

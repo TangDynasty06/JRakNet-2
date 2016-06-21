@@ -47,6 +47,19 @@ public enum Reliability {
 	RELIABLE_WITH_ACK_RECEIPT(6, true, false, false),
 	RELIABLE_ORDERED_WITH_ACK_RECEIPT(7, true, true, false);
 
+	public static interface INTERFACE {
+		
+		public static final Reliability UNRELIABLE = Reliability.UNRELIABLE;
+		public static final Reliability UNRELIABLE_SEQUENCED = Reliability.UNRELIABLE_SEQUENCED;
+		public static final Reliability RELIABLE = Reliability.RELIABLE;
+		public static final Reliability RELIABLE_ORDERED = Reliability.RELIABLE_ORDERED;
+		public static final Reliability RELIABLE_SEQUENCED = Reliability.RELIABLE_SEQUENCED;
+		public static final Reliability UNRELIABLE_WITH_ACK_RECEIPT = Reliability.UNRELIABLE_WITH_ACK_RECEIPT;
+		public static final Reliability RELIABLE_WITH_ACK_RECEIPT = Reliability.RELIABLE_WITH_ACK_RECEIPT;
+		public static final Reliability RELIABLE_ORDERED_WITH_ACK_RECEIPT = Reliability.RELIABLE_ORDERED_WITH_ACK_RECEIPT;
+	
+	}
+
 	private final byte reliability;
 	private final boolean reliable;
 	private final boolean ordered;

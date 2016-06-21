@@ -32,7 +32,6 @@ package net.marfgamer.raknet.protocol.raknet.internal;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.marfgamer.raknet.protocol.Bytable;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
 

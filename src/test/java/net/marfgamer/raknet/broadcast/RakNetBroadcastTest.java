@@ -69,9 +69,6 @@ public class RakNetBroadcastTest {
 			updateFrame(discoveredServers.values(), frame);
 		});
 		
-		while(true) {
-			System.out.println(Arrays.toString(client.getDiscoveredServers()));
-		}
 	}
 
 	private static void updateFrame(Collection<DiscoveredRakNetServer> servers, RakNetBroadcastFrame frame) {

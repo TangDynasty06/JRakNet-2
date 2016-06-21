@@ -41,16 +41,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
-import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.SplitQueueOverloadException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
-import net.marfgamer.raknet.protocol.SplitPacket;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
+import net.marfgamer.raknet.protocol.raknet.internal.SplitPacket;
 
 /**
  * Represents a session in RakNet, used by the internal handlers to easily track
@@ -58,7 +58,7 @@ import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
  *
  * @author Trent Summerlin
  */
-public abstract class RakNetSession implements RakNet {
+public abstract class RakNetSession implements MessageIdentifiers, Reliability.INTERFACE {
 
 	// Channel data
 	private final Channel channel;

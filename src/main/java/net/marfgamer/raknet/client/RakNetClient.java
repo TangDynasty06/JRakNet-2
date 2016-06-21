@@ -53,7 +53,9 @@ import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.exception.client.ConnectionBannedException;
 import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
 import net.marfgamer.raknet.exception.client.ServerFullException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
@@ -80,7 +82,7 @@ import net.marfgamer.raknet.utils.RakNetUtils;
  *
  * @author Trent Summerlin
  */
-public class RakNetClient implements RakNet {
+public class RakNetClient implements RakNet, MessageIdentifiers {
 
 	// Client options
 	private final int maxTransferUnit;
@@ -337,7 +339,7 @@ public class RakNetClient implements RakNet {
 					ccr.timestamp = this.timestamp;
 					ccr.encode();
 
-					session.sendPacket(RELIABLE, ccr);
+					session.sendPacket(Reliability.RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
 				}
 			}
@@ -483,6 +485,7 @@ public class RakNetClient implements RakNet {
 				return true;
 			}
 		}
+		System.out.println("Broadcasting");
 		return false;
 	}
 
@@ -633,7 +636,7 @@ public class RakNetClient implements RakNet {
 	 */
 	public void disconnect(String reason) {
 		if (session != null) {
-			session.sendPacket(UNRELIABLE, new ConnectedCloseConnection());
+			session.sendPacket(Reliability.UNRELIABLE, new ConnectedCloseConnection());
 			if (this.state == SessionState.CONNECTED) {
 				this.executeHook(Hook.SESSION_DISCONNECTED, session, reason);
 			}

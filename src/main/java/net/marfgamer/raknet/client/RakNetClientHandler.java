@@ -37,9 +37,9 @@ import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
-import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.InvalidChannelException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
@@ -52,7 +52,7 @@ import net.marfgamer.raknet.session.ServerSession;
  * @author Trent Summerlin
  */
 @Sharable // Socket will be bound to a socket multiple times
-public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
+public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPacket>implements MessageIdentifiers {
 
 	private final RakNetClient client;
 	private volatile Channel channel;
