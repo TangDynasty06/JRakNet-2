@@ -91,7 +91,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			Packet packet = new Packet(msg.content().retain());
 			short pid = packet.getId();
 
-			// Handle internal packets here
+			// Update client server info
 			if (client.isServer(sender)) {
 				client.resetLastReceiveTime();
 				client.pushPacketsThisSecond();
@@ -102,6 +102,8 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 					}
 				}
 			}
+
+			// Handle internal packets
 			if (pid >= ID_CUSTOM_0 && pid <= ID_CUSTOM_F) {
 				CustomPacket custom = new CustomPacket(packet);
 				custom.decode();
@@ -120,7 +122,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			msg.release(msg.refCnt() - 1);
 		}
 	}
-	
+
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();

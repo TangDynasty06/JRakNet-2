@@ -104,7 +104,7 @@ public class ServerSession extends RakNetSession {
 
 				client.setState(SessionState.CONNECTED);
 				client.executeHook(Hook.SESSION_CONNECTED, this);
-				client.checkClientLatency();
+				client.checkServerLatency();
 			}
 		} else if (pid == ID_CONNECTED_CLOSE_CONNECTION) {
 			ConnectedCloseConnection close = new ConnectedCloseConnection();

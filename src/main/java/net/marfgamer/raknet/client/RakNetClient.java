@@ -314,7 +314,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionReplyOne ucro = new UnconnectedConnectionReplyOne(packet);
 				ucro.decode();
 
-				if (ucro.magic == true && session.isServer(sender)) {
+				if (ucro.magic == true && this.isServer(sender)) {
 					session.setSessionId(ucro.serverId);
 					session.setMaximumTransferUnit(ucro.mtuSize);
 
@@ -333,7 +333,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionReplyTwo ucrt = new UnconnectedConnectionReplyTwo(packet);
 				ucrt.decode();
 
-				if (ucrt.magic == true && session.isServer(sender)) {
+				if (ucrt.magic == true && this.isServer(sender)) {
 					ConnectedConnectRequest ccr = new ConnectedConnectRequest();
 					ccr.clientId = this.clientId;
 					ccr.timestamp = this.timestamp;
@@ -344,20 +344,20 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_SERVER_FULL) {
-			if (state != SessionState.CONNECTED && session.isServer(sender)) {
+			if (state != SessionState.CONNECTED && this.isServer(sender)) {
 				UnconnectedServerFull full = new UnconnectedServerFull(packet);
 				full.decode();
 				connectionErrors.add(new ServerFullException(this, session));
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_BANNED) {
-			if (state != SessionState.CONNECTED && session.isServer(sender)) {
+			if (state != SessionState.CONNECTED && this.isServer(sender)) {
 				UnconnectedConnectionBanned banned = new UnconnectedConnectionBanned(packet);
 				banned.decode();
 				connectionErrors.add(new ConnectionBannedException(this, session));
 			}
 		} else if (pid == ID_UNCONNECTED_INCOMPATIBLE_PROTOCOL) {
 			if (sender.equals(session.getSocketAddress())) {
-				if (state != SessionState.CONNECTED && session.isServer(sender)) {
+				if (state != SessionState.CONNECTED && this.isServer(sender)) {
 					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol(packet);
 					incompatible.decode();
 					connectionErrors.add(
@@ -399,10 +399,23 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * Sends an <code>ID_UNCONNECTED_PING</code> to the server to check it's
 	 * latency
 	 */
-	public void checkClientLatency() {
+	public void checkServerLatency() {
 		if (timeout != null) {
 			timeout.sendConnectedPing();
 		}
+	}
+
+	/**
+	 * Returns the server latency, if the client is not connected to the server
+	 * it will return <code>false</code>
+	 * 
+	 * @return long
+	 */
+	public long getServerLatency() {
+		if (this.isConnected()) {
+			return session.getLatency();
+		}
+		return -1;
 	}
 
 	/**
@@ -435,10 +448,8 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * @param sender
 	 */
 	protected void handleCustom(CustomPacket custom, InetSocketAddress sender) throws RakNetException {
-		if (session != null) {
-			if (session.isServer(sender)) {
-				session.handleCustom0(custom);
-			}
+		if (this.isServer(sender)) {
+			session.handleCustom0(custom);
 		}
 	}
 
@@ -449,10 +460,8 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * @param sender
 	 */
 	protected void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
-		if (session != null) {
-			if (session.isServer(sender)) {
-				session.handleAck(ack);
-			}
+		if (this.isServer(sender)) {
+			session.handleAck(ack);
 		}
 	}
 
@@ -463,10 +472,8 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * @param sender
 	 */
 	protected void handleNack(Acknowledge nack, InetSocketAddress sender) throws UnexpectedPacketException {
-		if (session != null) {
-			if (session.isServer(sender)) {
-				session.handleNack(nack);
-			}
+		if (this.isServer(sender)) {
+			session.handleNack(nack);
 		}
 	}
 
