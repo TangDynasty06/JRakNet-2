@@ -41,7 +41,7 @@ import net.marfgamer.raknet.utils.RakNetUtils;
  */
 public class RakNetLatencyTest {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		RakNetLatencyFrame frame = new RakNetLatencyFrame();
 		RakNetServer server = new RakNetServer(19132, 10,
 				"MCPE;A RakNet Latency Test;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";");
@@ -57,6 +57,13 @@ public class RakNetLatencyTest {
 		server.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
 			frame.setClients(server.getClients());
 		});
+		
+		// Latency update
+		
+		while(true) {
+			Thread.sleep(1000);
+			frame.setClients(server.getClients());
+		}
 	}
 
 }

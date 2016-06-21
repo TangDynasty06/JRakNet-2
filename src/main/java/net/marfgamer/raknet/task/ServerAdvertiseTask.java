@@ -31,8 +31,8 @@
 package net.marfgamer.raknet.task;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
@@ -52,11 +52,11 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 	private static final int CYCLE_START = 5;
 
 	private final RakNetClient client;
-	private final HashMap<InetSocketAddress, DiscoveredRakNetServer> servers;
+	private final ConcurrentHashMap<InetSocketAddress, DiscoveredRakNetServer> servers;
 
 	public ServerAdvertiseTask(RakNetClient client) {
 		this.client = client;
-		this.servers = new HashMap<InetSocketAddress, DiscoveredRakNetServer>();
+		this.servers = new ConcurrentHashMap<InetSocketAddress, DiscoveredRakNetServer>();
 	}
 
 	/**
@@ -66,12 +66,11 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 	 * @param sender
 	 * @throws UnexpectedPacketException
 	 */
-	public synchronized void handleUnconnectedPong(UnconnectedPong pong, InetSocketAddress sender)
-			throws UnexpectedPacketException {
+	public void handleUnconnectedPong(UnconnectedPong pong, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (pong.getId() == ID_UNCONNECTED_PONG) {
 			servers.put(sender, new DiscoveredRakNetServer(sender, pong.serverId, pong.identifier));
 			servers.get(sender).cyclesLeft = CYCLE_START;
-			client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender, System.currentTimeMillis());
+			client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender);
 		} else {
 			throw new UnexpectedPacketException(ID_UNCONNECTED_PING, pong.getId());
 		}
@@ -82,17 +81,17 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 	 * 
 	 * @return DiscoveredRakNetServer[]
 	 */
-	public synchronized DiscoveredRakNetServer[] getDiscoveredServers() {
+	public DiscoveredRakNetServer[] getDiscoveredServers() {
 		return servers.values().toArray(new DiscoveredRakNetServer[servers.size()]);
 	}
 
 	@Override
-	public synchronized long getWaitTimeMillis() {
+	public long getWaitTimeMillis() {
 		return 1000L;
 	}
 
 	@Override
-	public synchronized void run() {
+	public void run() {
 		// Broadcast ping to network
 		UnconnectedPing ping = new UnconnectedPing();
 		ping.pingId = System.currentTimeMillis();
@@ -106,7 +105,7 @@ public class ServerAdvertiseTask implements TaskRunnable, RakNet {
 			DiscoveredRakNetServer server = iServers.next();
 			if (server.cyclesLeft <= 0) {
 				iServers.remove();
-				client.executeHook(Hook.SERVER_UNDISCOVERED, server, server.address, System.currentTimeMillis());
+				client.executeHook(Hook.SERVER_UNDISCOVERED, server, server.address);
 			} else {
 				server.cyclesLeft--;
 			}

@@ -61,6 +61,7 @@ public class RakNetBroadcastFrame extends JFrame {
 		// Tells what the user what this window does
 		this.infoPane = new JTextPane();
 		infoPane.setText("These are the MCPE servers that have been found on your network");
+		infoPane.setEditable(false);
 		infoPane.setBounds(10, 10, 425, 20);
 		getContentPane().add(infoPane);
 

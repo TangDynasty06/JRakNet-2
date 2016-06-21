@@ -59,6 +59,7 @@ public class RakNetLatencyFrame extends JFrame {
 		// Tells what the user what this window does
 		this.infoPane = new JTextPane();
 		infoPane.setText("These are the latencies of every connected client");
+		infoPane.setEditable(false);
 		infoPane.setBounds(10, 10, 425, 20);
 		getContentPane().add(infoPane);
 

@@ -58,7 +58,7 @@ public class RakNetScheduler extends Thread {
 	 * @param task
 	 * @return int
 	 */
-	public int scheduleTask(TaskRunnable task) {
+	public synchronized int scheduleTask(TaskRunnable task) {
 		tasks.add(taskId++, new RakNetTask(task));
 		return this.taskId;
 	}
@@ -70,7 +70,7 @@ public class RakNetScheduler extends Thread {
 	 * @param wait
 	 * @return int
 	 */
-	public int scheduleTask(Runnable task, long wait) {
+	public synchronized int scheduleTask(Runnable task, long wait) {
 		return this.scheduleTask(new TaskRunnable() {
 
 			@Override
@@ -91,7 +91,7 @@ public class RakNetScheduler extends Thread {
 	 * 
 	 * @param taskId
 	 */
-	public void cancelTask(int taskId) {
+	public synchronized void cancelTask(int taskId) {
 		try {
 			tasks.remove(taskId);
 		} catch (IndexOutOfBoundsException e) {
@@ -105,7 +105,7 @@ public class RakNetScheduler extends Thread {
 	 * @param task
 	 * @return int
 	 */
-	public int scheduleRepeatingTask(TaskRunnable task) {
+	public synchronized int scheduleRepeatingTask(TaskRunnable task) {
 		repeating.add(taskId++, new RakNetRepeatingTask(task));
 		return this.taskId;
 	}
@@ -117,7 +117,7 @@ public class RakNetScheduler extends Thread {
 	 * @param wait
 	 * @return int
 	 */
-	public int scheduleRepeatingTask(Runnable task, long wait) {
+	public synchronized int scheduleRepeatingTask(Runnable task, long wait) {
 		return this.scheduleRepeatingTask(new TaskRunnable() {
 
 			@Override
@@ -138,7 +138,7 @@ public class RakNetScheduler extends Thread {
 	 * 
 	 * @param taskId
 	 */
-	public void cancelRepeatingTask(int taskId) {
+	public synchronized void cancelRepeatingTask(int taskId) {
 		try {
 			repeating.remove(taskId);
 		} catch (IndexOutOfBoundsException e) {
@@ -147,7 +147,7 @@ public class RakNetScheduler extends Thread {
 	}
 
 	@Override
-	public void run() {
+	public synchronized void run() {
 		// Check and initialize data
 		if (running == true) {
 			throw new RuntimeException("Scheduler is already running!");
@@ -161,22 +161,24 @@ public class RakNetScheduler extends Thread {
 			long difference = (current - last);
 
 			// Update tasks
-			for (int i = 0; i < tasks.size(); i++) {
-				RakNetTask task = tasks.get(i);
-				task.waitTime -= difference;
-				if (task.waitTime <= 0) {
-					task.runnable.run();
-					tasks.remove(task);
-				}
-			}
-
-			// Update repeating tasks
-			for (int i = 0; i < repeating.size(); i++) {
-				RakNetRepeatingTask task = repeating.get(i);
-				task.waitTime -= difference;
-				if (task.waitTime <= 0) {
-					task.runnable.run();
-					task.waitTime = task.reset;
+			synchronized (tasks) {
+				for (int i = 0; i < tasks.size(); i++) {
+					RakNetTask scheduledTask = tasks.get(i);
+					scheduledTask.waitTime -= difference;
+					if (scheduledTask.waitTime <= 0) {
+						scheduledTask.runnable.run();
+						tasks.remove(scheduledTask);
+					}
+					
+					// Update repeating tasks
+					for (int j = 0; j < repeating.size(); j++) {
+						RakNetRepeatingTask repeatingTask = repeating.get(j);
+						repeatingTask.waitTime -= difference;
+						if (repeatingTask.waitTime <= 0) {
+							repeatingTask.runnable.run();
+							repeatingTask.waitTime = repeatingTask.reset;
+						}
+					}
 				}
 			}
 

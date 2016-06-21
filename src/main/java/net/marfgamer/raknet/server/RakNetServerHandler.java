@@ -32,7 +32,7 @@ package net.marfgamer.raknet.server;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -56,16 +56,60 @@ import net.marfgamer.raknet.session.SessionState;
 public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPacket>implements RakNet {
 
 	private final RakNetServer server;
-	private final HashMap<InetAddress, BlockedAddress> blocked;
-	private final HashMap<InetSocketAddress, ClientSession> sessions;
+	private final ConcurrentHashMap<InetSocketAddress, ClientSession> sessions;
+	private final ConcurrentHashMap<InetAddress, BlockedAddress> blocked;
 
 	// Used in exception handling
 	private InetSocketAddress lastSender;
 
 	public RakNetServerHandler(RakNetServer server) {
 		this.server = server;
-		this.blocked = new HashMap<InetAddress, BlockedAddress>();
-		this.sessions = new HashMap<InetSocketAddress, ClientSession>();
+		this.sessions = new ConcurrentHashMap<InetSocketAddress, ClientSession>();
+		this.blocked = new ConcurrentHashMap<InetAddress, BlockedAddress>();
+	}
+
+	/**
+	 * Returns all currently connect ClientSessions
+	 * 
+	 * @return ClientSession[]
+	 */
+	public ClientSession[] getSessions() {
+		return sessions.values().toArray(new ClientSession[sessions.size()]);
+	}
+
+	/**
+	 * Returns a ClientSession based on it's InetSocketAddress
+	 * 
+	 * @param address
+	 * @return ClientSession
+	 */
+	public ClientSession getSession(InetSocketAddress address) {
+		return sessions.get(address);
+	}
+
+	/**
+	 * Removes a ClientSession from the handler based on their remote address
+	 * 
+	 * @param address
+	 */
+	public void removeSession(InetSocketAddress address, String reason) {
+		if (sessions.containsKey(address)) {
+			ClientSession session = sessions.remove(address);
+			session.sendPacket(RELIABLE, new ConnectedCloseConnection());
+			if (session.getState() == SessionState.CONNECTED) {
+				server.executeHook(Hook.SESSION_DISCONNECTED, session, reason);
+			}
+		}
+	}
+
+	/**
+	 * Removes a ClientSession from the handler with the specified reason
+	 * 
+	 * @param session
+	 * @param reason
+	 */
+	public void removeSession(ClientSession session, String reason) {
+		this.removeSession(session.getSocketAddress(), reason);
 	}
 
 	/**
@@ -78,11 +122,13 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public void blockAddress(InetAddress address, long time) {
 		if (!blocked.containsKey(address)) {
-			if (sessions.containsKey(address)) {
-				this.removeSession(sessions.get(address), "Address blocked");
+			for (ClientSession session : this.getSessions()) {
+				if (session.getAddress().equals(address)) {
+					this.removeSession(session, "Address blocked");
+				}
 			}
 			blocked.put(address, new BlockedAddress(address, time));
-			server.executeHook(Hook.CLIENT_ADDRESS_BLOCKED, blocked.get(address), System.currentTimeMillis());
+			server.executeHook(Hook.CLIENT_ADDRESS_BLOCKED, blocked.get(address));
 		}
 	}
 
@@ -93,7 +139,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 	 */
 	public void unblockAddress(InetAddress address) {
 		if (blocked.containsKey(address)) {
-			server.executeHook(Hook.CLIENT_ADDRESS_UNBLOCKED, blocked.get(address), System.currentTimeMillis());
+			server.executeHook(Hook.CLIENT_ADDRESS_UNBLOCKED, blocked.get(address));
 			blocked.remove(address);
 		}
 	}
@@ -129,50 +175,6 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Returns all currently connect ClientSessions
-	 * 
-	 * @return ClientSession[]
-	 */
-	public ClientSession[] getSessions() {
-		return sessions.values().toArray(new ClientSession[sessions.size()]);
-	}
-
-	/**
-	 * Returns a ClientSession based on it's InetSocketAddress
-	 * 
-	 * @param address
-	 * @return ClientSession
-	 */
-	public ClientSession getSession(InetSocketAddress address) {
-		return sessions.get(address);
-	}
-
-	/**
-	 * Removes a ClientSession from the handler based on their remote address
-	 * 
-	 * @param address
-	 */
-	public void removeSession(InetSocketAddress address, String reason) {
-		if (sessions.containsKey(address)) {
-			ClientSession session = sessions.remove(address);
-			session.sendPacket(RELIABLE, new ConnectedCloseConnection());
-			if (session.getState() == SessionState.CONNECTED) {
-				server.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
-			}
-		}
-	}
-
-	/**
-	 * Removes a ClientSession from the handler with the specified reason
-	 * 
-	 * @param session
-	 * @param reason
-	 */
-	public void removeSession(ClientSession session, String reason) {
-		this.removeSession(session.getSocketAddress(), reason);
 	}
 
 	@Override
@@ -232,7 +234,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			this.removeSession(this.getSession(lastSender), cause.getLocalizedMessage());
 			this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
 		}
-		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender, System.currentTimeMillis());
+		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender);
 	}
 
 }

@@ -71,7 +71,6 @@ public enum Hook {
 	 * 
 	 * Parameter 0: The discovered server (DiscoveredRakNetServer)<br>
 	 * Parameter 1: The address of the discovered server (InetSocketAddress)<br>
-	 * Parameter 2: The time the server was discovered (long)
 	 */
 	SERVER_DISCOVERED,
 
@@ -83,7 +82,6 @@ public enum Hook {
 	 * Parameter 0: The undiscovered server (DiscoveredRakNetServer)<br>
 	 * Parameter 1: The address of the undiscovered server (InetSocketAddress)
 	 * <br>
-	 * Parameter 2: The time the server lost connection (long)
 	 */
 	SERVER_UNDISCOVERED,
 
@@ -92,7 +90,6 @@ public enum Hook {
 	 * <br>
 	 * 
 	 * Parameter 0: The blocked client (BlockedClient)<br>
-	 * Parameter 1: The time the client was blocked (long)
 	 */
 	CLIENT_ADDRESS_BLOCKED,
 
@@ -101,7 +98,6 @@ public enum Hook {
 	 * <br>
 	 * 
 	 * Parameter 0: The now unblocked client (BlockedClient)<br>
-	 * Parameter 1: The time the client was unblocked (long)
 	 */
 	CLIENT_ADDRESS_UNBLOCKED,
 
@@ -109,7 +105,6 @@ public enum Hook {
 	 * Received whenever a session is officially connected <br>
 	 * <br>
 	 * Parameter 0: The RakNetSession (RakNetSession)<br>
-	 * Parameter 1: The time the session connected (long)
 	 */
 	SESSION_CONNECTED,
 
@@ -119,7 +114,6 @@ public enum Hook {
 	 * 
 	 * Parameter 0: The RakNetSession (RakNetSession)<br>
 	 * Parameter 1: The reason the session was disconnected (String)<br>
-	 * Parameter 2: The time the session disconnected (long)
 	 */
 	SESSION_DISCONNECTED,
 
@@ -133,13 +127,20 @@ public enum Hook {
 	PACKET_RECEIVED,
 
 	/**
+	 * Received whenever a session's latency has been updated<br>
+	 * <br>
+	 * 
+	 * Parameter 0: The RakNetSession (RakNetSession)<br>
+	 * Parameter 1: The new latency<br>
+	 */
+	LATENCY_UPDATED,
+
+	/**
 	 * Received whenever a Netty handler exception occurs<br>
 	 * <br>
 	 * 
 	 * Parameter 0: The caught exception (Throwable)<br>
 	 * Parameter 1: The address of who caused the exception (InetSocketAddress)
-	 * <br>
-	 * Parameter 2: The time the error occurred (long)
 	 */
 	HANDLER_EXCEPTION_OCCURED;
 

@@ -30,9 +30,10 @@
  */
 package net.marfgamer.raknet.task.timeout;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
@@ -50,12 +51,12 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 
 	private final RakNetServer server;
 	private final RakNetServerHandler handler;
-	private final HashMap<ClientSession, ConnectedPing> latencyTimes;
+	private final ConcurrentHashMap<ClientSession, PingData> latencyTimes;
 
 	public ClientTimeoutTask(RakNetServer server, RakNetServerHandler handler) {
 		this.server = server;
 		this.handler = handler;
-		this.latencyTimes = new HashMap<ClientSession, ConnectedPing>();
+		this.latencyTimes = new ConcurrentHashMap<ClientSession, PingData>();
 	}
 
 	/**
@@ -65,21 +66,16 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 	 * @param session
 	 * @param pong
 	 */
-
 	public void handleConnectedPong(ClientSession session, ConnectedPong pong) throws UnexpectedPacketException {
 		if (pong.getId() == ID_CONNECTED_PONG) {
 			if (latencyTimes.containsKey(session)) {
-				long pingTime = latencyTimes.get(session).pingTime;
-				System.out.println(pong.pingTime + " - " + pingTime);
-				if (pong.pingTime == pingTime) {
-					long latency = pong.pingTime - pingTime;
+				PingData ping = latencyTimes.remove(session);
+				if (pong.pingTime == ping.ping.pingTime) {
+					long latency = System.currentTimeMillis() - ping.pingTime;
 					if (latency >= 0) {
 						session.setLatency(latency);
-					} else {
-						handler.removeSession(session, "Invalid pong");
+						server.executeHook(Hook.LATENCY_UPDATED, session, latency);
 					}
-				} else {
-					handler.removeSession(session, "Invalid pong");
 				}
 			}
 		} else {
@@ -95,10 +91,10 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 	 */
 	public void sendConnectedPing(ClientSession session) {
 		ConnectedPing ping = new ConnectedPing();
-		ping.pingTime = System.currentTimeMillis();
+		ping.pingTime = (System.currentTimeMillis() - server.getServerTimestamp());
 		ping.encode();
 		session.sendPacket(RELIABLE, ping);
-		latencyTimes.put(session, ping);
+		latencyTimes.put(session, new PingData(System.currentTimeMillis(), ping));
 	}
 
 	@Override
@@ -119,6 +115,24 @@ public class ClientTimeoutTask implements TaskRunnable, RakNet {
 				handler.removeSession(session, "Timeout");
 			}
 		}
+	}
+
+	/**
+	 * Contains the time this ping was sent and the
+	 * <code>ID_CONNECTED_PING</code> packet
+	 *
+	 * @author Trent Summerlin
+	 */
+	private static class PingData {
+
+		public final long pingTime;
+		public final ConnectedPing ping;
+
+		public PingData(long pingTime, ConnectedPing ping) {
+			this.pingTime = pingTime;
+			this.ping = ping;
+		}
+
 	}
 
 }

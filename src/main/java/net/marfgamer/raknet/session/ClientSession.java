@@ -54,7 +54,6 @@ public class ClientSession extends RakNetSession {
 	private final RakNetServerHandler handler;
 	private final RakNetServer server;
 	private SessionState state;
-	private long latency;
 
 	public ClientSession(Channel channel, InetSocketAddress address, RakNetServerHandler handler, RakNetServer server) {
 		super(channel, address);
@@ -81,24 +80,6 @@ public class ClientSession extends RakNetSession {
 		this.state = state;
 	}
 
-	/**
-	 * Returns the session's latency
-	 * 
-	 * @return long
-	 */
-	public long getLatency() {
-		return this.latency;
-	}
-
-	/**
-	 * Sets the session's latency
-	 * 
-	 * @param latency
-	 */
-	public void setLatency(long latency) {
-		this.latency = latency;
-	}
-
 	@Override
 	public void handleEncapsulated(EncapsulatedPacket encapsulated) {
 		Packet packet = encapsulated.convertPayload();
@@ -112,7 +93,7 @@ public class ClientSession extends RakNetSession {
 
 				ConnectedPong pong = new ConnectedPong();
 				pong.pingTime = ping.pingTime;
-				pong.pongTime = System.currentTimeMillis();
+				pong.pongTime = (System.currentTimeMillis() - server.getServerTimestamp());
 				pong.encode();
 				
 				this.sendPacket(RELIABLE, pong);
@@ -144,7 +125,7 @@ public class ClientSession extends RakNetSession {
 
 				this.setState(SessionState.CONNECTED);
 				server.checkClientLatency(this);
-				server.executeHook(Hook.SESSION_CONNECTED, this, System.currentTimeMillis());
+				server.executeHook(Hook.SESSION_CONNECTED, this);
 			}
 		} else if (pid == ID_CONNECTED_CLOSE_CONNECTION) {
 			handler.removeSession(this, "Client disconnected");

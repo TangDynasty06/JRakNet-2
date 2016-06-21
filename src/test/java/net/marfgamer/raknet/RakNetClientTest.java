@@ -75,6 +75,8 @@ public class RakNetClientTest {
 			InetSocketAddress naughtyAddress = (InetSocketAddress) parameters[1];
 			System.out.println(
 					"Handler exception " + throwable.getClass().getName() + " caused by " + naughtyAddress);
+			throwable.printStackTrace();
+			System.exit(0);
 		});
 
 		// Connect client to server

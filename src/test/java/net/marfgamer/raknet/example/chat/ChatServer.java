@@ -30,7 +30,7 @@
  */
 package net.marfgamer.raknet.example.chat;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.example.chat.handler.ChatClientDisconnectHandler;
@@ -49,11 +49,11 @@ import net.marfgamer.raknet.session.RakNetSession;
 public class ChatServer {
 
 	private final int port;
-	private final HashMap<RakNetSession, ChatClientSession> sessions;
+	private final ConcurrentHashMap<RakNetSession, ChatClientSession> sessions;
 
 	public ChatServer(int port) {
 		this.port = port;
-		this.sessions = new HashMap<RakNetSession, ChatClientSession>();
+		this.sessions = new ConcurrentHashMap<RakNetSession, ChatClientSession>();
 	}
 
 	/**

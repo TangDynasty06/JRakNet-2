@@ -34,7 +34,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -56,6 +56,7 @@ import net.marfgamer.raknet.exception.client.ServerFullException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
+import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionBanned;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -91,7 +92,8 @@ public class RakNetClient implements RakNet {
 	private final long timestamp;
 	private final RakNetScheduler scheduler;
 	private final ServerAdvertiseTask advertise;
-	private final HashMap<Hook, HookRunnable> hooks;
+	private final ServerTimeoutTask timeout;
+	private final ConcurrentHashMap<Hook, HookRunnable> hooks;
 
 	// Netty info
 	private final RakNetClientHandler handler;
@@ -114,7 +116,7 @@ public class RakNetClient implements RakNet {
 		this.clientId = RakNetUtils.getRakNetID();
 		this.timestamp = System.currentTimeMillis();
 		this.scheduler = new RakNetScheduler();
-		this.hooks = new HashMap<Hook, HookRunnable>();
+		this.hooks = new ConcurrentHashMap<Hook, HookRunnable>();
 
 		// Set netty info
 		this.handler = new RakNetClientHandler(this);
@@ -128,7 +130,7 @@ public class RakNetClient implements RakNet {
 
 		// Start scheduler here so we can discover
 		scheduler.scheduleRepeatingTask(this.advertise = new ServerAdvertiseTask(this));
-		scheduler.scheduleRepeatingTask(new ServerTimeoutTask(this));
+		scheduler.scheduleRepeatingTask(this.timeout = new ServerTimeoutTask(this));
 		scheduler.scheduleRepeatingTask(new ServerReliabilityTask(this));
 		scheduler.start();
 	}
@@ -184,7 +186,7 @@ public class RakNetClient implements RakNet {
 	 * 
 	 * @return long
 	 */
-	public long getTimestamp() {
+	public long getClientTimestamp() {
 		return this.timestamp;
 	}
 
@@ -312,7 +314,7 @@ public class RakNetClient implements RakNet {
 
 				if (ucro.magic == true && session.isServer(sender)) {
 					session.setSessionId(ucro.serverId);
-					session.setMTUSize(ucro.mtuSize);
+					session.setMaximumTransferUnit(ucro.mtuSize);
 
 					UnconnectedConnectionRequestTwo ucrt = new UnconnectedConnectionRequestTwo();
 					ucrt.clientId = this.clientId;
@@ -373,8 +375,32 @@ public class RakNetClient implements RakNet {
 	 * 
 	 * @return DiscoveredRakNetServer[]
 	 */
-	public synchronized DiscoveredRakNetServer[] getDiscoveredServers() {
+	public DiscoveredRakNetServer[] getDiscoveredServers() {
 		return advertise.getDiscoveredServers();
+	}
+
+	/**
+	 * Updates the server latency based on the pong packet
+	 * 
+	 * @param session
+	 * @param pong
+	 */
+	public void updateServerLatency(ConnectedPong pong) {
+		try {
+			timeout.handledConnectedPong(pong);
+		} catch (UnexpectedPacketException e) {
+			this.disconnect(e);
+		}
+	}
+
+	/**
+	 * Sends an <code>ID_UNCONNECTED_PING</code> to the server to check it's
+	 * latency
+	 */
+	public void checkClientLatency() {
+		if (timeout != null) {
+			timeout.sendConnectedPing();
+		}
 	}
 
 	/**
@@ -420,7 +446,7 @@ public class RakNetClient implements RakNet {
 	 * @param ack
 	 * @param sender
 	 */
-	protected synchronized void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
+	protected void handleAck(Acknowledge ack, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleAck(ack);
@@ -434,8 +460,7 @@ public class RakNetClient implements RakNet {
 	 * @param nack
 	 * @param sender
 	 */
-	protected synchronized void handleNack(Acknowledge nack, InetSocketAddress sender)
-			throws UnexpectedPacketException {
+	protected void handleNack(Acknowledge nack, InetSocketAddress sender) throws UnexpectedPacketException {
 		if (session != null) {
 			if (session.isServer(sender)) {
 				session.handleNack(nack);
@@ -610,7 +635,7 @@ public class RakNetClient implements RakNet {
 		if (session != null) {
 			session.sendPacket(UNRELIABLE, new ConnectedCloseConnection());
 			if (this.state == SessionState.CONNECTED) {
-				this.executeHook(Hook.SESSION_DISCONNECTED, session, reason, System.currentTimeMillis());
+				this.executeHook(Hook.SESSION_DISCONNECTED, session, reason);
 			}
 			this.setState(SessionState.DISCONNECTED);
 		}

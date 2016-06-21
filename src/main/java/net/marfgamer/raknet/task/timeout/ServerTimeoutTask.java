@@ -32,7 +32,10 @@ package net.marfgamer.raknet.task.timeout;
 
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.RakNetClient;
+import net.marfgamer.raknet.event.Hook;
+import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
+import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.session.ServerSession;
 import net.marfgamer.raknet.task.TaskRunnable;
 
@@ -44,6 +47,8 @@ import net.marfgamer.raknet.task.TaskRunnable;
 public class ServerTimeoutTask implements TaskRunnable, RakNet {
 
 	private final RakNetClient client;
+	private ConnectedPing lastPing;
+	private long lastPingTime;
 
 	public ServerTimeoutTask(RakNetClient client) {
 		this.client = client;
@@ -54,6 +59,49 @@ public class ServerTimeoutTask implements TaskRunnable, RakNet {
 		return 100L;
 	}
 
+	/**
+	 * Handles a <code>ID_CONNECTED_PONG</code> packet and sets the server's
+	 * latency data if the packet data is correct
+	 * 
+	 * @param session
+	 * @param pong
+	 * @throws UnexpectedPacketException
+	 */
+	public void handledConnectedPong(ConnectedPong pong) throws UnexpectedPacketException {
+		ServerSession session = client.getSession();
+		if (session != null && lastPing != null && lastPingTime != 0) {
+			if (pong.getId() == ID_CONNECTED_PONG) {
+				if (pong.pingTime == lastPing.pingTime) {
+					long latency = System.currentTimeMillis() - lastPingTime;
+					if (latency >= 0) {
+						session.setLatency(latency);
+						client.executeHook(Hook.LATENCY_UPDATED, session, latency);
+					}
+				}
+			} else {
+				throw new UnexpectedPacketException(ID_CONNECTED_PONG, pong.getId());
+			}
+		}
+	}
+
+	/**
+	 * Sends a <code>ID_CONNECTED_PING</code> to the server and gets data ready
+	 * for calculating latency
+	 * 
+	 * @param session
+	 */
+	public void sendConnectedPing() {
+		ServerSession session = client.getSession();
+		if (session != null) {
+			ConnectedPing ping = new ConnectedPing();
+			ping.pingTime = (System.currentTimeMillis() - client.getClientTimestamp());
+			ping.encode();
+
+			session.sendPacket(RELIABLE, this.lastPing = ping);
+			this.lastPingTime = System.currentTimeMillis();
+		}
+	}
+
 	@Override
 	public void run() {
 		ServerSession session = client.getSession();
@@ -62,12 +110,7 @@ public class ServerTimeoutTask implements TaskRunnable, RakNet {
 			session.pushLastReceiveTime(this.getWaitTimeMillis());
 			if ((double) (client.getServerTimeout() - session.getLastReceiveTime())
 					/ client.getServerTimeout() <= 0.5) {
-				if (session != null) {
-					ConnectedPing ping = new ConnectedPing();
-					ping.pingTime = System.currentTimeMillis();
-					ping.encode();
-					session.sendPacket(RELIABLE, ping);
-				}
+				this.sendConnectedPing();
 			}
 			if (session.getLastReceiveTime() >= client.getServerTimeout()) {
 				client.disconnect("Timeout");

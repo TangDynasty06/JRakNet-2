@@ -35,7 +35,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -67,10 +67,12 @@ public abstract class RakNetSession implements RakNet {
 	// Session data
 	private long sessionId;
 	private short maximumTransferUnit;
+	private long latency;
 
 	// Packet sequencing data
 	private int sendSeqNumber;
 	private int receiveSeqNumber;
+	private long lastSendTime;
 	private long lastReceiveTime;
 	private int receivedPacketsThisSecond;
 
@@ -80,9 +82,9 @@ public abstract class RakNetSession implements RakNet {
 	private int[] sendIndex;
 	private int[] receiveIndex;
 	private final ArrayList<Integer> receivedCustoms;
-	private final HashMap<Integer, CustomPacket> reliableQueue;
-	private final HashMap<Integer, CustomPacket> recoveryQueue;
-	private final HashMap<Integer, Map<Integer, EncapsulatedPacket>> splitQueue;
+	private final ConcurrentHashMap<Integer, CustomPacket> reliableQueue;
+	private final ConcurrentHashMap<Integer, CustomPacket> recoveryQueue;
+	private final ConcurrentHashMap<Integer, HashMap<Integer, EncapsulatedPacket>> splitQueue;
 
 	public RakNetSession(Channel channel, InetSocketAddress address) {
 		this.channel = channel;
@@ -90,9 +92,9 @@ public abstract class RakNetSession implements RakNet {
 		this.sendIndex = new int[32];
 		this.receiveIndex = new int[32];
 		this.receivedCustoms = new ArrayList<Integer>();
-		this.reliableQueue = new HashMap<Integer, CustomPacket>();
-		this.recoveryQueue = new HashMap<Integer, CustomPacket>();
-		this.splitQueue = new HashMap<Integer, Map<Integer, EncapsulatedPacket>>();
+		this.reliableQueue = new ConcurrentHashMap<Integer, CustomPacket>();
+		this.recoveryQueue = new ConcurrentHashMap<Integer, CustomPacket>();
+		this.splitQueue = new ConcurrentHashMap<Integer, HashMap<Integer, EncapsulatedPacket>>();
 	}
 
 	/**
@@ -154,8 +156,26 @@ public abstract class RakNetSession implements RakNet {
 	 * 
 	 * @param maximumTransferUnit
 	 */
-	public void setMTUSize(short maximumTransferUnit) {
+	public void setMaximumTransferUnit(short maximumTransferUnit) {
 		this.maximumTransferUnit = maximumTransferUnit;
+	}
+
+	/**
+	 * Returns the session's latency
+	 * 
+	 * @return long
+	 */
+	public long getLatency() {
+		return this.latency;
+	}
+
+	/**
+	 * Sets the session's latency
+	 * 
+	 * @param latency
+	 */
+	public void setLatency(long latency) {
+		this.latency = latency;
 	}
 
 	/**
@@ -182,7 +202,16 @@ public abstract class RakNetSession implements RakNet {
 	}
 
 	/**
-	 * Returns the last time the a packet was received from the session
+	 * Returns the last time a packet was sent to the session
+	 * 
+	 * @return long
+	 */
+	public long getLastSendTime() {
+		return this.lastSendTime;
+	}
+
+	/**
+	 * Returns the last time a packet was received from the session
 	 * 
 	 * @return long
 	 */
@@ -253,6 +282,7 @@ public abstract class RakNetSession implements RakNet {
 			}
 			recoveryQueue.put(custom.seqNumber, custom);
 		}
+		this.lastSendTime = System.currentTimeMillis();
 	}
 
 	/**
@@ -302,7 +332,7 @@ public abstract class RakNetSession implements RakNet {
 	 * @param ack
 	 * @throws UnexpectedPacketException
 	 */
-	public final synchronized void handleAck(Acknowledge ack) throws UnexpectedPacketException {
+	public final void handleAck(Acknowledge ack) throws UnexpectedPacketException {
 		if (ack.getId() == ID_ACK) {
 			for (int packet : ack.packets) {
 				reliableQueue.remove(packet);
@@ -319,7 +349,7 @@ public abstract class RakNetSession implements RakNet {
 	 * @param nack
 	 * @throws UnexpectedPacketException
 	 */
-	public final synchronized void handleNack(Acknowledge nack) throws UnexpectedPacketException {
+	public final void handleNack(Acknowledge nack) throws UnexpectedPacketException {
 		if (nack.getId() == ID_NACK) {
 			int[] packets = nack.packets;
 			for (int i = 0; i < packets.length; i++) {
@@ -383,11 +413,11 @@ public abstract class RakNetSession implements RakNet {
 					throw new SplitQueueOverloadException(this);
 				}
 
-				Map<Integer, EncapsulatedPacket> split = new HashMap<>();
+				HashMap<Integer, EncapsulatedPacket> split = new HashMap<Integer, EncapsulatedPacket>();
 				split.put(encapsulated.splitIndex, encapsulated);
 				splitQueue.put(encapsulated.splitId, split);
 			} else {
-				Map<Integer, EncapsulatedPacket> split = splitQueue.get(encapsulated.splitId);
+				HashMap<Integer, EncapsulatedPacket> split = splitQueue.get(encapsulated.splitId);
 				split.put(encapsulated.splitIndex, encapsulated);
 				splitQueue.put(encapsulated.splitId, split);
 			}
@@ -395,7 +425,7 @@ public abstract class RakNetSession implements RakNet {
 			if (splitQueue.get(encapsulated.splitId).size() == encapsulated.splitCount) {
 				ByteBuf b = Unpooled.buffer();
 				int size = 0;
-				Map<Integer, EncapsulatedPacket> packets = splitQueue.get(encapsulated.splitId);
+				HashMap<Integer, EncapsulatedPacket> packets = splitQueue.get(encapsulated.splitId);
 				for (int i = 0; i < encapsulated.splitCount; i++) {
 					b.writeBytes(packets.get(i).payload);
 					size += packets.get(i).payload.length;

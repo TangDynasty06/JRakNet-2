@@ -33,20 +33,25 @@ package net.marfgamer.raknet.protocol.raknet;
 import net.marfgamer.raknet.protocol.Packet;
 
 public class ConnectedPing extends Packet {
-	
+
 	public long pingTime;
-	
+
 	public ConnectedPing(Packet packet) {
 		super(packet);
 	}
-	
+
 	public ConnectedPing() {
 		super(ID_CONNECTED_PING);
 	}
-	
+
 	@Override
 	public void encode() {
 		this.putLong(pingTime);
 	}
-	
+
+	@Override
+	public void decode() {
+		this.pingTime = this.getLong();
+	}
+
 }

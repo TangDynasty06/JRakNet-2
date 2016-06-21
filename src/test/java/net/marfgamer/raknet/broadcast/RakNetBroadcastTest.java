@@ -32,8 +32,9 @@ package net.marfgamer.raknet.broadcast;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
@@ -47,7 +48,7 @@ import net.marfgamer.raknet.event.Hook;
 public class RakNetBroadcastTest {
 
 	public static void main(String[] args) {
-		HashMap<InetSocketAddress, DiscoveredRakNetServer> discoveredServers = new HashMap<InetSocketAddress, DiscoveredRakNetServer>();
+		ConcurrentHashMap<InetSocketAddress, DiscoveredRakNetServer> discoveredServers = new ConcurrentHashMap<InetSocketAddress, DiscoveredRakNetServer>();
 		RakNetBroadcastFrame frame = new RakNetBroadcastFrame();
 		RakNetClient client = new RakNetClient();
 		frame.setVisible(true);
@@ -58,6 +59,7 @@ public class RakNetBroadcastTest {
 			InetSocketAddress address = (InetSocketAddress) parameters[1];
 			discoveredServers.put(address, server);
 			updateFrame(discoveredServers.values(), frame);
+			System.out.println("Discovered server!");
 		});
 
 		// Server can no longer be found on local network
@@ -66,6 +68,10 @@ public class RakNetBroadcastTest {
 			discoveredServers.remove(address);
 			updateFrame(discoveredServers.values(), frame);
 		});
+		
+		while(true) {
+			System.out.println(Arrays.toString(client.getDiscoveredServers()));
+		}
 	}
 
 	private static void updateFrame(Collection<DiscoveredRakNetServer> servers, RakNetBroadcastFrame frame) {

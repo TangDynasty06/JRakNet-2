@@ -38,6 +38,7 @@ import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
+import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.ConnectedServerHandshake;
@@ -79,34 +80,37 @@ public class ServerSession extends RakNetSession implements RakNet {
 
 			ConnectedPong pong = new ConnectedPong();
 			pong.pingTime = ping.pingTime;
-			pong.pongTime = System.currentTimeMillis();
+			pong.pongTime = (System.currentTimeMillis() - client.getClientTimestamp());
 			pong.encode();
 
 			this.sendPacket(RELIABLE, pong);
 		} else if (pid == ID_CONNECTED_PONG) {
-			/*
-			 * This has been handled through the ACK since SOME servers don't
-			 * respond with CONNECTED_PONG at all, but rather only an ACK packet
-			 * *cough* PocketMine-MP's RakLib *cough*
-			 */
+			ConnectedPong pong = new ConnectedPong(packet);
+			pong.decode();
+			client.updateServerLatency(pong);
 		} else if (pid == ID_CONNECTED_SERVER_HANDSHAKE) {
 			if (client.getState() == SessionState.HANDSHAKING) {
 				ConnectedServerHandshake serverHandshake = new ConnectedServerHandshake(packet);
 				serverHandshake.decode();
 
-				if (serverHandshake.timestamp == client.getTimestamp()) {
+				if (serverHandshake.timestamp == client.getClientTimestamp()) {
 					ConnectedClientHandshake clientHandshake = new ConnectedClientHandshake();
 					clientHandshake.clientAddress = client.getLocalAddress();
 					clientHandshake.serverTimestamp = serverHandshake.serverTimestamp;
-					clientHandshake.timestamp = client.getTimestamp();
+					clientHandshake.timestamp = client.getClientTimestamp();
 					clientHandshake.encode();
 
 					this.sendPacket(RELIABLE, clientHandshake);
 				}
 
 				client.setState(SessionState.CONNECTED);
-				client.executeHook(Hook.SESSION_CONNECTED, client.getSession(), System.currentTimeMillis());
+				client.executeHook(Hook.SESSION_CONNECTED, this);
+				client.checkClientLatency();
 			}
+		} else if (pid == ID_CONNECTED_CLOSE_CONNECTION) {
+			ConnectedCloseConnection close = new ConnectedCloseConnection();
+			close.decode();
+			client.disconnect("Server closed connection");
 		} else if (client.getState() == SessionState.CONNECTED) {
 			client.executeHook(Hook.PACKET_RECEIVED, client.getSession(), encapsulated);
 		}

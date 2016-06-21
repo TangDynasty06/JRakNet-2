@@ -32,7 +32,7 @@ package net.marfgamer.raknet.server;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
@@ -87,7 +87,7 @@ public class RakNetServer implements RakNet {
 	private ClientTimeoutTask timeout;
 	private final RakNetScheduler scheduler;
 	private final RakNetServerHandler handler;
-	private final HashMap<Hook, HookRunnable> hooks;
+	private final ConcurrentHashMap<Hook, HookRunnable> hooks;
 
 	public RakNetServer(int port, int maxConnections, String identifier, int maxTransferUnit, long clientTimeout) {
 		// Set server options
@@ -102,7 +102,7 @@ public class RakNetServer implements RakNet {
 		this.serverTimestamp = System.currentTimeMillis();
 		this.handler = new RakNetServerHandler(this);
 		this.scheduler = new RakNetScheduler();
-		this.hooks = new HashMap<Hook, HookRunnable>();
+		this.hooks = new ConcurrentHashMap<Hook, HookRunnable>();
 	}
 
 	public RakNetServer(int port, int maxConnections, String identifier) {
@@ -184,7 +184,6 @@ public class RakNetServer implements RakNet {
 	 * 
 	 * @param session
 	 * @param pong
-	 * @throws UnexpectedPacketException
 	 */
 	public void updateClientLatency(ClientSession session, ConnectedPong pong) {
 		if (timeout != null) {
@@ -390,7 +389,7 @@ public class RakNetServer implements RakNet {
 				UnconnectedLegacyPong legacyPong = new UnconnectedLegacyPong();
 				legacyPong.pingId = legacyPing.pingId;
 				legacyPong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.SERVER_LEGACY_PING, this.identifier, session.getAddress());
+				Object[] parameters = this.executeHook(Hook.SERVER_LEGACY_PING, session.getAddress(), this.identifier);
 				legacyPong.data = parameters[0].toString();
 				legacyPong.encode();
 
@@ -441,7 +440,7 @@ public class RakNetServer implements RakNet {
 					response.encode();
 
 					session.sendRaw(response);
-					session.setMTUSize(request.mtuSize);
+					session.setMaximumTransferUnit(request.mtuSize);
 					session.setSessionId(request.clientId);
 					session.setState(SessionState.CONNECTING_2);
 				}
