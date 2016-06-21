@@ -52,8 +52,6 @@ import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestTwo;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedIncompatibleProtocol;
-import net.marfgamer.raknet.protocol.raknet.UnconnectedLegacyPing;
-import net.marfgamer.raknet.protocol.raknet.UnconnectedLegacyPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedServerFull;
@@ -379,23 +377,6 @@ public class RakNetServer implements RakNet {
 				// Make sure identifier is not null before encoding
 				if (parameters[1] != null) {
 					session.sendRaw(pong);
-				}
-			}
-		} else if (pid == ID_UNCONNECTED_LEGACY_PING) {
-			UnconnectedLegacyPing legacyPing = new UnconnectedLegacyPing(packet);
-			legacyPing.decode();
-
-			if (legacyPing.magic == true) {
-				UnconnectedLegacyPong legacyPong = new UnconnectedLegacyPong();
-				legacyPong.pingId = legacyPing.pingId;
-				legacyPong.serverId = this.serverId;
-				Object[] parameters = this.executeHook(Hook.SERVER_LEGACY_PING, session.getAddress(), this.identifier);
-				legacyPong.data = parameters[0].toString();
-				legacyPong.encode();
-
-				// Make sure identifier is not null before encoding
-				if (parameters[1] != null) {
-					session.sendRaw(legacyPong);
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_1) {

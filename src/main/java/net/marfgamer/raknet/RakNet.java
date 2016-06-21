@@ -60,9 +60,7 @@ public interface RakNet {
 
 	// Status packets
 	public static final short ID_UNCONNECTED_PING = 0x01;
-	public static final short ID_UNCONNECTED_LEGACY_PING = 0x02;
 	public static final short ID_UNCONNECTED_PONG = 0x1C;
-	public static final short ID_UNCONNECTED_LEGACY_PONG = 0x1D;
 
 	// Connection packets
 	public static final short ID_UNCONNECTED_CONNECTION_REQUEST_1 = 0x05;
