@@ -260,7 +260,7 @@ public class Packet implements MessageIdentifiers {
 	}
 
 	public ByteBuf buffer() {
-		return this.buffer.duplicate().retain();
+		return this.buffer;
 	}
 
 	public int remaining() {

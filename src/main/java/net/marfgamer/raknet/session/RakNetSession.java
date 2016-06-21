@@ -41,6 +41,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
+import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.SplitQueueOverloadException;
 import net.marfgamer.raknet.exception.UnexpectedPacketException;
@@ -58,7 +59,7 @@ import net.marfgamer.raknet.protocol.raknet.internal.SplitPacket;
  *
  * @author Trent Summerlin
  */
-public abstract class RakNetSession implements MessageIdentifiers, Reliability.INTERFACE {
+public abstract class RakNetSession implements RakNet, MessageIdentifiers, Reliability.INTERFACE {
 
 	// Channel data
 	private final Channel channel;
@@ -409,7 +410,7 @@ public abstract class RakNetSession implements MessageIdentifiers, Reliability.I
 		// Handle split data of packet
 		if (encapsulated.split == true) {
 			if (!splitQueue.containsKey(encapsulated.splitId)) {
-				if (splitQueue.size() >= 128) {
+				if (splitQueue.size() >= MAX_PACKETS_IN_QUEUE) {
 					throw new SplitQueueOverloadException(this);
 				}
 
