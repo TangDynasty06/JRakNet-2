@@ -43,7 +43,7 @@ public interface RakNet {
 
 	// Transfer size
 	public static final int MINIMUM_TRANSFER_UNIT = 530;
-	public static final int MAX_PACKETS_PER_SECOND = 500;
+	public static final int MAX_PACKETS_PER_SECOND = 512;
 	public static final int MAX_PACKETS_IN_QUEUE = 128;
 
 	// Time conversion

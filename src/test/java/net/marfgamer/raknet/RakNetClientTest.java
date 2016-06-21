@@ -46,7 +46,7 @@ import net.marfgamer.raknet.session.RakNetSession;
  */
 public class RakNetClientTest {
 
-	private static final String SERVER_ADDRESS = "localhost";
+	private static final String SERVER_ADDRESS = "sg.lbsg.net";
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
@@ -58,7 +58,7 @@ public class RakNetClientTest {
 			RakNetSession session = (RakNetSession) parameters[0];
 			System.out.println(
 					"Client has connected to server with address " + session.getSocketAddress() + ", disconnecting...");
-			//client.disconnect();
+			client.disconnect();
 		});
 
 		// Client disconnected
@@ -73,8 +73,7 @@ public class RakNetClientTest {
 		client.addHook(Hook.HANDLER_EXCEPTION_OCCURED, (Object[] parameters) -> {
 			Throwable throwable = (Throwable) parameters[0];
 			InetSocketAddress naughtyAddress = (InetSocketAddress) parameters[1];
-			System.out.println(
-					"Handler exception " + throwable.getClass().getName() + " caused by " + naughtyAddress);
+			System.out.println("Handler exception " + throwable.getClass().getName() + " caused by " + naughtyAddress);
 			throwable.printStackTrace();
 			System.exit(0);
 		});

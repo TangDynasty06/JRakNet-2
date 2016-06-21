@@ -450,7 +450,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 			bootstrap.group(group).channel(NioDatagramChannel.class).option(ChannelOption.SO_BROADCAST, true)
 					.option(ChannelOption.SO_REUSEADDR, false).option(ChannelOption.SO_SNDBUF, this.maxTransferUnit)
 					.option(ChannelOption.SO_RCVBUF, this.maxTransferUnit).handler(handler);
-			bootstrap.bind(this.port);
+			bootstrap.bind(InetAddress.getLocalHost(), this.port);
 		} catch (Exception e) {
 			group.shutdownGracefully();
 			throw new RakNetException(e);
