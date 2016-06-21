@@ -101,10 +101,6 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 		}
 	}
 
-	public static void main(String[] args) {
-		System.out.println(getNetworkInterfaceMTU());
-	}
-
 	/**
 	 * Used to quickly send a packet to a sever and get it's response, do
 	 * <b><i><u>NOT</u></i></b> use for long time communication!

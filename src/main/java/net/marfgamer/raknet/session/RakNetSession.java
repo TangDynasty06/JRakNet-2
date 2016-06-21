@@ -282,7 +282,6 @@ public abstract class RakNetSession implements MessageIdentifiers, Reliability.I
 			}
 			recoveryQueue.put(custom.seqNumber, custom);
 		}
-		this.lastSendTime = System.currentTimeMillis();
 	}
 
 	/**
@@ -305,6 +304,7 @@ public abstract class RakNetSession implements MessageIdentifiers, Reliability.I
 	 */
 	public final void sendRaw(Packet packet) {
 		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
+		this.lastSendTime = System.currentTimeMillis();
 	}
 
 	/**
