@@ -11,14 +11,8 @@ This library was meant to be used for Minecraft: Pocket Edition servers and clie
 # How to create a server
 
 ```java
-// Create options and set identifier
-RakNetOptions options = new RakNetOptions();
-options.serverPort = 19132;
-options.serverMaxConnections = 10;
-options.serverIdentifier = "MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";";
-
 // Create server and add hooks
-RakNetServer server = new RakNetServer(options);
+RakNetServer server = new RakNetServer(19132m 10, "MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID());
 
 // Client connected
 server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
@@ -36,13 +30,13 @@ server.addHook(Hook.SESSION_DISCONNECTED, (Object[] parameters) -> {
 // Start server
 server.start();	
 ```
-A simple RakNet server, this can be tested using a Minecraft: Pocket Edition client. Simply launch the game and click on "Play". Then, "A RakNet Server" should pop up, just like when someone else is playing on the same network and their name pops up.
+A simple RakNet server, this can be tested using a Minecraft: Pocket Edition client. Simply launch the game and click on "Play", then go to the "Friends" tab. Then, "A RakNet Server" should pop up, just like when someone else is playing on the same network and their name pops up.
 
 
 # How to create a client
 
 ```java
-// There are no special options needed for clients
+// Create client and add hooks
 RakNetClient client = new RakNetClient();
 
 // Server connected

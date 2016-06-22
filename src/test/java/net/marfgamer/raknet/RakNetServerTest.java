@@ -58,7 +58,7 @@ public class RakNetServerTest {
 	public static void main(String[] args) throws RakNetException {
 		// Create server
 		RakNetServer server = new RakNetServer(19132, 10,
-				"MCPE;_IDENTIFIER_;80;0.15.0;0;10;" + RakNetUtils.getRakNetID() + ";");
+				"MCPE;_IDENTIFIER_;80;0.15.0;0;10;" + RakNetUtils.getRakNetID());
 
 		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
