@@ -43,7 +43,11 @@ import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
  * Used to test <code>RakNetServer</code>, meant for testing with Minecraft:
- * Pocket Edition clients
+ * Pocket Edition clients <br>
+ * <br>
+ * Note: If you are unable to connect to the server through Minecraft: Windows
+ * 10 edition and you are on the same device as this test is running on, that is
+ * not a glitch with JRakNet but rather with Minecraft: Windows 10 edition
  *
  * @author Trent Summerlin
  */
