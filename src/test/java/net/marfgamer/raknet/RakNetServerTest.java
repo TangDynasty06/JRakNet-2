@@ -39,7 +39,6 @@ import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 import net.marfgamer.raknet.server.BlockedAddress;
 import net.marfgamer.raknet.server.RakNetServer;
 import net.marfgamer.raknet.session.RakNetSession;
-import net.marfgamer.raknet.utils.RakNetUtils;
 
 /**
  * Used to test <code>RakNetServer</code>, meant for testing with Minecraft:
@@ -57,8 +56,7 @@ public class RakNetServerTest {
 
 	public static void main(String[] args) throws RakNetException {
 		// Create server
-		RakNetServer server = new RakNetServer(19132, 10,
-				"MCPE;_IDENTIFIER_;80;0.15.0;0;10;" + RakNetUtils.getRakNetID());
+		RakNetServer server = new RakNetServer(19132, 10, "MCPE;_IDENTIFIER_;80;0.15.0;_ONLINE_;_MAX_;_SERVERID_");
 
 		// Client connected
 		server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
@@ -84,8 +82,10 @@ public class RakNetServerTest {
 
 		// Server has been pinged
 		server.addHook(Hook.SERVER_PING, (Object[] parameters) -> {
-			parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier).replace("_SERVERID_",
-					Long.toString(server.getServerId()));
+			parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier)
+					.replace("_ONLINE_", Integer.toString(server.getConnectionCount()))
+					.replace("_MAX_", Integer.toString(server.getMaxConnections()))
+					.replace("_SERVERID_", Long.toString(server.getServerId()));
 		});
 
 		// Address blocked
