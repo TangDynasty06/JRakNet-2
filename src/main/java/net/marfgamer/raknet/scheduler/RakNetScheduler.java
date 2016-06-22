@@ -41,7 +41,6 @@ import net.marfgamer.raknet.task.TaskRunnable;
  */
 public class RakNetScheduler extends Thread {
 
-	private boolean shouldRun;
 	private boolean running;
 	private int taskId;
 
@@ -157,7 +156,7 @@ public class RakNetScheduler extends Thread {
 		long last = System.currentTimeMillis();
 
 		// Start loop
-		while (shouldRun) {
+		while (running) {
 			long current = System.currentTimeMillis();
 			long difference = (current - last);
 
@@ -185,12 +184,12 @@ public class RakNetScheduler extends Thread {
 			last = current;
 		}
 	}
-	
+
 	/**
 	 * Stops the scheduler
 	 */
 	public void shutdown() {
-		this.shouldRun = false;
+		this.running = false;
 	}
 
 }
