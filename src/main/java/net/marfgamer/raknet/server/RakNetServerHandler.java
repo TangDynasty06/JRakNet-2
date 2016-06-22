@@ -229,7 +229,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			msg.release();
 		}
 	}
-	
+
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();

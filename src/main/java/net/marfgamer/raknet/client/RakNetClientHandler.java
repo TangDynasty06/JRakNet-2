@@ -119,7 +119,11 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			} else {
 				client.handleRaw(packet, sender);
 			}
-			msg.release(msg.refCnt() - 1);
+
+			// Release message
+			while (msg.refCnt() > 1) {
+				msg.release();
+			}
 		}
 	}
 
