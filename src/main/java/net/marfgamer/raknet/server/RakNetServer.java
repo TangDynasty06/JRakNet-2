@@ -104,20 +104,20 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 		this.hooks = new ConcurrentHashMap<Hook, HookRunnable>();
 	}
 
-	public RakNetServer(int port, int maxConnections, String identifier) {
-		this(port, maxConnections, identifier, RakNetUtils.getNetworkInterfaceMTU(), CLIENT_TIMEOUT);
+	public RakNetServer(int port, int maxConnections, String identifier, int maxTransferUnit) {
+		this(port, maxConnections, identifier, maxTransferUnit, CLIENT_TIMEOUT);
 	}
 
-	public RakNetServer(int port, int maxConnections, int maxTransferUnit, long clientTimeout) {
-		this(port, maxConnections, null, maxTransferUnit, clientTimeout);
+	public RakNetServer(int port, int maxConnections, String identifier) {
+		this(port, maxConnections, identifier, RakNetUtils.getNetworkInterfaceMTU());
 	}
 
 	public RakNetServer(int port, int maxConnections, int maxTransferUnit) {
-		this(port, maxConnections, maxTransferUnit, CLIENT_TIMEOUT);
+		this(port, maxConnections, null, maxTransferUnit);
 	}
 
 	public RakNetServer(int port, int maxConnections) {
-		this(port, maxConnections, null);
+		this(port, maxConnections, RakNetUtils.getNetworkInterfaceMTU());
 	}
 
 	/**
@@ -401,11 +401,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 					} else {
 						UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
 						response.serverId = this.serverId;
-						if (request.mtuSize >= this.maxTransferUnit) {
-							response.mtuSize = (short) this.maxTransferUnit;
-						} else {
-							response.mtuSize = (short) request.mtuSize;
-						}
+						response.mtuSize = (short) this.maxTransferUnit;
 						response.encode();
 
 						session.sendRaw(response);
@@ -420,8 +416,6 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 
 					session.sendRaw(incompatible);
 					handler.removeSession(session, "Incorrect protocol");
-				} else if (request.mtuSize < MINIMUM_TRANSFER_UNIT) {
-					handler.removeSession(session, "MTU is too low");
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {

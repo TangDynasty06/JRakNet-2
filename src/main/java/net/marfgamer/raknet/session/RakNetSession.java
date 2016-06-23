@@ -237,14 +237,24 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 
 	/**
 	 * Sends an <code>EncapsulatedPacket</code> wrapped in a
-	 * <code>CustomPacket</code>. There is no method to send a
-	 * <code>CustomPacket</code> on it's own as a important queue data rely on
-	 * data contained in the <code>CustomPacket</code> and
-	 * <code>EncapsulatedPacket</code>. This method will automatically split the
-	 * packet if necessary.
+	 * <code>CustomPacket</code>.
 	 * 
-	 * @param channel
 	 * @param encapsulated
+	 */
+	public final void sendEncapsulated(EncapsulatedPacket encapsulated) {
+		try {
+			this.sendEncapsulated(encapsulated, false);
+		} catch (RecursiveSplitException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Sends an <code>EncapsulatedPacket</code> wrapped in a
+	 * <code>CustomPacket</code>.
+	 * 
+	 * @param encapsulated
+	 * @param recursive
 	 * @throws RecursiveSplitException
 	 */
 	private final void sendEncapsulated(EncapsulatedPacket encapsulated, boolean recursive)
@@ -298,12 +308,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 		EncapsulatedPacket encapsulated = new EncapsulatedPacket();
 		encapsulated.reliability = reliability;
 		encapsulated.payload = packet.array();
-
-		try {
-			this.sendEncapsulated(encapsulated, false);
-		} catch (RecursiveSplitException e) {
-			e.printStackTrace();
-		}
+		this.sendEncapsulated(encapsulated);
 	}
 
 	/**

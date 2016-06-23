@@ -49,8 +49,8 @@ import net.marfgamer.raknet.session.RakNetSession;
 public class SplitPacketTest implements RakNet {
 
 	public static void main(String[] args) throws RakNetException {
+		System.out.println("Creating server...");
 		createServer();
-		System.out.println("Started server!");
 
 		System.out.println("Creating client...");
 		createClient();
@@ -98,11 +98,12 @@ public class SplitPacketTest implements RakNet {
 
 			// Send huge packet of doom
 			Packet packet = new Packet(0xFF);
-			for (int i = 0; i < 65279; i++) {
+			for (int i = 0; i < EncapsulatedPacket.getMaxPacketSize(Reliability.RELIABLE_ORDERED, MINIMUM_TRANSFER_UNIT)
+					- 1; i++) {
 				packet.putUByte(0x00);
 			}
-			System.out.println("Sending giant packet...");
-			session.sendPacket(Reliability.RELIABLE, packet);
+			System.out.println("Client: Sending giant packet... (" + packet.size() + " bytes)");
+			session.sendPacket(Reliability.RELIABLE_ORDERED, packet);
 		});
 
 		// Server disconnect

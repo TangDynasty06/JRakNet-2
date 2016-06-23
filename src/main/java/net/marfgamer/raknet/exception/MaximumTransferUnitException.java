@@ -52,7 +52,7 @@ public class MaximumTransferUnitException extends RakNetException {
 
 	@Override
 	public String getLocalizedMessage() {
-		return "The MTU size is too small!";
+		return "The MTU size is too low!";
 	}
 
 }

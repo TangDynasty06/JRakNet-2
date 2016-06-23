@@ -46,19 +46,21 @@ import net.marfgamer.raknet.session.RakNetSession;
  */
 public class RakNetClientTest {
 
-	private static final String SERVER_ADDRESS = "sg.lbsg.net";
+	private static final String SERVER_ADDRESS = "192.168.1.23";
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
 		// Create client
-		RakNetClient client = new RakNetClient();
+		RakNetClient client = new RakNetClient(1200, 19132, 10000L);
 
 		// Client connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
 			RakNetSession session = (RakNetSession) parameters[0];
 			System.out.println(
 					"Client has connected to server with address " + session.getSocketAddress() + ", disconnecting...");
+			System.out.println(session.getMaximumTransferUnit());
 			client.disconnect();
+			
 		});
 
 		// Client disconnected

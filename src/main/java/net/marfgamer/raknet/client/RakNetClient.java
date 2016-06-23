@@ -86,8 +86,8 @@ import net.marfgamer.raknet.utils.RakNetUtils;
 public class RakNetClient implements RakNet, MessageIdentifiers {
 
 	// Client options
-	private final int maxTransferUnit;
 	private final int discoverPort;
+	private final int maxTransferUnit;
 	private final long serverTimeout;
 
 	// Client info
@@ -109,10 +109,10 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	private volatile SessionState state = SessionState.DISCONNECTED;
 	private volatile ArrayList<RakNetException> connectionErrors = new ArrayList<RakNetException>();
 
-	public RakNetClient(int maxTransferUnit, int discoverPort, long serverTimeout) {
+	public RakNetClient(int discoverPort, int maxTransferUnit, long serverTimeout) {
 		// Set client options
-		this.maxTransferUnit = maxTransferUnit;
 		this.discoverPort = discoverPort;
+		this.maxTransferUnit = maxTransferUnit;
 		this.serverTimeout = serverTimeout;
 
 		// Set client info
@@ -138,8 +138,12 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 		scheduler.start();
 	}
 
+	public RakNetClient(int discoverPort, int maxTransferUnit) {
+		this(discoverPort, maxTransferUnit, SERVER_TIMEOUT);
+	}
+
 	public RakNetClient(int discoverPort) {
-		this(RakNetUtils.getNetworkInterfaceMTU(), discoverPort, SERVER_TIMEOUT);
+		this(discoverPort, RakNetUtils.getNetworkInterfaceMTU());
 	}
 
 	public RakNetClient() {
@@ -315,7 +319,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionReplyOne ucro = new UnconnectedConnectionReplyOne(packet);
 				ucro.decode();
 
-				// Make sure MTU is not too low
+				// Make sure MTU is not too big or too low
 				if (ucro.mtuSize < MINIMUM_TRANSFER_UNIT) {
 					connectionErrors.add(new MaximumTransferUnitException(ucro.mtuSize));
 				}
@@ -323,7 +327,6 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				// Make sure data is valid
 				if (ucro.magic == true && this.isServer(sender) && ucro.mtuSize >= MINIMUM_TRANSFER_UNIT) {
 					session.setSessionId(ucro.serverId);
-					session.setMaximumTransferUnit(ucro.mtuSize);
 
 					UnconnectedConnectionRequestTwo ucrt = new UnconnectedConnectionRequestTwo();
 					ucrt.clientId = this.clientId;
@@ -341,6 +344,9 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				ucrt.decode();
 
 				if (ucrt.magic == true && this.isServer(sender)) {
+					System.out.println(ucrt.clientAddress + " - " + ucrt.mtuSize);
+					session.setMaximumTransferUnit(ucrt.mtuSize);
+
 					ConnectedConnectRequest ccr = new ConnectedConnectRequest();
 					ccr.clientId = this.clientId;
 					ccr.timestamp = this.timestamp;
@@ -568,10 +574,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				session.sendRaw(request);
 
 				mtu -= 100L;
-				if (mtu < MINIMUM_TRANSFER_UNIT) {
-					mtu = MINIMUM_TRANSFER_UNIT;
-				}
-				Thread.sleep(100L);
+				Thread.sleep(500L);
 			}
 		} catch (Exception e) {
 			group.shutdownGracefully();
