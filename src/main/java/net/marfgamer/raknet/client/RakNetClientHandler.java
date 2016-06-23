@@ -142,7 +142,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 				ctx.close();
 			}
 		}
-
+		
 		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender);
 	}
 

@@ -28,33 +28,47 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.session.RakNetSession;
+import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.protocol.MessageIdentifiers;
 
 /**
- * Occurs when the split queue for a <code>RakNetSession</code> is too big
+ * Thrown when a handler is expecting a packet and receives something else
+ * instead
  *
  * @author Trent Summerlin
  */
-public class SplitQueueOverloadException extends RakNetException {
+public class UnexpectedPacketException extends RakNetException {
 
-	private static final long serialVersionUID = -289422497689147588L;
+	private static final long serialVersionUID = -3793043367215871424L;
 
-	private final RakNetSession session;
+	private final int requiredId;
 
-	public SplitQueueOverloadException(RakNetSession session) {
-		super("The split queue is too big!");
-		this.session = session;
+	public UnexpectedPacketException(int requiredId, int retrievedId) {
+		super("Packet must be " + MessageIdentifiers.getPacketName(requiredId) + " but instead got a "
+				+ (MessageIdentifiers.getPacketName(retrievedId) != null ? MessageIdentifiers.getPacketName(retrievedId)
+						: "unknown packet")
+				+ "!");
+		this.requiredId = requiredId;
 	}
 
-	/**
-	 * Returns the session that caused the error
-	 * 
-	 * @return RakNetSession
-	 */
-	public RakNetSession getSession() {
-		return this.session;
+	public UnexpectedPacketException(int requiredId) {
+		super("Packet must be 0x" + Integer.toHexString(requiredId).toUpperCase() + "!");
+		this.requiredId = requiredId;
+	}
+
+	public int getRequiredId() {
+		return this.requiredId;
+	}
+
+	public String getRequiredString() {
+		return ("0x" + Integer.toHexString(requiredId).toUpperCase());
+	}
+
+	@Override
+	public String getLocalizedMessage() {
+		return "Packet ID must be " + Integer.toHexString(requiredId).toUpperCase() + "!";
 	}
 
 }

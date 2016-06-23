@@ -43,8 +43,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.exception.RakNetException;
-import net.marfgamer.raknet.exception.SplitQueueOverloadException;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.packet.PacketQueueOverloadException;
+import net.marfgamer.raknet.exception.packet.SplitPacketQueueException;
+import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
@@ -244,7 +245,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	public final void sendEncapsulated(EncapsulatedPacket packet) {
 		// If packet is too big, split it up
 		ArrayList<EncapsulatedPacket> toSend = new ArrayList<EncapsulatedPacket>();
-		if (CustomPacket.DEFAULT_SIZE + EncapsulatedPacket.DEFAULT_SIZE
+		if (CustomPacket.HEADER_LENGTH + EncapsulatedPacket.getHeaderLength(packet.reliability, false)
 				+ packet.payload.length > this.maximumTransferUnit) {
 			EncapsulatedPacket[] split = SplitPacket.createSplit(packet, maximumTransferUnit, splitId++);
 			for (EncapsulatedPacket encapsulated : split) {
@@ -275,6 +276,8 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 			custom.seqNumber = this.sendSeqNumber++;
 			custom.packets.add(encapsulated);
 			custom.encode();
+
+			System.out.println(custom.array().length + " <- CUSTOM PACKET LENGTH");
 
 			// Send CustomPacket and update Acknowledge queues
 			this.sendRaw(custom);
@@ -410,8 +413,11 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 		// Handle split data of packet
 		if (encapsulated.split == true) {
 			if (!splitQueue.containsKey(encapsulated.splitId)) {
-				if (splitQueue.size() >= MAX_PACKETS_IN_QUEUE) {
-					throw new SplitQueueOverloadException(this);
+				if (splitQueue.size() > MAX_SPLITS_PER_QUEUE) {
+					throw new PacketQueueOverloadException(this, "split queue", MAX_SPLITS_PER_QUEUE);
+				}
+				if (encapsulated.splitCount > MAX_SPLIT_COUNT) {
+					throw new SplitPacketQueueException(encapsulated);
 				}
 
 				HashMap<Integer, EncapsulatedPacket> split = new HashMap<Integer, EncapsulatedPacket>();

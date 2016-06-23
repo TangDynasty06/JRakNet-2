@@ -1,5 +1,5 @@
 /*
- *       _   _____            _      _   _          _   
+c *       _   _____            _      _   _          _   
  *      | | |  __ \          | |    | \ | |        | |  
  *      | | | |__) |   __ _  | | __ |  \| |   ___  | |_ 
  *  _   | | |  _  /   / _` | | |/ / | . ` |  / _ \ | __|
@@ -63,8 +63,8 @@ public class ClientReliabilityTask implements TaskRunnable, RakNet {
 			CustomPacket[] recoveryPackets = session.getRecoveryQueue();
 			
 			// Make sure client is not trying to do a back-off attack
-			if (reliablePackets.length > MAX_PACKETS_IN_QUEUE || recoveryPackets.length > MAX_PACKETS_IN_QUEUE) {
-				handler.removeSession(session, "Too many unacknowledged packets!");
+			if (reliablePackets.length > MAX_PACKETS_PER_QUEUE || recoveryPackets.length > MAX_PACKETS_PER_QUEUE) {
+				handler.removeSession(session, "Too many packets in queue!");
 				handler.blockAddress(session.getAddress(), FIVE_MINUTES_MILLIS);
 			} else {
 				// Resend all lost packets

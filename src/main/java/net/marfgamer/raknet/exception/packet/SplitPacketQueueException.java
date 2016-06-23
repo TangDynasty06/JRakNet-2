@@ -28,34 +28,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.session.RakNetSession;
+import net.marfgamer.raknet.RakNet;
+import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 
 /**
- * Occurs whenever too many packets are received from one session too fast
+ * Occurs whenever a split packet has too many split packets needed to complete
+ * it
  *
  * @author Trent Summerlin
  */
-public class PacketOverloadException extends RakNetException {
+public class SplitPacketQueueException extends RakNetException {
 
-	private static final long serialVersionUID = -4600284275407632090L;
+	private static final long serialVersionUID = 6437847918319611506L;
 
-	private final RakNetSession session;
+	private final EncapsulatedPacket packet;
 
-	public PacketOverloadException(RakNetSession session) {
-		super("Session with address " + session.getSocketAddress() + " sent too many packets! (Over "
-				+ MAX_PACKETS_PER_SECOND + " a second!)");
-		this.session = session;
+	public SplitPacketQueueException(EncapsulatedPacket packet) {
+		super("EncapsulatedPacket has splitCount over " + RakNet.MAX_SPLIT_COUNT + "!");
+		this.packet = packet;
 	}
 
-	public RakNetSession getSession() {
-		return this.session;
-	}
-
-	@Override
-	public String getLocalizedMessage() {
-		return "Received too many packets";
+	/**
+	 * Returns the <code>EncapsulatedPacket</code> that caused the error
+	 * 
+	 * @return EncapsulatedPacket
+	 */
+	public EncapsulatedPacket getPacket() {
+		return this.packet;
 	}
 
 }

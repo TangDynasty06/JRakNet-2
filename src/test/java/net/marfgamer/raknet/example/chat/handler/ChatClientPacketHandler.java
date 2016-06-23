@@ -37,7 +37,7 @@ import net.marfgamer.raknet.example.chat.protocol.KickPacket;
 import net.marfgamer.raknet.example.chat.protocol.LoginPacket;
 import net.marfgamer.raknet.example.chat.protocol.MessagePacket;
 import net.marfgamer.raknet.example.chat.session.ChatClientSession;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;

@@ -30,7 +30,7 @@
  */
 package net.marfgamer.raknet.example.chat.protocol;
 
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
 
 public class KickPacket extends ChatPacket {

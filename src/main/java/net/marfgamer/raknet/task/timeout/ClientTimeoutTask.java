@@ -33,7 +33,7 @@ package net.marfgamer.raknet.task.timeout;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;

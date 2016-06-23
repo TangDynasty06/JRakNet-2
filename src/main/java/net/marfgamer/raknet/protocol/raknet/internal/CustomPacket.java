@@ -36,7 +36,7 @@ import net.marfgamer.raknet.protocol.Packet;
 
 public class CustomPacket extends Packet {
 	
-	public static final int DEFAULT_SIZE = 4;
+	public static final int HEADER_LENGTH = 4;
 
 	/**
 	 * This is handled by the ClientSession class

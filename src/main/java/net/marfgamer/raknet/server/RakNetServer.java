@@ -44,7 +44,7 @@ import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.RakNetException;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
+import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
@@ -106,6 +106,14 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 
 	public RakNetServer(int port, int maxConnections, String identifier) {
 		this(port, maxConnections, identifier, RakNetUtils.getNetworkInterfaceMTU(), CLIENT_TIMEOUT);
+	}
+
+	public RakNetServer(int port, int maxConnections, int maxTransferUnit, long clientTimeout) {
+		this(port, maxConnections, null, maxTransferUnit, clientTimeout);
+	}
+
+	public RakNetServer(int port, int maxConnections, int maxTransferUnit) {
+		this(port, maxConnections, maxTransferUnit, CLIENT_TIMEOUT);
 	}
 
 	public RakNetServer(int port, int maxConnections) {
@@ -386,18 +394,23 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 				request.decode();
 
 				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
-						&& request.mtuSize <= this.maxTransferUnit) {
+						&& request.mtuSize >= MINIMUM_TRANSFER_UNIT) {
 					if (this.getConnectionCount() >= this.maxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
 						handler.removeSession(session, "Server is full");
 					} else {
 						UnconnectedConnectionReplyOne response = new UnconnectedConnectionReplyOne();
 						response.serverId = this.serverId;
-						response.mtuSize = (short) (request.mtuSize + 46);
+						if (request.mtuSize >= this.maxTransferUnit) {
+							response.mtuSize = (short) this.maxTransferUnit;
+						} else {
+							response.mtuSize = (short) request.mtuSize;
+						}
 						response.encode();
 
 						session.sendRaw(response);
 						session.setState(SessionState.CONNECTING_1);
+						session.setMaximumTransferUnit(request.mtuSize);
 					}
 				} else if (request.protocol != SERVER_NETWORK_PROTOCOL) {
 					UnconnectedIncompatibleProtocol incompatible = new UnconnectedIncompatibleProtocol();
@@ -407,6 +420,8 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 
 					session.sendRaw(incompatible);
 					handler.removeSession(session, "Incorrect protocol");
+				} else if (request.mtuSize < MINIMUM_TRANSFER_UNIT) {
+					handler.removeSession(session, "MTU is too low");
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_CONNECTION_REQUEST_2) {

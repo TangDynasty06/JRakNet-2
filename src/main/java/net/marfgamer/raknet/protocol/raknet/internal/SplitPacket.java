@@ -43,11 +43,13 @@ import net.marfgamer.raknet.utils.ArrayUtils;
 public class SplitPacket {
 
 	public static EncapsulatedPacket[] createSplit(EncapsulatedPacket packet, int mtuSize, int splitId) {
-		byte[][] splitData = ArrayUtils.splitArray(packet.payload, mtuSize - CustomPacket.DEFAULT_SIZE);
+		byte[][] splitData = ArrayUtils.splitArray(packet.payload,
+				mtuSize - CustomPacket.HEADER_LENGTH - EncapsulatedPacket.getHeaderLength(packet.reliability, true));
 		ArrayList<EncapsulatedPacket> packets = new ArrayList<EncapsulatedPacket>();
 		for (int i = 0; i < splitData.length; i++) {
 			// Copy packet data
 			EncapsulatedPacket encapsulated = new EncapsulatedPacket();
+			encapsulated.reliability = packet.reliability;
 			encapsulated.messageIndex = packet.messageIndex;
 			encapsulated.orderChannel = packet.orderChannel;
 			encapsulated.orderIndex = packet.orderIndex;

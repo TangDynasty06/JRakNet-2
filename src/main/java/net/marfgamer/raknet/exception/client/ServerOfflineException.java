@@ -28,31 +28,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.example.chat.protocol;
+package net.marfgamer.raknet.exception.client;
 
-import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.client.RakNetClient;
 
-public class MessagePacket extends ChatPacket {
+/**
+ * Occurs whenever the client is unable to connect to the server as it is
+ * supposedly offline. The client throws this when the MTU goes below the
+ * minimum requirements so it cannot send data
+ *
+ * @author Trent Summerlin
+ */
+public class ServerOfflineException extends RakNetClientException {
 
-	public String message;
+	private static final long serialVersionUID = 4203326380764401700L;
 
-	public MessagePacket(Packet packet) throws UnexpectedPacketException {
-		super(packet);
-	}
-
-	public MessagePacket() {
-		super(ID_CHAT);
-	}
-
-	@Override
-	public void encode() {
-		this.putString(message);
+	public ServerOfflineException(RakNetClient client) {
+		super(client, "The server failed after too many retries!");
 	}
 
 	@Override
-	public void decode() {
-		this.message = this.getString();
+	public String getLocalizedMessage() {
+		return "Server offline!";
 	}
 
 }

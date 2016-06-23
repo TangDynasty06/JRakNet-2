@@ -242,6 +242,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 			this.removeSession(this.getSession(lastSender), cause.getLocalizedMessage());
 			this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
 		}
+		
 		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender);
 	}
 

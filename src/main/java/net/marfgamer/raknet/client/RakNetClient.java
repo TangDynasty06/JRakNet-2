@@ -47,12 +47,13 @@ import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
-import net.marfgamer.raknet.exception.PacketOverloadException;
 import net.marfgamer.raknet.exception.RakNetException;
-import net.marfgamer.raknet.exception.UnexpectedPacketException;
 import net.marfgamer.raknet.exception.client.ConnectionBannedException;
 import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
 import net.marfgamer.raknet.exception.client.ServerFullException;
+import net.marfgamer.raknet.exception.client.ServerOfflineException;
+import net.marfgamer.raknet.exception.packet.PacketOverloadException;
+import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
@@ -314,7 +315,13 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionReplyOne ucro = new UnconnectedConnectionReplyOne(packet);
 				ucro.decode();
 
-				if (ucro.magic == true && this.isServer(sender)) {
+				// Make sure MTU is not too low
+				if (ucro.mtuSize < MINIMUM_TRANSFER_UNIT) {
+					connectionErrors.add(new MaximumTransferUnitException(ucro.mtuSize));
+				}
+
+				// Make sure data is valid
+				if (ucro.magic == true && this.isServer(sender) && ucro.mtuSize >= MINIMUM_TRANSFER_UNIT) {
 					session.setSessionId(ucro.serverId);
 					session.setMaximumTransferUnit(ucro.mtuSize);
 
@@ -526,7 +533,6 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * 
 	 * @param address
 	 * @throws RaknetException
-	 * @throws InterruptedException
 	 */
 	public void connect(InetSocketAddress address) throws RakNetException {
 		// Check options
@@ -550,7 +556,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 		try {
 			while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
 				if (mtu < MINIMUM_TRANSFER_UNIT) {
-					throw new MaximumTransferUnitException(mtu);
+					throw new ServerOfflineException(this);
 				}
 
 				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
@@ -562,7 +568,10 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				session.sendRaw(request);
 
 				mtu -= 100L;
-				Thread.sleep(500L);
+				if (mtu < MINIMUM_TRANSFER_UNIT) {
+					mtu = MINIMUM_TRANSFER_UNIT;
+				}
+				Thread.sleep(100L);
 			}
 		} catch (Exception e) {
 			group.shutdownGracefully();
@@ -584,9 +593,8 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * @param address
 	 * @param port
 	 * @throws RakNetException
-	 * @throws InterruptedException
 	 */
-	public void connect(String address, int port) throws RakNetException, InterruptedException {
+	public void connect(String address, int port) throws RakNetException {
 		this.connect(new InetSocketAddress(address, port));
 	}
 
@@ -595,9 +603,8 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * 
 	 * @param server
 	 * @throws RakNetException
-	 * @throws InterruptedException
 	 */
-	public void connect(DiscoveredRakNetServer server) throws RakNetException, InterruptedException {
+	public void connect(DiscoveredRakNetServer server) throws RakNetException {
 		this.connect(server.address);
 	}
 

@@ -28,46 +28,61 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception;
+package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.protocol.MessageIdentifiers;
+import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.session.RakNetSession;
 
 /**
- * Thrown when a handler is expecting a packet and receives something else
- * instead
+ * Occurs when a queue for a <code>RakNetSession</code> is too big
  *
  * @author Trent Summerlin
  */
-public class UnexpectedPacketException extends RakNetException {
+public class PacketQueueOverloadException extends RakNetException {
 
-	private static final long serialVersionUID = -3793043367215871424L;
+	private static final long serialVersionUID = -289422497689147588L;
 
-	private final int requiredId;
+	private final RakNetSession session;
+	private final String queueName;
+	private final int queueSize;
 
-	public UnexpectedPacketException(int requiredId, int retrievedId) {
-		super("Packet must be " + MessageIdentifiers.getPacketName(requiredId) + " but instead got a "
-				+ (MessageIdentifiers.getPacketName(retrievedId) != null ? MessageIdentifiers.getPacketName(retrievedId)
-						: "unknown packet")
-				+ "!");
-		this.requiredId = requiredId;
+	public PacketQueueOverloadException(RakNetSession session, String queueName, int queueSize) {
+		super("Packet queue \"" + queueName + "\" exceeded it's limits of " + queueSize + "limit");
+		this.session = session;
+		this.queueName = queueName;
+		this.queueSize = queueSize;
 	}
 
-	public UnexpectedPacketException(int requiredId) {
-		super("Packet must be 0x" + Integer.toHexString(requiredId).toUpperCase() + "!");
-		this.requiredId = requiredId;
+	/**
+	 * Returns the session that caused the error
+	 * 
+	 * @return RakNetSession
+	 */
+	public RakNetSession getSession() {
+		return this.session;
 	}
 
-	public int getRequiredId() {
-		return this.requiredId;
+	/**
+	 * Returns the name of the queue that overloaded
+	 * 
+	 * @return String
+	 */
+	public String getQueueName() {
+		return this.queueName;
 	}
 
-	public String getRequiredString() {
-		return ("0x" + Integer.toHexString(requiredId).toUpperCase());
+	/**
+	 * Returns the queues maximum size before it overloads
+	 * 
+	 * @return int
+	 */
+	public int getQueueSize() {
+		return this.queueSize;
 	}
 
 	@Override
 	public String getLocalizedMessage() {
-		return "Packet ID must be " + Integer.toHexString(requiredId).toUpperCase() + "!";
+		return "Packet queue overloaded!";
 	}
 
 }

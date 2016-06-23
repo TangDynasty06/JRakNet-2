@@ -59,14 +59,15 @@ public class ServerReliabilityTask implements TaskRunnable, RakNet {
 	public void run() {
 		ServerSession session = client.getSession();
 		if (session != null) {
-			CustomPacket[] packets = session.getReliableQueue();
+			CustomPacket[] reliablePackets = session.getReliableQueue();
+			CustomPacket[] recoveryPackets = session.getRecoveryQueue();
 
 			// Make sure the server is not trying to do a back-off attack
-			if (packets.length > MAX_PACKETS_IN_QUEUE) {
+			if (reliablePackets.length > MAX_PACKETS_PER_QUEUE || recoveryPackets.length > MAX_PACKETS_PER_QUEUE) {
 				client.disconnect("Too many packets in queue!");
 			} else {
 				// Resend all lost packets
-				for (CustomPacket packet : packets) {
+				for (CustomPacket packet : reliablePackets) {
 					session.sendRaw(packet);
 				}
 			}

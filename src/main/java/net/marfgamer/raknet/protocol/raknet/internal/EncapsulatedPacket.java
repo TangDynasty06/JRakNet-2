@@ -31,13 +31,36 @@
 package net.marfgamer.raknet.protocol.raknet.internal;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
 
 public class EncapsulatedPacket implements Bytable {
-	
-	public static final short DEFAULT_SIZE = 11;
+
+	// Header data
+	public static int getHeaderLength(Reliability reliability, boolean split) {
+		int headerSize = 0;
+		headerSize += 1; // Reliability
+		headerSize += 2; // Payload length
+
+		if (reliability.isReliable()) {
+			headerSize += 3; // Message index
+		}
+
+		if (reliability.isOrdered() || reliability.isSequenced()) {
+			headerSize += 3; // Order index
+			headerSize += 1; // Order channel
+		}
+
+		if (split) {
+			headerSize += 4; // Split count
+			headerSize += 2; // Count ID
+			headerSize += 4; // Cound index
+		}
+
+		return headerSize;
+	}
+
+	// Binary flag data
 	public static final byte FLAG_RELIABILITY = (byte) 0xF4;
 	public static final byte FLAG_SPLIT = (byte) 0x10;
 
@@ -102,14 +125,13 @@ public class EncapsulatedPacket implements Bytable {
 			this.splitId = buffer.readShort();
 			this.splitIndex = buffer.readInt();
 		}
-		
-		
+
 		this.payload = new byte[length];
 		buffer.readBytes(payload);
 	}
 
 	public Packet convertPayload() {
-		return new Packet(Unpooled.copiedBuffer(payload));
+		return new Packet(payload);
 	}
 
 }

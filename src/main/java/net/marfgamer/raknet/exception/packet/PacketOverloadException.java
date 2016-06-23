@@ -28,31 +28,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.example.chat.protocol;
+package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.exception.RakNetException;
+import net.marfgamer.raknet.session.RakNetSession;
 
-public class MessagePacket extends ChatPacket {
+/**
+ * Occurs whenever too many packets are received from one session too fast
+ *
+ * @author Trent Summerlin
+ */
+public class PacketOverloadException extends RakNetException {
 
-	public String message;
+	private static final long serialVersionUID = -4600284275407632090L;
 
-	public MessagePacket(Packet packet) throws UnexpectedPacketException {
-		super(packet);
+	private final RakNetSession session;
+
+	public PacketOverloadException(RakNetSession session) {
+		super("Session with address " + session.getSocketAddress() + " sent too many packets! (Over "
+				+ MAX_PACKETS_PER_SECOND + " a second!)");
+		this.session = session;
 	}
 
-	public MessagePacket() {
-		super(ID_CHAT);
+	public RakNetSession getSession() {
+		return this.session;
 	}
 
 	@Override
-	public void encode() {
-		this.putString(message);
-	}
-
-	@Override
-	public void decode() {
-		this.message = this.getString();
+	public String getLocalizedMessage() {
+		return "Received too many packets!";
 	}
 
 }
