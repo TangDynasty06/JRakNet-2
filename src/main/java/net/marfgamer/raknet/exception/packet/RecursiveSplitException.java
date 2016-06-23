@@ -28,43 +28,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.protocol.raknet.internal;
+package net.marfgamer.raknet.exception.packet;
 
-import java.util.ArrayList;
-
-import net.marfgamer.raknet.utils.ArrayUtils;
+import net.marfgamer.raknet.session.RakNetSession;
 
 /**
- * A packet that has been split up into multiple packets since it was too big to
- * be sent at once
+ * Occurs when a packet attempts to be split by a recursive call to the
+ * function, this normally happens when the packet wasn't split correctly and
+ * the output was still bigger than the session's MTU
  *
  * @author Trent Summerlin
  */
-public class SplitPacket {
+public class RecursiveSplitException extends RakNetPacketException {
 
-	public static EncapsulatedPacket[] createSplit(EncapsulatedPacket packet, int mtuSize, int splitId) {
-		byte[][] splitData = ArrayUtils.splitArray(packet.payload,
-				mtuSize - CustomPacket.HEADER_LENGTH - EncapsulatedPacket.getHeaderLength(packet.reliability, true));
-		ArrayList<EncapsulatedPacket> packets = new ArrayList<EncapsulatedPacket>();
-		for (int i = 0; i < splitData.length; i++) {
-			// Copy packet data
-			EncapsulatedPacket encapsulated = new EncapsulatedPacket();
-			encapsulated.reliability = packet.reliability;
-			encapsulated.messageIndex = packet.messageIndex;
-			encapsulated.orderChannel = packet.orderChannel;
-			encapsulated.orderIndex = packet.orderIndex;
+	private static final long serialVersionUID = -3831498484899229578L;
 
-			// Set split data
-			encapsulated.split = true;
-			encapsulated.splitIndex = i;
-			encapsulated.splitId = splitId;
-			encapsulated.splitCount = splitData.length;
-
-			// Set payload data
-			encapsulated.payload = splitData[i];
-			packets.add(encapsulated);
-		}
-		return packets.toArray(new EncapsulatedPacket[packets.size()]);
+	public RecursiveSplitException(RakNetSession session) {
+		super(session, "A packet attempted to split with a recursive call!");
 	}
 
 }

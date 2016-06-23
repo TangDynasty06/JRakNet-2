@@ -30,13 +30,26 @@
  */
 package net.marfgamer.raknet.protocol.raknet.internal;
 
+import java.util.ArrayList;
+
 import io.netty.buffer.ByteBuf;
+import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
+import net.marfgamer.raknet.utils.ArrayUtils;
 
 public class EncapsulatedPacket implements Bytable {
 
-	// Header data
+	/**
+	 * Returns the header length of an EncapsulatedPacket with the specified
+	 * reliability and whether or not it is split. These two are key factors in
+	 * packet splitting as even a slight change in header size can massively
+	 * change the amount of bytes that can be sent as a single packet.
+	 * 
+	 * @param reliability
+	 * @param split
+	 * @return int
+	 */
 	public static int getHeaderLength(Reliability reliability, boolean split) {
 		int headerSize = 0;
 		headerSize += 1; // Reliability
@@ -58,6 +71,41 @@ public class EncapsulatedPacket implements Bytable {
 		}
 
 		return headerSize;
+	}
+
+	public static EncapsulatedPacket[] split(EncapsulatedPacket packet, int mtuSize, int splitId) {
+		byte[][] splitData = ArrayUtils.splitArray(packet.payload,
+				mtuSize - CustomPacket.HEADER_LENGTH - getHeaderLength(packet.reliability, true));
+		ArrayList<EncapsulatedPacket> packets = new ArrayList<EncapsulatedPacket>();
+		for (int i = 0; i < splitData.length; i++) {
+			// Copy packet data
+			EncapsulatedPacket encapsulated = new EncapsulatedPacket();
+			encapsulated.reliability = packet.reliability;
+			encapsulated.messageIndex = packet.messageIndex;
+			encapsulated.orderChannel = packet.orderChannel;
+			encapsulated.orderIndex = packet.orderIndex;
+
+			// Set split data
+			encapsulated.split = true;
+			encapsulated.splitIndex = i;
+			encapsulated.splitId = splitId;
+			encapsulated.splitCount = splitData.length;
+
+			// Set payload data
+			encapsulated.payload = splitData[i];
+			packets.add(encapsulated);
+		}
+		return packets.toArray(new EncapsulatedPacket[packets.size()]);
+	}
+
+	/**
+	 * Returns the maximum size of bytes that can be sent as one packet
+	 * 
+	 * @return int
+	 */
+	public static int getMaxPacketSize(int maxTransferUnit) {
+		return (maxTransferUnit - CustomPacket.HEADER_LENGTH
+				- EncapsulatedPacket.getHeaderLength(Reliability.RELIABLE, true)) * RakNet.MAX_SPLIT_COUNT;
 	}
 
 	// Binary flag data

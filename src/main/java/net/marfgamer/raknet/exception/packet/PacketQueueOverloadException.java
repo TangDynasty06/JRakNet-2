@@ -30,7 +30,6 @@
  */
 package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.session.RakNetSession;
 
 /**
@@ -38,28 +37,17 @@ import net.marfgamer.raknet.session.RakNetSession;
  *
  * @author Trent Summerlin
  */
-public class PacketQueueOverloadException extends RakNetException {
+public class PacketQueueOverloadException extends RakNetPacketException {
 
 	private static final long serialVersionUID = -289422497689147588L;
 
-	private final RakNetSession session;
 	private final String queueName;
 	private final int queueSize;
 
 	public PacketQueueOverloadException(RakNetSession session, String queueName, int queueSize) {
-		super("Packet queue \"" + queueName + "\" exceeded it's limits of " + queueSize + "limit");
-		this.session = session;
+		super(session, "Packet queue \"" + queueName + "\" exceeded it's limits of " + queueSize + "limit");
 		this.queueName = queueName;
 		this.queueSize = queueSize;
-	}
-
-	/**
-	 * Returns the session that caused the error
-	 * 
-	 * @return RakNetSession
-	 */
-	public RakNetSession getSession() {
-		return this.session;
 	}
 
 	/**

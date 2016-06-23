@@ -30,6 +30,7 @@
  */
 package net.marfgamer.raknet;
 
+import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.RakNetException;
@@ -50,7 +51,7 @@ public class SplitPacketTest implements RakNet {
 	public static void main(String[] args) throws RakNetException {
 		createServer();
 		System.out.println("Started server!");
-		
+
 		System.out.println("Creating client...");
 		createClient();
 	}
@@ -76,8 +77,7 @@ public class SplitPacketTest implements RakNet {
 		server.addHook(Hook.PACKET_RECEIVED, (Object[] parameters) -> {
 			RakNetSession session = (RakNetSession) parameters[0];
 			EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-			Packet packet = encapsulated.convertPayload();
-			
+
 			System.out.println("Server: Received packet of " + encapsulated.payload.length + " bytes from "
 					+ session.getAddress());
 			System.exit(0);
@@ -98,7 +98,7 @@ public class SplitPacketTest implements RakNet {
 
 			// Send huge packet of doom
 			Packet packet = new Packet(0xFF);
-			for (int i = 0; i < 67327; i++) {
+			for (int i = 0; i < 65279; i++) {
 				packet.putUByte(0x00);
 			}
 			System.out.println("Sending giant packet...");

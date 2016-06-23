@@ -30,46 +30,32 @@
  */
 package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.protocol.MessageIdentifiers;
+import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.session.RakNetSession;
 
 /**
- * Thrown when a handler is expecting a packet and receives something else
- * instead
+ * Occurs whenever an error related to a packet occurs
  *
  * @author Trent Summerlin
  */
-public class UnexpectedPacketException extends RakNetPacketException {
+public class RakNetPacketException extends RakNetException {
 
-	private static final long serialVersionUID = -3793043367215871424L;
+	private static final long serialVersionUID = 4810568346727379897L;
 
-	private final int requiredId;
+	private final RakNetSession session;
 
-	public UnexpectedPacketException(RakNetSession session, int requiredId, int retrievedId) {
-		super(session,
-				"Packet must be " + MessageIdentifiers.getPacketName(requiredId) + " but instead got a "
-						+ (MessageIdentifiers.getPacketName(retrievedId) != null
-								? MessageIdentifiers.getPacketName(retrievedId) : "unknown packet")
-						+ "!");
-		this.requiredId = requiredId;
+	public RakNetPacketException(RakNetSession session, String error) {
+		super(error);
+		this.session = session;
 	}
 
-	public UnexpectedPacketException(RakNetSession session, int requiredId) {
-		super(session, "Packet must be 0x" + Integer.toHexString(requiredId).toUpperCase() + "!");
-		this.requiredId = requiredId;
-	}
-
-	public int getRequiredId() {
-		return this.requiredId;
-	}
-
-	public String getRequiredString() {
-		return ("0x" + Integer.toHexString(requiredId).toUpperCase());
-	}
-
-	@Override
-	public String getLocalizedMessage() {
-		return "Wrong packet ID!";
+	/**
+	 * Returns the session that caused the error
+	 * 
+	 * @return RakNetSession
+	 */
+	public RakNetSession getSession() {
+		return this.session;
 	}
 
 }

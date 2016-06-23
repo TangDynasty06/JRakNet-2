@@ -31,8 +31,8 @@
 package net.marfgamer.raknet.exception.packet;
 
 import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
+import net.marfgamer.raknet.session.RakNetSession;
 
 /**
  * Occurs whenever a split packet has too many split packets needed to complete
@@ -40,19 +40,19 @@ import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
  *
  * @author Trent Summerlin
  */
-public class SplitPacketQueueException extends RakNetException {
+public class SplitPacketQueueException extends RakNetPacketException {
 
 	private static final long serialVersionUID = 6437847918319611506L;
 
 	private final EncapsulatedPacket packet;
 
-	public SplitPacketQueueException(EncapsulatedPacket packet) {
-		super("EncapsulatedPacket has splitCount over " + RakNet.MAX_SPLIT_COUNT + "!");
+	public SplitPacketQueueException(RakNetSession session, EncapsulatedPacket packet) {
+		super(session, "EncapsulatedPacket has splitCount over " + RakNet.MAX_SPLIT_COUNT + "!");
 		this.packet = packet;
 	}
 
 	/**
-	 * Returns the <code>EncapsulatedPacket</code> that caused the error
+	 * Returns the packet that caused the error
 	 * 
 	 * @return EncapsulatedPacket
 	 */

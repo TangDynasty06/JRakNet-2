@@ -44,6 +44,7 @@ import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.packet.PacketQueueOverloadException;
+import net.marfgamer.raknet.exception.packet.RecursiveSplitException;
 import net.marfgamer.raknet.exception.packet.SplitPacketQueueException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.MessageIdentifiers;
@@ -52,7 +53,6 @@ import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
-import net.marfgamer.raknet.protocol.raknet.internal.SplitPacket;
 
 /**
  * Represents a session in RakNet, used by the internal handlers to easily track
@@ -190,14 +190,14 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	}
 
 	/**
-	 * Updates the <code>receivedPacketsThisSecond</code> for the session
+	 * Updates the amount of packets received from the session
 	 */
 	public void pushReceivedPacketsThisSecond() {
 		this.receivedPacketsThisSecond++;
 	}
 
 	/**
-	 * Resets the <code>receivedPacketThisSecond</code> for the session
+	 * Resets the amount of packets received this second from the session
 	 */
 	public void resetReceivedPacketsThisSecond() {
 		this.receivedPacketsThisSecond = 0;
@@ -222,64 +222,64 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	}
 
 	/**
-	 * Updates the <code>lastReceiveTime</code> for the session
+	 * Updates the last time a packet was received from the session
 	 */
 	public void pushLastReceiveTime(long amount) {
 		this.lastReceiveTime += amount;
 	}
 
 	/**
-	 * Resets the <code>lastReceiveTime</code> for the session
+	 * Resets the last time the packet was received from the session
 	 */
 	public void resetLastReceiveTime() {
 		this.lastReceiveTime = 0L;
 	}
 
 	/**
-	 * Sends an EncapsulatedPacket, will automatically split packets if
-	 * necessary.
+	 * Sends an <code>EncapsulatedPacket</code> wrapped in a
+	 * <code>CustomPacket</code>. There is no method to send a
+	 * <code>CustomPacket</code> on it's own as a important queue data rely on
+	 * data contained in the <code>CustomPacket</code> and
+	 * <code>EncapsulatedPacket</code>. This method will automatically split the
+	 * packet if necessary.
 	 * 
 	 * @param channel
-	 * @param packet
+	 * @param encapsulated
+	 * @throws RecursiveSplitException
 	 */
-	public final void sendEncapsulated(EncapsulatedPacket packet) {
+	private final void sendEncapsulated(EncapsulatedPacket encapsulated, boolean recursive)
+			throws RecursiveSplitException {
 		// If packet is too big, split it up
-		ArrayList<EncapsulatedPacket> toSend = new ArrayList<EncapsulatedPacket>();
-		if (CustomPacket.HEADER_LENGTH + EncapsulatedPacket.getHeaderLength(packet.reliability, false)
-				+ packet.payload.length > this.maximumTransferUnit) {
-			EncapsulatedPacket[] split = SplitPacket.createSplit(packet, maximumTransferUnit, splitId++);
-			for (EncapsulatedPacket encapsulated : split) {
-				toSend.add(encapsulated);
+		if (CustomPacket.HEADER_LENGTH + EncapsulatedPacket.getHeaderLength(encapsulated.reliability, false)
+				+ encapsulated.payload.length > this.maximumTransferUnit) {
+			if (!recursive) {
+				EncapsulatedPacket[] splitEncapsulated = EncapsulatedPacket.split(encapsulated, maximumTransferUnit,
+						splitId++);
+				for (EncapsulatedPacket split : splitEncapsulated) {
+					this.sendEncapsulated(split, true);
+				}
+			} else {
+				throw new RecursiveSplitException(this);
 			}
 		} else {
-			toSend.add(packet);
-		}
-
-		// Send each EncapsulatedPacket
-		for (EncapsulatedPacket encapsulated : toSend) {
-			// Create CustomPacket and set data
-			CustomPacket custom = new CustomPacket();
-
-			if (packet.reliability.isReliable()) {
+			// Update session data
+			if (encapsulated.reliability.isReliable()) {
 				encapsulated.messageIndex = sendMessageIndex++;
 			} else {
 				encapsulated.messageIndex = 0;
 			}
-
-			if (packet.reliability.isOrdered() || packet.reliability.isSequenced()) {
+			if (encapsulated.reliability.isOrdered() || encapsulated.reliability.isSequenced()) {
 				encapsulated.orderIndex = this.sendIndex[encapsulated.orderChannel]++;
 			} else {
 				encapsulated.orderChannel = 0;
 				encapsulated.orderIndex = 0;
 			}
 
+			// Send CustomPacket
+			CustomPacket custom = new CustomPacket();
 			custom.seqNumber = this.sendSeqNumber++;
 			custom.packets.add(encapsulated);
 			custom.encode();
-
-			System.out.println(custom.array().length + " <- CUSTOM PACKET LENGTH");
-
-			// Send CustomPacket and update Acknowledge queues
 			this.sendRaw(custom);
 			if (encapsulated.reliability.isReliable()) {
 				reliableQueue.put(custom.seqNumber, custom);
@@ -298,7 +298,12 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 		EncapsulatedPacket encapsulated = new EncapsulatedPacket();
 		encapsulated.reliability = reliability;
 		encapsulated.payload = packet.array();
-		this.sendEncapsulated(encapsulated);
+
+		try {
+			this.sendEncapsulated(encapsulated, false);
+		} catch (RecursiveSplitException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -343,7 +348,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 				recoveryQueue.remove(packet);
 			}
 		} else {
-			throw new UnexpectedPacketException(ID_ACK, ack.getId());
+			throw new UnexpectedPacketException(this, ID_ACK, ack.getId());
 		}
 	}
 
@@ -363,7 +368,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 				}
 			}
 		} else {
-			throw new UnexpectedPacketException(ID_NACK, nack.getId());
+			throw new UnexpectedPacketException(this, ID_NACK, nack.getId());
 		}
 	}
 
@@ -410,26 +415,31 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 			receiveIndex[encapsulated.orderChannel] = encapsulated.orderIndex + 1;
 		}
 
-		// Handle split data of packet
 		if (encapsulated.split == true) {
+			// Check if split packet exists
 			if (!splitQueue.containsKey(encapsulated.splitId)) {
+				// Check queues
 				if (splitQueue.size() > MAX_SPLITS_PER_QUEUE) {
 					throw new PacketQueueOverloadException(this, "split queue", MAX_SPLITS_PER_QUEUE);
 				}
 				if (encapsulated.splitCount > MAX_SPLIT_COUNT) {
-					throw new SplitPacketQueueException(encapsulated);
+					throw new SplitPacketQueueException(this, encapsulated);
 				}
 
+				// Create split packet
 				HashMap<Integer, EncapsulatedPacket> split = new HashMap<Integer, EncapsulatedPacket>();
 				split.put(encapsulated.splitIndex, encapsulated);
 				splitQueue.put(encapsulated.splitId, split);
 			} else {
+				// Update split packet
 				HashMap<Integer, EncapsulatedPacket> split = splitQueue.get(encapsulated.splitId);
 				split.put(encapsulated.splitIndex, encapsulated);
 				splitQueue.put(encapsulated.splitId, split);
 			}
 
+			// Check if split packet is complete
 			if (splitQueue.get(encapsulated.splitId).size() == encapsulated.splitCount) {
+				// Write raw data to buffer
 				ByteBuf b = Unpooled.buffer();
 				int size = 0;
 				HashMap<Integer, EncapsulatedPacket> packets = splitQueue.get(encapsulated.splitId);
@@ -440,6 +450,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 				byte[] data = Arrays.copyOfRange(b.array(), 0, size);
 				splitQueue.remove(encapsulated.splitId);
 
+				// Create EncapsulatedPacket and handle it
 				EncapsulatedPacket ep = new EncapsulatedPacket();
 				ep.payload = data;
 				ep.orderChannel = encapsulated.orderChannel;

@@ -80,7 +80,7 @@ public class ServerTimeoutTask implements TaskRunnable, MessageIdentifiers {
 					}
 				}
 			} else {
-				throw new UnexpectedPacketException(ID_CONNECTED_PONG, pong.getId());
+				throw new UnexpectedPacketException(session, ID_CONNECTED_PONG, pong.getId());
 			}
 		}
 	}

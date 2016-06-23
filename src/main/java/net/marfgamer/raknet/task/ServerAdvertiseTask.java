@@ -72,7 +72,7 @@ public class ServerAdvertiseTask implements TaskRunnable, MessageIdentifiers {
 			servers.get(sender).cyclesLeft = CYCLE_START;
 			client.executeHook(Hook.SERVER_DISCOVERED, servers.get(sender), sender);
 		} else {
-			throw new UnexpectedPacketException(ID_UNCONNECTED_PING, pong.getId());
+			throw new UnexpectedPacketException(null, ID_UNCONNECTED_PING, pong.getId());
 		}
 	}
 

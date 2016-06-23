@@ -30,7 +30,6 @@
  */
 package net.marfgamer.raknet.exception.packet;
 
-import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.session.RakNetSession;
 
 /**
@@ -38,20 +37,13 @@ import net.marfgamer.raknet.session.RakNetSession;
  *
  * @author Trent Summerlin
  */
-public class PacketOverloadException extends RakNetException {
+public class PacketOverloadException extends RakNetPacketException {
 
 	private static final long serialVersionUID = -4600284275407632090L;
 
-	private final RakNetSession session;
-
 	public PacketOverloadException(RakNetSession session) {
-		super("Session with address " + session.getSocketAddress() + " sent too many packets! (Over "
+		super(session, "Session with address " + session.getSocketAddress() + " sent too many packets! (Over "
 				+ MAX_PACKETS_PER_SECOND + " a second!)");
-		this.session = session;
-	}
-
-	public RakNetSession getSession() {
-		return this.session;
 	}
 
 	@Override
