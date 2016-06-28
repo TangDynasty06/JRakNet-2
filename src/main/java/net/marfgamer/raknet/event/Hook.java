@@ -145,12 +145,11 @@ public enum Hook {
 	LATENCY_UPDATED,
 
 	/**
-	 * Received whenever a Netty handler exception is caused by a RakNetSession
-	 * <br>
+	 * Received whenever a exception occurs in a Netty handler<br>
 	 * <br>
 	 * 
 	 * Parameter 0: The caught exception (Throwable)<br>
-	 * Parameter 1: The session that caused the exception (RakNetSession)
+	 * Parameter 1: The address that caused the exception (InetSocketAddress)
 	 */
 	HANDLER_EXCEPTION_OCCURED;
 

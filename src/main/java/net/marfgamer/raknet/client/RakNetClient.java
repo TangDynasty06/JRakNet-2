@@ -86,6 +86,8 @@ import net.marfgamer.raknet.utils.RakNetUtils;
  */
 public class RakNetClient implements RakNet, MessageIdentifiers {
 
+	public static final short NO_DISCOVERY = -1;
+
 	// Client options
 	private final int discoverPort;
 	private final int maxTransferUnit;

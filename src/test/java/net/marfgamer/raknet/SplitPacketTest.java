@@ -89,7 +89,7 @@ public class SplitPacketTest implements RakNet {
 
 	private static RakNetClient createClient() throws RakNetException {
 		// Create client and add hooks
-		RakNetClient client = new RakNetClient(-1, MINIMUM_TRANSFER_UNIT);
+		RakNetClient client = new RakNetClient(RakNetClient.NO_DISCOVERY, MINIMUM_TRANSFER_UNIT);
 
 		// Server connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
