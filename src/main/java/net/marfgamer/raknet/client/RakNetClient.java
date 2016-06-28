@@ -46,7 +46,8 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
-import net.marfgamer.raknet.exception.MaximumTransferUnitException;
+import net.marfgamer.raknet.exception.MaximumTransferUnitIncorrectException;
+import net.marfgamer.raknet.exception.MaximumTransferUnitUnderflowException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.client.ConnectionBannedException;
 import net.marfgamer.raknet.exception.client.IncompatibleProtocolException;
@@ -340,10 +341,12 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 			if (state == SessionState.CONNECTING_1) {
 				UnconnectedConnectionReplyOne ucro = new UnconnectedConnectionReplyOne(packet);
 				ucro.decode();
+				
+				System.out.println(ucro.mtuSize);
 
 				// Make sure MTU is not too big or too low
 				if (ucro.mtuSize < MINIMUM_TRANSFER_UNIT) {
-					connectionErrors.add(new MaximumTransferUnitException(ucro.mtuSize));
+					connectionErrors.add(new MaximumTransferUnitUnderflowException(ucro.mtuSize));
 				}
 
 				// Make sure data is valid
@@ -371,13 +374,17 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 					ccr.timestamp = this.timestamp;
 					ccr.encode();
 
-					session.setMaximumTransferUnit((short) this.maxTransferUnit);
+					// Favor lower MTU
+					if (this.maxTransferUnit < ucrt.mtuSize) {
+						session.setMaximumTransferUnit((short) this.maxTransferUnit);
+					} else {
+						session.setMaximumTransferUnit((short) ucrt.mtuSize);
+					}
+					
 					session.sendPacket(Reliability.RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
 				} else if (ucrt.mtuSize != this.maxTransferUnit) {
-					throw new RakNetException("Server provided incorrect MTU!"); // TODO:
-																					// Unique
-																					// exception
+					throw new MaximumTransferUnitIncorrectException(this.maxTransferUnit, ucrt.mtuSize);
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_SERVER_FULL) {
@@ -567,7 +574,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	public void connect(InetSocketAddress address) throws RakNetException {
 		// Check options
 		if (this.maxTransferUnit < MINIMUM_TRANSFER_UNIT) {
-			throw new MaximumTransferUnitException(this.maxTransferUnit);
+			throw new MaximumTransferUnitUnderflowException(this.maxTransferUnit);
 		}
 
 		// Disconnect from current session

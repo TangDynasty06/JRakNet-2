@@ -241,9 +241,12 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 		if (session != null) {
 			this.removeSession(this.getSession(lastSender), cause.getLocalizedMessage());
 			this.blockAddress(lastSender.getAddress(), FIVE_MINUTES_MILLIS);
+
+			// We only care if it's caused by a listed session
+			server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, session);
 		}
-		
-		server.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender);
+
+		// cause.printStackTrace(); /* <- Uncomment for debug */
 	}
 
 }

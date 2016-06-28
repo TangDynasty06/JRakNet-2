@@ -42,7 +42,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.event.HookRunnable;
-import net.marfgamer.raknet.exception.MaximumTransferUnitException;
+import net.marfgamer.raknet.exception.MaximumTransferUnitUnderflowException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Packet;
@@ -452,7 +452,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 
 		// Check options
 		if (this.maxTransferUnit < MINIMUM_TRANSFER_UNIT) {
-			throw new MaximumTransferUnitException(this.maxTransferUnit);
+			throw new MaximumTransferUnitUnderflowException(this.maxTransferUnit);
 		}
 
 		// Bind socket and start receiving data

@@ -35,13 +35,13 @@ package net.marfgamer.raknet.exception;
  *
  * @author Trent Summerlin
  */
-public class MaximumTransferUnitException extends RakNetException {
+public class MaximumTransferUnitUnderflowException extends RakNetException {
 
 	private static final long serialVersionUID = -6040478416974497890L;
 
 	private final int mtu;
 
-	public MaximumTransferUnitException(int mtu) {
+	public MaximumTransferUnitUnderflowException(int mtu) {
 		super("MTU size is too small! It should be at least " + MINIMUM_TRANSFER_UNIT + " but is " + mtu + "!");
 		this.mtu = mtu;
 	}

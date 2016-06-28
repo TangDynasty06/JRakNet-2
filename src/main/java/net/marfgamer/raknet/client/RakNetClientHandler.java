@@ -137,13 +137,16 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		// Disconnect only if it's the server
 		ServerSession session = client.getSession();
 		if (session != null) {
-			if (session.getSocketAddress().equals(lastSender)) {
+			if (session.isServer(lastSender)) {
 				client.disconnect(cause);
 				ctx.close();
+
+				// We only care if it's the server
+				client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, session);
 			}
 		}
-		
-		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender);
+
+		// cause.printStackTrace(); /* <- Uncomment for debug */
 	}
 
 }
