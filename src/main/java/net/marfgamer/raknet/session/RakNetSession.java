@@ -340,6 +340,31 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	}
 
 	/**
+	 * Removes as many unreliable packets as possible until the recovery queue
+	 * size is smaller than the maximum amount of packets in a queue or there
+	 * are no more unreliable packets
+	 */
+	public final void cleanRecoveryQueue() {
+		for (CustomPacket custom : recoveryQueue.values()) {
+			if (custom.packets.size() > 0) {
+				// Remove CustomPacket based on reliability
+				EncapsulatedPacket encapsulated = custom.packets.get(0);
+				if (!encapsulated.reliability.isReliable() && recoveryQueue.size() > MAX_PACKETS_PER_QUEUE) {
+					recoveryQueue.remove(custom.seqNumber);
+				}
+
+				// Buffer is no longer overflowing
+				if (recoveryQueue.size() <= MAX_PACKETS_PER_QUEUE) {
+					break;
+				}
+			} else {
+				// Glitched recovery packet!
+				recoveryQueue.remove(custom.seqNumber);
+			}
+		}
+	}
+
+	/**
 	 * Removes all packets in the ACK packet from the recovery queue, as they
 	 * have already been acknowledged
 	 * 

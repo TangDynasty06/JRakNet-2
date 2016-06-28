@@ -70,14 +70,13 @@ public class SplitPacketTest implements RakNet {
 			RakNetSession session = (RakNetSession) parameters[0];
 			System.out
 					.println("Server: Client from " + session.getAddress() + " disconnected! (" + parameters[1] + ")");
-			System.exit(0);
+			System.exit(1);
 		});
 
 		// Packet received
 		server.addHook(Hook.PACKET_RECEIVED, (Object[] parameters) -> {
 			RakNetSession session = (RakNetSession) parameters[0];
 			EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-
 			System.out.println("Server: Received packet of " + encapsulated.payload.length + " bytes from "
 					+ session.getAddress());
 			System.exit(0);

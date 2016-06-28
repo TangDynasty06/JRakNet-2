@@ -434,7 +434,6 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 					response.encode();
 
 					session.sendRaw(response);
-					session.setMaximumTransferUnit(request.mtuSize);
 					session.setSessionId(request.clientId);
 					session.setState(SessionState.CONNECTING_2);
 				}
