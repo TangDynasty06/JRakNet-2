@@ -341,8 +341,6 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 			if (state == SessionState.CONNECTING_1) {
 				UnconnectedConnectionReplyOne ucro = new UnconnectedConnectionReplyOne(packet);
 				ucro.decode();
-				
-				System.out.println(ucro.mtuSize);
 
 				// Make sure MTU is not too big or too low
 				if (ucro.mtuSize < MINIMUM_TRANSFER_UNIT) {
@@ -380,7 +378,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 					} else {
 						session.setMaximumTransferUnit((short) ucrt.mtuSize);
 					}
-					
+
 					session.sendPacket(Reliability.RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
 				} else if (ucrt.mtuSize != this.maxTransferUnit) {

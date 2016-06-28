@@ -51,7 +51,7 @@ public class RakNetClientTest {
 
 	public static void main(String[] args) throws RakNetException {
 		// Create client
-		RakNetClient client = new RakNetClient(19132, 1500);
+		RakNetClient client = new RakNetClient(19132, 1200);
 
 		// Client connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
@@ -74,8 +74,6 @@ public class RakNetClientTest {
 			Throwable throwable = (Throwable) parameters[0];
 			InetSocketAddress naughtyAddress = (InetSocketAddress) parameters[1];
 			System.out.println("Handler exception " + throwable.getClass().getName() + " caused by " + naughtyAddress);
-			throwable.printStackTrace();
-			System.exit(0);
 		});
 
 		// Connect client to server
