@@ -41,16 +41,16 @@ import net.marfgamer.raknet.exception.RakNetException;
  * @author Trent Summerlin
  */
 public class UtilitiesTest {
-	
+
 	private static final String SERVER_ADDRESS = "sg.lbsg.net";
 	private static final int SERVER_PORT = 19132;
 
 	public static void main(String[] args) throws RakNetException {
 		System.out.println("System RakNet ID: " + getRakNetID());
 		System.out.println("Network Interface MTU: " + getNetworkInterfaceMTU());
-		System.out.println("Server identifier: " + removeColors(getServerIdentifier(SERVER_ADDRESS, SERVER_PORT)).replace(";", ", "));
+		System.out.println("Server identifier: "
+				+ removeColors(getServerIdentifier(SERVER_ADDRESS, SERVER_PORT)).replace(";", ", "));
 		System.out.println("Server compatible?: " + isServerCompatible(SERVER_ADDRESS, SERVER_PORT));
-		System.out.println("Subnet Mask: " + getSubnetMask());
 	}
 
 	/**

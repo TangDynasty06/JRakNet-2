@@ -50,8 +50,7 @@ public class UnconnectedConnectionRequestOne extends Packet {
 	public void encode() {
 		this.putMagic();
 		this.putUByte(protocol);
-		this.pad(mtuSize - 18); // 28 UDP overhead, 1 for Packet ID,
-								// 1 for Protocol, 16 for MAGIC
+		this.pad(mtuSize - 18); // 1 for Packet ID, 1 for Protocol, 16 for MAGIC
 	}
 
 	@Override

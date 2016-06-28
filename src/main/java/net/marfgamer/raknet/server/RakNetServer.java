@@ -45,8 +45,8 @@ import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.MaximumTransferUnitException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -371,20 +371,21 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	 */
 	protected void handleRaw(Packet packet, ClientSession session) {
 		short pid = packet.getId();
-		if (pid == ID_UNCONNECTED_PING) {
+		if (pid == ID_UNCONNECTED_PING || pid == ID_UNCONNECTED_PING_OPEN_CONNECTIONS) {
+			boolean openConnections = this.getConnectionCount() < this.getMaxConnections();
 			UnconnectedPing ping = new UnconnectedPing(packet);
 			ping.decode();
 
-			if (ping.magic == true) {
+			if (ping.magic == true && (pid == ID_UNCONNECTED_PING_OPEN_CONNECTIONS ? openConnections : true)) {
 				UnconnectedPong pong = new UnconnectedPong();
 				pong.pingId = ping.pingId;
 				pong.serverId = this.serverId;
 				Object[] parameters = this.executeHook(Hook.SERVER_PING, session.getAddress(), this.identifier);
 				pong.identifier = parameters[1].toString();
-				pong.encode();
 
 				// Make sure identifier is not null before encoding
 				if (parameters[1] != null) {
+					pong.encode();
 					session.sendRaw(pong);
 				}
 			}
@@ -393,8 +394,10 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne(packet);
 				request.decode();
 
+				System.out.println(request.mtuSize);
+
 				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
-						&& request.mtuSize >= MINIMUM_TRANSFER_UNIT) {
+						&& request.mtuSize >= MINIMUM_TRANSFER_UNIT && request.mtuSize <= this.maxTransferUnit) {
 					if (this.getConnectionCount() >= this.maxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
 						handler.removeSession(session, "Server is full");

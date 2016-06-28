@@ -46,8 +46,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
@@ -276,27 +276,6 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 	 */
 	public static boolean isServerCompatible(String address, int port) {
 		return isServerCompatible(address, port, 1000L);
-	}
-
-	/**
-	 * Return's the machines current subnet mask
-	 * 
-	 * @return InetAddress
-	 */
-	public static InetAddress getSubnetMask() {
-		try {
-			NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-			int prefix = networkInterface.getInterfaceAddresses().get(1).getNetworkPrefixLength();
-			int shiftby = (1 << 31);
-			for (int i = prefix - 1; i > 0; i--) {
-				shiftby = (shiftby >> 1);
-			}
-			String maskString = Integer.toString((shiftby >> 24) & 255) + "." + Integer.toString((shiftby >> 16) & 255)
-					+ "." + Integer.toString((shiftby >> 8) & 255) + "." + Integer.toString(shiftby & 255);
-			return InetAddress.getByName(maskString);
-		} catch (Exception e) {
-			return null;
-		}
 	}
 
 	private static class BootstrapHandler extends SimpleChannelInboundHandler<DatagramPacket> {

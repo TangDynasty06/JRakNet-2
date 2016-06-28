@@ -28,48 +28,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.exception.packet;
-
-import net.marfgamer.raknet.protocol.identifier.MessageIdentifiersH;
-import net.marfgamer.raknet.session.RakNetSession;
+package net.marfgamer.raknet.client;
 
 /**
- * Thrown when a handler is expecting a packet and receives something else
- * instead
+ * Represents how the client wants to discover servers
  *
  * @author Trent Summerlin
  */
-public class UnexpectedPacketException extends RakNetPacketException {
+public enum DiscoverMode {
 
-	private static final long serialVersionUID = -3793043367215871424L;
+	/**
+	 * This option will cause the client to broadcast
+	 * <code>ID_UNCONNECTED_PING</code>, enabling it to discover all servers
+	 * found on the network
+	 */
+	ALL_CONNECTIONS,
 
-	private final int requiredId;
-
-	public UnexpectedPacketException(RakNetSession session, int requiredId, int retrievedId) {
-		super(session,
-				"Packet must be " + MessageIdentifiersH.getPacketName(requiredId) + " but instead got a "
-						+ (MessageIdentifiersH.getPacketName(retrievedId) != null
-								? MessageIdentifiersH.getPacketName(retrievedId) : "unknown packet")
-						+ "!");
-		this.requiredId = requiredId;
-	}
-
-	public UnexpectedPacketException(RakNetSession session, int requiredId) {
-		super(session, "Packet must be 0x" + Integer.toHexString(requiredId).toUpperCase() + "!");
-		this.requiredId = requiredId;
-	}
-
-	public int getRequiredId() {
-		return this.requiredId;
-	}
-
-	public String getRequiredString() {
-		return ("0x" + Integer.toHexString(requiredId).toUpperCase());
-	}
-
-	@Override
-	public String getLocalizedMessage() {
-		return "Wrong packet ID!";
-	}
+	/**
+	 * This option will cause the client to broadcast
+	 * <code>ID_UNCONNECTED_PING_OPEN_CONNECTIONS</code>, enabling it to
+	 * discover only servers that are not full
+	 */
+	OPEN_CONNECTIONS;
 
 }

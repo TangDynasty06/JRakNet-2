@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 
 /**
  * Used to read and write data for packets with ease

@@ -89,7 +89,7 @@ public class SplitPacketTest implements RakNet {
 
 	private static RakNetClient createClient() throws RakNetException {
 		// Create client and add hooks
-		RakNetClient client = new RakNetClient();
+		RakNetClient client = new RakNetClient(-1, MINIMUM_TRANSFER_UNIT);
 
 		// Server connected
 		client.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {
@@ -99,7 +99,7 @@ public class SplitPacketTest implements RakNet {
 			// Send huge packet of doom
 			Packet packet = new Packet(0xFF);
 			for (int i = 0; i < EncapsulatedPacket.getMaxPacketSize(Reliability.RELIABLE_ORDERED, MINIMUM_TRANSFER_UNIT)
-					- 1; i++) {
+					- 1; i++) { // Subtract 1 for packet ID (0xFF)
 				packet.putUByte(0x00);
 			}
 			System.out.println("Client: Sending giant packet... (" + packet.size() + " bytes)");

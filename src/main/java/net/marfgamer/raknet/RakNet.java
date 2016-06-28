@@ -42,6 +42,7 @@ public interface RakNet {
 	public static final int CLIENT_NETWORK_PROTOCOL = 8;
 
 	// Transfer size
+	public static final int TRANSFER_UNIT_DECREASE = 3;
 	public static final int MINIMUM_TRANSFER_UNIT = 530;
 	public static final int MAX_PACKETS_PER_SECOND = 512;
 	public static final int MAX_PACKETS_PER_QUEUE = 512;

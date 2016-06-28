@@ -31,6 +31,7 @@
 package net.marfgamer.raknet.protocol.raknet;
 
 import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.identifier.MessageIdentifiersH;
 
 public class UnconnectedPing extends Packet {
 
@@ -44,6 +45,15 @@ public class UnconnectedPing extends Packet {
 
 	public UnconnectedPing() {
 		super(ID_UNCONNECTED_PING);
+	}
+
+	protected UnconnectedPing(short idUnconnectedPingOpenConnections) {
+		super(idUnconnectedPingOpenConnections);
+		if (idUnconnectedPingOpenConnections != ID_UNCONNECTED_PING_OPEN_CONNECTIONS) {
+			throw new IllegalArgumentException(
+					"Packet ID must be " + MessageIdentifiersH.getPacketName(ID_UNCONNECTED_PING_OPEN_CONNECTIONS)
+							+ "! Instead got " + MessageIdentifiersH.getPacketName(idUnconnectedPingOpenConnections));
+		}
 	}
 
 	@Override

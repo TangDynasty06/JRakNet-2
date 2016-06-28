@@ -34,12 +34,14 @@ import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.marfgamer.raknet.client.DiscoverMode;
 import net.marfgamer.raknet.client.DiscoveredRakNetServer;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.MessageIdentifiers;
+import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
+import net.marfgamer.raknet.protocol.raknet.UnconnectedPingOpenConnections;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPong;
 
 /**
@@ -93,7 +95,8 @@ public class ServerAdvertiseTask implements TaskRunnable, MessageIdentifiers {
 	@Override
 	public void run() {
 		// Broadcast ping to network
-		UnconnectedPing ping = new UnconnectedPing();
+		UnconnectedPing ping = (client.getDiscoverMode() == DiscoverMode.ALL_CONNECTIONS ? new UnconnectedPing()
+				: new UnconnectedPingOpenConnections());
 		ping.pingId = System.currentTimeMillis();
 		ping.clientId = client.getClientId();
 		ping.encode();

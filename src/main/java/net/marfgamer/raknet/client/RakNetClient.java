@@ -54,9 +54,9 @@ import net.marfgamer.raknet.exception.client.ServerFullException;
 import net.marfgamer.raknet.exception.client.ServerOfflineException;
 import net.marfgamer.raknet.exception.packet.PacketOverloadException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.Packet;
 import net.marfgamer.raknet.protocol.Reliability;
+import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
@@ -107,12 +107,14 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	// Session info
 	private volatile ServerSession session;
 	private volatile SessionState state = SessionState.DISCONNECTED;
+	private volatile DiscoverMode discoverMode = DiscoverMode.ALL_CONNECTIONS;
 	private volatile ArrayList<RakNetException> connectionErrors = new ArrayList<RakNetException>();
 
 	public RakNetClient(int discoverPort, int maxTransferUnit, long serverTimeout) {
 		// Set client options
 		this.discoverPort = discoverPort;
-		this.maxTransferUnit = maxTransferUnit;
+		this.maxTransferUnit = (maxTransferUnit < RakNetUtils.getNetworkInterfaceMTU() ? maxTransferUnit
+				: RakNetUtils.getNetworkInterfaceMTU());
 		this.serverTimeout = serverTimeout;
 
 		// Set client info
@@ -257,6 +259,26 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	}
 
 	/**
+	 * Returns the discover mode which determines how the client discovers
+	 * servers on the local network
+	 * 
+	 * @return DiscoverMode
+	 */
+	public DiscoverMode getDiscoverMode() {
+		return this.discoverMode;
+	}
+
+	/**
+	 * Sets the discover mode which determines how the client discovers servers
+	 * on the local network
+	 * 
+	 * @param discoverMode
+	 */
+	public void setDiscoverMode(DiscoverMode discoverMode) {
+		this.discoverMode = discoverMode;
+	}
+
+	/**
 	 * Sets the HookRunnable for the specified Hook
 	 * 
 	 * @param hook
@@ -343,17 +365,19 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionReplyTwo ucrt = new UnconnectedConnectionReplyTwo(packet);
 				ucrt.decode();
 
-				if (ucrt.magic == true && this.isServer(sender)) {
-					System.out.println(ucrt.clientAddress + " - " + ucrt.mtuSize);
-					session.setMaximumTransferUnit(ucrt.mtuSize);
-
+				if (ucrt.magic == true && this.isServer(sender) && ucrt.mtuSize == this.maxTransferUnit) {
 					ConnectedConnectRequest ccr = new ConnectedConnectRequest();
 					ccr.clientId = this.clientId;
 					ccr.timestamp = this.timestamp;
 					ccr.encode();
 
+					session.setMaximumTransferUnit((short) this.maxTransferUnit);
 					session.sendPacket(Reliability.RELIABLE, ccr);
 					this.setState(SessionState.HANDSHAKING);
+				} else if (ucrt.mtuSize != this.maxTransferUnit) {
+					throw new RakNetException("Server provided incorrect MTU!"); // TODO:
+																					// Unique
+																					// exception
 				}
 			}
 		} else if (pid == ID_UNCONNECTED_SERVER_FULL) {
@@ -501,7 +525,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 		if (channel != null) {
 			if (channel.isOpen() && this.discoverPort > 0) {
 				channel.writeAndFlush(new DatagramPacket(packet.buffer(),
-						new InetSocketAddress(RakNetUtils.getSubnetMask(), this.discoverPort)));
+						new InetSocketAddress("255.255.255.255", this.discoverPort)));
 				return true;
 			}
 		}
@@ -558,6 +582,10 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 		this.session = new ServerSession(channel, address, this);
 		this.setState(SessionState.CONNECTING_1);
 
+		// Decrease counter
+		int decreaseCount = 0;
+		boolean didMinimum = false;
+
 		// Request connection until a condition fails to meet
 		try {
 			while (!handler.foundMtu && session != null && connectionErrors.isEmpty()) {
@@ -565,15 +593,26 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 					throw new ServerOfflineException(this);
 				}
 
+				// Send request
 				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne();
 				request.mtuSize = (short) mtu;
 				request.protocol = CLIENT_NETWORK_PROTOCOL;
 				request.encode();
 
+				// Update bootstrap options
 				bootstrap.option(ChannelOption.SO_SNDBUF, (int) request.mtuSize);
 				session.sendRaw(request);
 
-				mtu -= 100L;
+				// Decrease MTU
+				decreaseCount++;
+				if (decreaseCount >= TRANSFER_UNIT_DECREASE) {
+					mtu -= 300L;
+					decreaseCount = 0;
+					if (mtu < MINIMUM_TRANSFER_UNIT && !didMinimum) {
+						mtu = MINIMUM_TRANSFER_UNIT;
+						didMinimum = true;
+					}
+				}
 				Thread.sleep(500L);
 			}
 		} catch (Exception e) {

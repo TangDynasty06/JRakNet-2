@@ -28,11 +28,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.  
  */
-package net.marfgamer.raknet.protocol;
+package net.marfgamer.raknet.protocol.identifier;
 
-import java.lang.reflect.Field;
-
-import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.protocol.unknown.Packet04;
 import net.marfgamer.raknet.protocol.unknown.Packet1A;
 
@@ -50,6 +47,7 @@ public interface MessageIdentifiers {
 
 	// Status packets
 	public static final short ID_UNCONNECTED_PING = 0x01;
+	public static final short ID_UNCONNECTED_PING_OPEN_CONNECTIONS = 0x02;
 	public static final short ID_UNCONNECTED_PONG = 0x1C;
 
 	// Connection packets
@@ -95,29 +93,5 @@ public interface MessageIdentifiers {
 	// Mysterious packets
 	public static final Packet04 ID_UNKNOWN_PACKET_04 = new Packet04();
 	public static final Packet1A ID_UNKNOWN_PACKET_1A = new Packet1A();
-
-	/**
-	 * Used to get a packet name by it's ID
-	 * 
-	 * @param id
-	 * @return String
-	 */
-	public static String getPacketName(int id) {
-		try {
-			Class<?> rakClass = RakNet.class;
-			for (Field field : rakClass.getFields()) {
-				String name = field.getName();
-				if (field.getType().equals(short.class) && name.startsWith("ID")) {
-					short fid = field.getShort(name);
-					if (fid == id) {
-						return name;
-					}
-				}
-			}
-			return "ID_UNKNOWN";
-		} catch (Exception e) {
-			return null;
-		}
-	}
 
 }
