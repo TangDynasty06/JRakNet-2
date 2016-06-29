@@ -83,7 +83,7 @@ public class RakNetServerTest {
 		// Server has been pinged
 		server.addHook(Hook.SERVER_PING, (Object[] parameters) -> {
 			parameters[1] = parameters[1].toString().replace("_IDENTIFIER_", identifier)
-					.replace("_ONLINE_", Integer.toString(server.getConnectionCount()))
+					.replace("_ONLINE_", Integer.toString(server.getConnections()))
 					.replace("_MAX_", Integer.toString(server.getMaxConnections()))
 					.replace("_SERVERID_", Long.toString(server.getServerId()));
 		});

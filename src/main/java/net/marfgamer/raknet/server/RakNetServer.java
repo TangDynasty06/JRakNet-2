@@ -352,7 +352,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	 * 
 	 * @return int
 	 */
-	public int getConnectionCount() {
+	public int getConnections() {
 		int connections = 0;
 		for (ClientSession session : handler.getSessions()) {
 			if (session.getState().getOrder() >= SessionState.CONNECTING_1.getOrder()) {
@@ -372,7 +372,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	protected void handleRaw(Message packet, ClientSession session) {
 		short pid = packet.getId();
 		if (pid == ID_UNCONNECTED_PING || pid == ID_UNCONNECTED_PING_OPEN_CONNECTIONS) {
-			boolean openConnections = this.getConnectionCount() < this.getMaxConnections();
+			boolean openConnections = this.getConnections() < this.getMaxConnections();
 			UnconnectedPing ping = new UnconnectedPing(packet);
 			ping.decode();
 
@@ -396,7 +396,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 
 				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
 						&& request.mtuSize >= MINIMUM_TRANSFER_UNIT && request.mtuSize <= this.maxTransferUnit) {
-					if (this.getConnectionCount() >= this.maxConnections) {
+					if (this.getConnections() >= this.maxConnections) {
 						session.sendRaw(new UnconnectedServerFull());
 						handler.removeSession(session, "Server is full");
 					} else {
