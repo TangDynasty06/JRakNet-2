@@ -107,11 +107,6 @@ public class EncapsulatedPacket implements Bytable {
 		return (maxTransferUnit - CustomPacket.HEADER_LENGTH
 				- EncapsulatedPacket.getHeaderLength(reliability, true)) * RakNet.MAX_SPLIT_COUNT;
 	}
-	
-	public static void main(String[] args) {
-		System.out.println(getHeaderLength(Reliability.RELIABLE, false));
-		System.out.println(getHeaderLength(Reliability.UNRELIABLE, false));
-	}
 
 	// Binary flag data
 	public static final byte FLAG_RELIABILITY = (byte) 0xF4;
