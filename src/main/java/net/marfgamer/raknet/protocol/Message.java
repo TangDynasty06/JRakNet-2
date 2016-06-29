@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.marfgamer.raknet.exception.InvalidHeaderException;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 
 /**
@@ -55,8 +56,8 @@ public class Message implements MessageIdentifiers {
 		this.putUByte(id);
 	}
 
-	public Message(int id, int identifier) {
-		this(identifier);
+	public Message(int id, int header) {
+		this(header);
 		this.putUByte(id);
 	}
 
@@ -65,13 +66,46 @@ public class Message implements MessageIdentifiers {
 		this.id = this.getUByte();
 	}
 
+	public Message(ByteBuf buffer, int header) {
+		this.buffer = buffer;
+		int headerCheck = this.getUByte();
+		this.id = this.getUByte();
+
+		// Check header
+		if (headerCheck != header) {
+			throw new InvalidHeaderException(header, headerCheck);
+		}
+	}
+
 	public Message(byte[] data) {
 		this(Unpooled.copiedBuffer(data));
+	}
+
+	public Message(byte[] data, int header) {
+		this.buffer = Unpooled.copiedBuffer(data);
+		int headerCheck = this.getUByte();
+		this.id = this.getUByte();
+
+		// Check header
+		if (headerCheck != header) {
+			throw new InvalidHeaderException(header, headerCheck);
+		}
 	}
 
 	public Message(Message packet) {
 		this.buffer = packet.buffer;
 		this.id = packet.id;
+	}
+
+	public Message(Message packet, int header) {
+		this.buffer = packet.buffer;
+		int headerCheck = packet.id;
+		this.id = this.getUByte();
+
+		// Check header
+		if (headerCheck != header) {
+			throw new InvalidHeaderException(header, headerCheck);
+		}
 	}
 
 	public final short getId() {
