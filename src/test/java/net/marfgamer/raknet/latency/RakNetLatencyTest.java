@@ -43,7 +43,7 @@ public class RakNetLatencyTest {
 
 	public static void main(String[] args) throws InterruptedException {
 		RakNetLatencyFrame frame = new RakNetLatencyFrame();
-		RakNetServer server = new RakNetServer(19132, 10,
+		RakNetServer server = new RakNetServer(19132, 5,
 				"MCPE;A RakNet Latency Test;80;0.15.0;0;10;" + RakNetUtils.getRakNetID());
 		server.startThreaded();
 		frame.setVisible(true);
