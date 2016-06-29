@@ -150,6 +150,9 @@ public enum Hook {
 	 * 
 	 * Parameter 0: The caught exception (Throwable)<br>
 	 * Parameter 1: The address that caused the exception (InetSocketAddress)
+	 * <br>
+	 * Parameter 2: The session that caused the exception if it could be found
+	 * (RakNetSession)
 	 */
 	HANDLER_EXCEPTION_OCCURED;
 

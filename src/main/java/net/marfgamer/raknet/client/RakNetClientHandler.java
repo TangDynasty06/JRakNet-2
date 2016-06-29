@@ -136,6 +136,8 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		// Disconnect only if it's the server
 		ServerSession session = client.getSession();
+		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender, session);
+
 		if (session != null) {
 			if (session.isServer(lastSender)) {
 				client.disconnect(cause);
@@ -144,7 +146,6 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 		}
 
 		// cause.printStackTrace(); /* <- Uncomment for debug */
-		client.executeHook(Hook.HANDLER_EXCEPTION_OCCURED, cause, lastSender);
 	}
 
 }

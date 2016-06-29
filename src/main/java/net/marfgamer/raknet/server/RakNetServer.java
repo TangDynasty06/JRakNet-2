@@ -46,7 +46,9 @@ import net.marfgamer.raknet.exception.MaximumTransferUnitUnderflowException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
 import net.marfgamer.raknet.protocol.Message;
+import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
+import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyTwo;
@@ -286,6 +288,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	 * @param reason
 	 */
 	public void kickClient(ClientSession session, String reason) {
+		session.sendPacket(Reliability.UNRELIABLE, new ConnectedCloseConnection());
 		handler.removeSession(session, reason);
 	}
 
