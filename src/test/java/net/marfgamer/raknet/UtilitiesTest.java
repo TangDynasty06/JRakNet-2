@@ -49,8 +49,8 @@ public class UtilitiesTest {
 		System.out.println("System RakNet ID: " + getRakNetID());
 		System.out.println("Network Interface MTU: " + getNetworkInterfaceMTU());
 		System.out.println("Server identifier: "
-				+ removeColors(getServerIdentifier(SERVER_ADDRESS, SERVER_PORT)).replace(";", ", "));
-		System.out.println("Server compatible?: " + isServerCompatible(SERVER_ADDRESS, SERVER_PORT));
+				+ removeColors(getServerIdentifier(SERVER_ADDRESS, SERVER_PORT)).replace(";", " - "));
+		System.out.println("Server compatible?: " + (isServerCompatible(SERVER_ADDRESS, SERVER_PORT) ? "Yes" : "No"));
 	}
 
 	/**

@@ -36,9 +36,10 @@ package net.marfgamer.raknet.protocol.identifier;
  * simulates that and can print out all the ID's or get an ID by it's name. <br>
  * <br>
  * Note: Do not <b><i><u>add or delete any values here</b></i></u> as it will
- * break the system entirely! Only import from the source code on GitHub
+ * break the system entirely! Only import from the source code from GitHub
  * 
- * @see https://github.com/OculusVR/RakNet/blob/master/Source/MessageIdentifiers.h
+ * @see https://github.com/OculusVR/RakNet/blob/master/Source/MessageIdentifiers
+ *      .h
  * @author Trent Summerlin
  */
 public enum MessageIdentifiersH {
@@ -174,7 +175,7 @@ public enum MessageIdentifiersH {
 	 * @param name
 	 * @return int
 	 */
-	public static int getPacketId(String name) {
+	public static short getPacketId(String name) {
 		MessageIdentifiersH[] packets = MessageIdentifiersH.values();
 		for (int i = 0; i < packets.length; i++) {
 			if (packets[i].name().equalsIgnoreCase(name)) {
