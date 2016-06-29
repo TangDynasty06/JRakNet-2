@@ -48,6 +48,9 @@ import net.marfgamer.raknet.session.RakNetSession;
  */
 public class SplitPacketTest implements RakNet {
 
+	private static final short SPLIT_START_ID = 0xFE;
+	private static final short SPLIT_END_ID = 0xFF;
+
 	public static void main(String[] args) throws RakNetException {
 		System.out.println("Creating server...");
 		createServer();
@@ -77,8 +80,35 @@ public class SplitPacketTest implements RakNet {
 		server.addHook(Hook.PACKET_RECEIVED, (Object[] parameters) -> {
 			RakNetSession session = (RakNetSession) parameters[0];
 			EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
+			Packet packet = encapsulated.convertPayload();
 			System.out.println("Server: Received packet of " + encapsulated.payload.length + " bytes from "
-					+ session.getAddress());
+					+ session.getAddress() + ", checking data...");
+
+			// Check packet ID
+			if (packet.getId() != SPLIT_START_ID) {
+				System.err.println("Packet header is " + packet.getId() + " when it should be " + SPLIT_START_ID + "!");
+				System.exit(1);
+			}
+
+			// Check shorts
+			int lastShort = -1;
+			while (packet.remaining() >= 2) {
+				int currentShort = packet.getUShort();
+				if (currentShort - lastShort != 1) {
+					System.err.println("Short data was not split correctly!");
+					System.exit(1);
+				} else {
+					lastShort = currentShort;
+				}
+			}
+
+			// Check ending byte
+			if (packet.getUByte() != SPLIT_END_ID) {
+				System.err.println("Packet footer is " + packet.getId() + " when it should be " + SPLIT_START_ID + "!");
+				System.exit(1);
+			}
+
+			System.out.println("Split packet test passed! ｡◕‿‿◕｡");
 			System.exit(0);
 		});
 
@@ -96,11 +126,17 @@ public class SplitPacketTest implements RakNet {
 			System.out.println("Client: Connected to server with MTU " + session.getMaximumTransferUnit());
 
 			// Send huge packet of doom
-			Packet packet = new Packet(0xFF);
-			for (int i = 0; i < EncapsulatedPacket.getMaxPacketSize(Reliability.RELIABLE_ORDERED, MINIMUM_TRANSFER_UNIT)
-					- 1; i++) { // Subtract 1 for packet ID (0xFF)
-				packet.putUByte(0x00);
+			Packet packet = new Packet(SPLIT_START_ID);
+			for (int i = 0; i < (EncapsulatedPacket.getMaxPacketSize(Reliability.RELIABLE_ORDERED,
+					MINIMUM_TRANSFER_UNIT) - 2) / 2; i++) { // Subtract 1 for
+															// packet ID (0xFE)
+															// and 1 for end
+															// packet byte
+															// (0xFF)
+				packet.putUShort(i);
 			}
+			packet.putUByte(SPLIT_END_ID);
+
 			System.out.println("Client: Sending giant packet... (" + packet.size() + " bytes)");
 			session.sendPacket(Reliability.RELIABLE_ORDERED, packet);
 		});
