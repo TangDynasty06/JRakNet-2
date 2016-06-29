@@ -35,7 +35,6 @@ import java.net.InetSocketAddress;
 import io.netty.channel.Channel;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.protocol.Packet;
-import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
 import net.marfgamer.raknet.protocol.raknet.ConnectedConnectRequest;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
@@ -116,8 +115,7 @@ public class ClientSession extends RakNetSession {
 				scha.serverTimestamp = server.getServerTimestamp();
 				scha.encode();
 				
-				this.sendPacket(Reliability.RELIABLE, new Packet(0x11));
-				//this.sendPacket(RELIABLE, scha);
+				this.sendPacket(RELIABLE, scha);
 				this.setState(SessionState.HANDSHAKING);
 			}
 		} else if (pid == ID_CONNECTED_CLIENT_HANDSHAKE) {
