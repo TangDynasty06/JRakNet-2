@@ -67,9 +67,9 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	private final InetSocketAddress address;
 
 	// Session data
-	private long sessionId;
-	private short maximumTransferUnit;
-	private long latency;
+	private long sessionId = -1;
+	private short maximumTransferUnit = MINIMUM_TRANSFER_UNIT;
+	private long latency = -1;
 
 	// Packet sequencing data
 	private int sendSeqNumber;

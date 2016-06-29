@@ -394,8 +394,6 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 				UnconnectedConnectionRequestOne request = new UnconnectedConnectionRequestOne(packet);
 				request.decode();
 
-				System.out.println(request.mtuSize);
-
 				if (request.magic == true && request.protocol == SERVER_NETWORK_PROTOCOL
 						&& request.mtuSize >= MINIMUM_TRANSFER_UNIT && request.mtuSize <= this.maxTransferUnit) {
 					if (this.getConnectionCount() >= this.maxConnections) {

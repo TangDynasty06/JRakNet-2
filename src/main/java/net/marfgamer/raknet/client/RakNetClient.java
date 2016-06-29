@@ -374,14 +374,8 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 					ccr.timestamp = this.timestamp;
 					ccr.encode();
 
-					// Favor lower MTU
-					if (this.maxTransferUnit < ucrt.mtuSize) {
-						session.setMaximumTransferUnit((short) this.maxTransferUnit);
-					} else {
-						session.setMaximumTransferUnit((short) ucrt.mtuSize);
-					}
-
 					session.sendPacket(Reliability.RELIABLE, ccr);
+					session.setMaximumTransferUnit(ucrt.mtuSize);
 					this.setState(SessionState.HANDSHAKING);
 				} else if (ucrt.mtuSize != this.maxTransferUnit) {
 					throw new MaximumTransferUnitIncorrectException(this.maxTransferUnit, ucrt.mtuSize);
