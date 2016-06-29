@@ -30,9 +30,9 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class ConnectedCloseConnection extends Packet {
+public class ConnectedCloseConnection extends Message {
 	
 	public ConnectedCloseConnection() {
 		super(ID_CONNECTED_CLOSE_CONNECTION);

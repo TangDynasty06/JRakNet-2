@@ -46,7 +46,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionRequestOne;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedPing;
@@ -111,7 +111,7 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 	 * @param timeout
 	 * @return Packet
 	 */
-	public static Packet createBootstrapAndSend(String address, int port, Packet send, long timeout) {
+	public static Message createBootstrapAndSend(String address, int port, Message send, long timeout) {
 		EventLoopGroup group = new NioEventLoopGroup();
 		try {
 			// Create bootstrap, bind and send
@@ -150,7 +150,7 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 	 * @param timeout
 	 * @return Packet
 	 */
-	public static Packet createBootstrapAndSend(String address, int port, Packet packet) {
+	public static Message createBootstrapAndSend(String address, int port, Message packet) {
 		return createBootstrapAndSend(address, port, packet, 1000L);
 	}
 
@@ -167,7 +167,7 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 		ping.clientId = raknetId;
 		ping.encode();
 
-		Packet sprr = createBootstrapAndSend(address, port, ping, timeout);
+		Message sprr = createBootstrapAndSend(address, port, ping, timeout);
 		if (sprr != null) {
 			if (sprr.getId() == ID_UNCONNECTED_PONG) {
 				UnconnectedPong pong = new UnconnectedPong(sprr);
@@ -205,7 +205,7 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 		request.protocol = CLIENT_NETWORK_PROTOCOL;
 		request.encode();
 
-		Packet response = createBootstrapAndSend(address, port, request, timeout);
+		Message response = createBootstrapAndSend(address, port, request, timeout);
 		return (response != null);
 	}
 
@@ -234,7 +234,7 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 		request.protocol = (short) protocol;
 		request.encode();
 
-		Packet response = createBootstrapAndSend(address, port, request, timeout);
+		Message response = createBootstrapAndSend(address, port, request, timeout);
 		if (response != null) {
 			return (response.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1
 					&& response.getId() == ID_UNCONNECTED_CONNECTION_REPLY_1);
@@ -280,11 +280,11 @@ public abstract class RakNetUtils implements RakNet, MessageIdentifiers {
 
 	private static class BootstrapHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
-		public volatile Packet packet;
+		public volatile Message packet;
 
 		@Override
 		protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-			this.packet = new Packet(msg.content().retain());
+			this.packet = new Message(msg.content().retain());
 		}
 
 		@Override

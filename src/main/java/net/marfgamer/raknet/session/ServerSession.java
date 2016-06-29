@@ -35,7 +35,7 @@ import java.net.InetSocketAddress;
 import io.netty.channel.Channel;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.raknet.ConnectedClientHandshake;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPing;
@@ -70,7 +70,7 @@ public class ServerSession extends RakNetSession {
 
 	@Override
 	public void handleEncapsulated(EncapsulatedPacket encapsulated) {
-		Packet packet = encapsulated.convertPayload();
+		Message packet = encapsulated.convertPayload();
 		short pid = packet.getId();
 
 		if (pid == ID_CONNECTED_PING) {

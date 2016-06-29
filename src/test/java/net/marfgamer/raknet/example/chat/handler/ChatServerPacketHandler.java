@@ -35,7 +35,7 @@ import net.marfgamer.raknet.example.chat.protocol.Info;
 import net.marfgamer.raknet.example.chat.protocol.KickPacket;
 import net.marfgamer.raknet.example.chat.protocol.MessagePacket;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 
 /**
@@ -48,7 +48,7 @@ public class ChatServerPacketHandler implements HookRunnable, Info {
 	@Override
 	public void run(Object... parameters) {
 		EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-		Packet packet = encapsulated.convertPayload();
+		Message packet = encapsulated.convertPayload();
 
 		if (packet.getId() == ID_IDENTIFIER) {
 			try {

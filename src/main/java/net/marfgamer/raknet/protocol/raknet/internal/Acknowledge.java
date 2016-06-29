@@ -35,13 +35,13 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class Acknowledge extends Packet implements Bytable {
+public class Acknowledge extends Message implements Bytable {
 
 	public int[] packets;
 
-	public Acknowledge(Packet packet) {
+	public Acknowledge(Message packet) {
 		super(packet);
 	}
 

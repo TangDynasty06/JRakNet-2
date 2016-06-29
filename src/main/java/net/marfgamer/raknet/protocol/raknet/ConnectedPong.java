@@ -30,14 +30,14 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class ConnectedPong extends Packet {
+public class ConnectedPong extends Message {
 
 	public long pingTime;
 	public long pongTime;
 
-	public ConnectedPong(Packet packet) {
+	public ConnectedPong(Message packet) {
 		super(packet);
 	}
 

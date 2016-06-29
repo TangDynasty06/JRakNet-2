@@ -31,13 +31,13 @@
 package net.marfgamer.raknet.example.chat.protocol;
 
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
 public class MessagePacket extends ChatPacket {
 
 	public String message;
 
-	public MessagePacket(Packet packet) throws UnexpectedPacketException {
+	public MessagePacket(Message packet) throws UnexpectedPacketException {
 		super(packet);
 	}
 

@@ -34,7 +34,7 @@ import java.util.ArrayList;
 
 import io.netty.buffer.ByteBuf;
 import net.marfgamer.raknet.RakNet;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.utils.ArrayUtils;
 
@@ -178,8 +178,8 @@ public class EncapsulatedPacket implements Bytable {
 		buffer.readBytes(payload);
 	}
 
-	public Packet convertPayload() {
-		return new Packet(payload);
+	public Message convertPayload() {
+		return new Message(payload);
 	}
 
 }

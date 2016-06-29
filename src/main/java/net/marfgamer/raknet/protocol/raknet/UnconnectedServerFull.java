@@ -30,11 +30,11 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class UnconnectedServerFull extends Packet {
+public class UnconnectedServerFull extends Message {
 
-	public UnconnectedServerFull(Packet packet) {
+	public UnconnectedServerFull(Message packet) {
 		super(packet);
 	}
 

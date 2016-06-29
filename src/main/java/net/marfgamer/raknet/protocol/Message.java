@@ -39,36 +39,37 @@ import io.netty.buffer.Unpooled;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 
 /**
- * Used to read and write data for packets with ease
+ * Used to read and write data for RakNet packets with ease which all begin with
+ * an unsigned byte for their ID
  *
  * @author Trent Summerlin
  */
-public class Packet implements MessageIdentifiers {
+public class Message implements MessageIdentifiers {
 
 	protected final ByteBuf buffer;
 	protected final short id;
 
-	public Packet(int id) {
+	public Message(int id) {
 		this.buffer = Unpooled.buffer();
 		this.id = (short) id;
 		this.putUByte(id);
 	}
 
-	public Packet(int id, int identifier) {
+	public Message(int id, int identifier) {
 		this(identifier);
 		this.putUByte(id);
 	}
 
-	public Packet(ByteBuf buffer) {
+	public Message(ByteBuf buffer) {
 		this.buffer = buffer;
 		this.id = this.getUByte();
 	}
 
-	public Packet(byte[] data) {
+	public Message(byte[] data) {
 		this(Unpooled.copiedBuffer(data));
 	}
 
-	public Packet(Packet packet) {
+	public Message(Message packet) {
 		this.buffer = packet.buffer;
 		this.id = packet.id;
 	}
@@ -163,26 +164,26 @@ public class Packet implements MessageIdentifiers {
 		}
 	}
 
-	public Packet put(byte[] data) {
+	public Message put(byte[] data) {
 		for (int i = 0; i < data.length; i++) {
 			buffer.writeByte(data[i]);
 		}
 		return this;
 	}
 
-	public Packet pad(int length) {
+	public Message pad(int length) {
 		for (int i = 0; i < length; i++) {
 			buffer.writeByte(0x00);
 		}
 		return this;
 	}
 
-	public Packet putByte(int b) {
+	public Message putByte(int b) {
 		buffer.writeByte((byte) b);
 		return this;
 	}
 
-	public Packet putUByte(int b) {
+	public Message putUByte(int b) {
 		buffer.writeByte(((byte) b) & 0xFF);
 		return this;
 	}
@@ -191,49 +192,49 @@ public class Packet implements MessageIdentifiers {
 		this.putUByte(b ? 0x01 : 0x00);
 	}
 
-	public Packet putShort(int s) {
+	public Message putShort(int s) {
 		buffer.writeShort(s);
 		return this;
 	}
 
-	public Packet putUShort(int s) {
+	public Message putUShort(int s) {
 		buffer.writeShort(((short) s) & 0xFFFF);
 		return this;
 	}
 
-	public Packet putLTriad(int t) {
+	public Message putLTriad(int t) {
 		buffer.writeByte(t << 0);
 		buffer.writeByte(t << 8);
 		buffer.writeByte(t << 16);
 		return this;
 	}
 
-	public Packet putInt(int i) {
+	public Message putInt(int i) {
 		buffer.writeInt(i);
 		return this;
 	}
 
-	public Packet putLong(long l) {
+	public Message putLong(long l) {
 		buffer.writeLong(l);
 		return this;
 	}
 
-	public Packet putFloat(double f) {
+	public Message putFloat(double f) {
 		buffer.writeFloat((float) f);
 		return this;
 	}
 
-	public Packet putDouble(double d) {
+	public Message putDouble(double d) {
 		buffer.writeDouble(d);
 		return this;
 	}
 
-	public Packet putMagic() {
+	public Message putMagic() {
 		this.put(MAGIC);
 		return this;
 	}
 
-	public Packet putString(String s) {
+	public Message putString(String s) {
 		byte[] data = s.getBytes();
 		this.putUShort(data.length);
 		this.put(data);

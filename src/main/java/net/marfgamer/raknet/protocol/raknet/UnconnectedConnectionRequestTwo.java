@@ -32,16 +32,16 @@ package net.marfgamer.raknet.protocol.raknet;
 
 import java.net.InetSocketAddress;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class UnconnectedConnectionRequestTwo extends Packet {
+public class UnconnectedConnectionRequestTwo extends Message {
 
 	public boolean magic;
 	public InetSocketAddress clientAddress;
 	public short mtuSize;
 	public long clientId;
 
-	public UnconnectedConnectionRequestTwo(Packet packet) {
+	public UnconnectedConnectionRequestTwo(Message packet) {
 		super(packet);
 	}
 

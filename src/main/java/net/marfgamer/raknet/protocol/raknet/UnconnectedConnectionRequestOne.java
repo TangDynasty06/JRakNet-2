@@ -30,15 +30,15 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class UnconnectedConnectionRequestOne extends Packet {
+public class UnconnectedConnectionRequestOne extends Message {
 
 	public boolean magic;
 	public short protocol;
 	public short mtuSize;
 
-	public UnconnectedConnectionRequestOne(Packet packet) {
+	public UnconnectedConnectionRequestOne(Message packet) {
 		super(packet);
 	}
 

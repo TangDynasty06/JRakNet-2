@@ -39,7 +39,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.InvalidChannelException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
 import net.marfgamer.raknet.protocol.raknet.internal.CustomPacket;
@@ -88,7 +88,7 @@ public class RakNetClientHandler extends SimpleChannelInboundHandler<DatagramPac
 			InetSocketAddress sender = msg.sender();
 
 			// Get packet
-			Packet packet = new Packet(msg.content().retain());
+			Message packet = new Message(msg.content().retain());
 			short pid = packet.getId();
 
 			// Update client server info

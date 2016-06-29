@@ -30,14 +30,14 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class ConnectedConnectRequest extends Packet {
+public class ConnectedConnectRequest extends Message {
 
 	public long clientId;
 	public long timestamp;
 
-	public ConnectedConnectRequest(Packet packet) {
+	public ConnectedConnectRequest(Message packet) {
 		super(packet);
 	}
 

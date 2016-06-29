@@ -45,7 +45,7 @@ import net.marfgamer.raknet.event.HookRunnable;
 import net.marfgamer.raknet.exception.MaximumTransferUnitUnderflowException;
 import net.marfgamer.raknet.exception.RakNetException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.ConnectedPong;
 import net.marfgamer.raknet.protocol.raknet.UnconnectedConnectionReplyOne;
@@ -369,7 +369,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	 * @param packet
 	 * @param session
 	 */
-	protected void handleRaw(Packet packet, ClientSession session) {
+	protected void handleRaw(Message packet, ClientSession session) {
 		short pid = packet.getId();
 		if (pid == ID_UNCONNECTED_PING || pid == ID_UNCONNECTED_PING_OPEN_CONNECTIONS) {
 			boolean openConnections = this.getConnectionCount() < this.getMaxConnections();

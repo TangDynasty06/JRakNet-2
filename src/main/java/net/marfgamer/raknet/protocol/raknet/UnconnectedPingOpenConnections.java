@@ -30,11 +30,11 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
 public class UnconnectedPingOpenConnections extends UnconnectedPing {
 
-	public UnconnectedPingOpenConnections(Packet packet) {
+	public UnconnectedPingOpenConnections(Message packet) {
 		super(packet);
 	}
 

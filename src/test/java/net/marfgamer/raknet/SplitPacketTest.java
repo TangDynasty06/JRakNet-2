@@ -34,7 +34,7 @@ import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.client.RakNetClient;
 import net.marfgamer.raknet.event.Hook;
 import net.marfgamer.raknet.exception.RakNetException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.raknet.internal.EncapsulatedPacket;
 import net.marfgamer.raknet.server.RakNetServer;
@@ -80,7 +80,7 @@ public class SplitPacketTest implements RakNet {
 		server.addHook(Hook.PACKET_RECEIVED, (Object[] parameters) -> {
 			RakNetSession session = (RakNetSession) parameters[0];
 			EncapsulatedPacket encapsulated = (EncapsulatedPacket) parameters[1];
-			Packet packet = encapsulated.convertPayload();
+			Message packet = encapsulated.convertPayload();
 			System.out.println("Server: Received packet of " + encapsulated.payload.length + " bytes from "
 					+ session.getAddress() + ", checking data...");
 
@@ -126,7 +126,7 @@ public class SplitPacketTest implements RakNet {
 			System.out.println("Client: Connected to server with MTU " + session.getMaximumTransferUnit());
 
 			// Send huge packet of doom
-			Packet packet = new Packet(SPLIT_START_ID);
+			Message packet = new Message(SPLIT_START_ID);
 			for (int i = 0; i < (EncapsulatedPacket.getMaxPacketSize(Reliability.RELIABLE_ORDERED,
 					MINIMUM_TRANSFER_UNIT) - 2) / 2; i++) { // Subtract 1 for
 															// packet ID (0xFE)

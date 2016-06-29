@@ -29,15 +29,15 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class UnconnectedIncompatibleProtocol extends Packet {
+public class UnconnectedIncompatibleProtocol extends Message {
 
 	public short protocol;
 	public boolean magic;
 	public long serverId;
 
-	public UnconnectedIncompatibleProtocol(Packet packet) {
+	public UnconnectedIncompatibleProtocol(Message packet) {
 		super(packet);
 	}
 

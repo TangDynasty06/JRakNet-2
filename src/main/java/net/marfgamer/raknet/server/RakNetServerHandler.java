@@ -39,7 +39,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import net.marfgamer.raknet.RakNet;
 import net.marfgamer.raknet.event.Hook;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
@@ -193,7 +193,7 @@ public class RakNetServerHandler extends SimpleChannelInboundHandler<DatagramPac
 
 			// Get session
 			ClientSession session = sessions.get(address);
-			Packet packet = new Packet(msg.content().retain());
+			Message packet = new Message(msg.content().retain());
 			short pid = packet.getId();
 
 			// Make sure we haven't received too many packets too fast

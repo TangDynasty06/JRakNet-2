@@ -32,9 +32,9 @@ package net.marfgamer.raknet.protocol.raknet.internal;
 
 import java.util.ArrayList;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class CustomPacket extends Packet {
+public class CustomPacket extends Message {
 	
 	public static final int HEADER_LENGTH = 4;
 
@@ -44,7 +44,7 @@ public class CustomPacket extends Packet {
 	public int seqNumber;
 	public ArrayList<EncapsulatedPacket> packets;
 
-	public CustomPacket(Packet packet) {
+	public CustomPacket(Message packet) {
 		super(packet);
 		this.packets = new ArrayList<EncapsulatedPacket>();
 	}

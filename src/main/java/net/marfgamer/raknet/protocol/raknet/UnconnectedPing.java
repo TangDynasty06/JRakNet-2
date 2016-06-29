@@ -30,16 +30,16 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiersH;
 
-public class UnconnectedPing extends Packet {
+public class UnconnectedPing extends Message {
 
 	public long pingId;
 	public boolean magic;
 	public long clientId;
 
-	public UnconnectedPing(Packet packet) {
+	public UnconnectedPing(Message packet) {
 		super(packet);
 	}
 

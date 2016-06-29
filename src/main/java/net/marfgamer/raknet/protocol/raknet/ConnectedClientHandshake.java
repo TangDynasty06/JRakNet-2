@@ -32,15 +32,15 @@ package net.marfgamer.raknet.protocol.raknet;
 
 import java.net.InetSocketAddress;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class ConnectedClientHandshake extends Packet {
+public class ConnectedClientHandshake extends Message {
 
 	public InetSocketAddress clientAddress;
 	public long serverTimestamp;
 	public long timestamp;
 
-	public ConnectedClientHandshake(Packet packet) {
+	public ConnectedClientHandshake(Message packet) {
 		super(packet);
 	}
 

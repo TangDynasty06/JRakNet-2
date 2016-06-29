@@ -47,7 +47,7 @@ import net.marfgamer.raknet.exception.packet.PacketQueueOverloadException;
 import net.marfgamer.raknet.exception.packet.RecursiveSplitException;
 import net.marfgamer.raknet.exception.packet.SplitPacketQueueException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.internal.Acknowledge;
@@ -304,7 +304,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	 * @param packet
 	 * @param reliability
 	 */
-	public final void sendPacket(Reliability reliability, Packet packet) {
+	public final void sendPacket(Reliability reliability, Message packet) {
 		EncapsulatedPacket encapsulated = new EncapsulatedPacket();
 		encapsulated.reliability = reliability;
 		encapsulated.payload = packet.array();
@@ -316,7 +316,7 @@ public abstract class RakNetSession implements RakNet, MessageIdentifiers, Relia
 	 * 
 	 * @param packet
 	 */
-	public final void sendRaw(Packet packet) {
+	public final void sendRaw(Message packet) {
 		channel.writeAndFlush(new DatagramPacket(packet.buffer(), address));
 		this.lastSendTime = System.currentTimeMillis();
 	}

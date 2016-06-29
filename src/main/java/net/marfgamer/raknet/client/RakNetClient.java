@@ -55,7 +55,7 @@ import net.marfgamer.raknet.exception.client.ServerFullException;
 import net.marfgamer.raknet.exception.client.ServerOfflineException;
 import net.marfgamer.raknet.exception.packet.PacketOverloadException;
 import net.marfgamer.raknet.exception.packet.UnexpectedPacketException;
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 import net.marfgamer.raknet.protocol.Reliability;
 import net.marfgamer.raknet.protocol.identifier.MessageIdentifiers;
 import net.marfgamer.raknet.protocol.raknet.ConnectedCloseConnection;
@@ -337,7 +337,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * @param packet
 	 * @param sender
 	 */
-	protected void handleRaw(Packet packet, InetSocketAddress sender) throws RakNetException {
+	protected void handleRaw(Message packet, InetSocketAddress sender) throws RakNetException {
 		short pid = packet.getId();
 		if (pid == ID_UNCONNECTED_CONNECTION_REPLY_1) {
 			if (state == SessionState.CONNECTING_1) {
@@ -522,7 +522,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 	 * @param packet
 	 * @return boolean
 	 */
-	public boolean broadcastRaw(Packet packet) {
+	public boolean broadcastRaw(Message packet) {
 		if (channel != null) {
 			if (channel.isOpen() && this.discoverPort > 0) {
 				channel.writeAndFlush(new DatagramPacket(packet.buffer(),

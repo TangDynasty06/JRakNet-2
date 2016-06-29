@@ -30,11 +30,11 @@
  */
 package net.marfgamer.raknet.protocol.raknet;
 
-import net.marfgamer.raknet.protocol.Packet;
+import net.marfgamer.raknet.protocol.Message;
 
-public class UnconnectedConnectionBanned extends Packet {
+public class UnconnectedConnectionBanned extends Message {
 
-	public UnconnectedConnectionBanned(Packet packet) {
+	public UnconnectedConnectionBanned(Message packet) {
 		super(packet);
 	}
 
