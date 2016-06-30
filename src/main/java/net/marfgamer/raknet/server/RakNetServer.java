@@ -289,7 +289,7 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	 */
 	public void kickClient(ClientSession session, String reason) {
 		session.sendPacket(Reliability.UNRELIABLE, new ConnectedCloseConnection());
-		handler.removeSession(session, reason);
+		this.removeClient(session, reason);
 	}
 
 	/**
@@ -299,6 +299,17 @@ public class RakNetServer implements RakNet, MessageIdentifiers {
 	 */
 	public void kickClient(ClientSession session) {
 		this.kickClient(session, "Kicked from server");
+	}
+
+	/**
+	 * Removes the specified client from the server without sending a kick
+	 * packet
+	 * 
+	 * @param session
+	 * @param reason
+	 */
+	public void removeClient(ClientSession session, String reason) {
+		handler.removeSession(session, reason);
 	}
 
 	/**
