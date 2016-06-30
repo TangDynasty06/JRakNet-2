@@ -12,7 +12,7 @@ This library was meant to be used for Minecraft: Pocket Edition servers and clie
 
 ```java
 // Create server and add hooks
-RakNetServer server = new RakNetServer(19132m 10, "MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID());
+RakNetServer server = new RakNetServer(19132, 10, "MCPE;A RakNet Server;80;0.15.0;0;10;" + RakNetUtils.getRakNetID());
 
 // Client connected
 server.addHook(Hook.SESSION_CONNECTED, (Object[] parameters) -> {

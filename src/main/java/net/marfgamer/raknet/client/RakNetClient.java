@@ -541,6 +541,7 @@ public class RakNetClient implements RakNet, MessageIdentifiers {
 			this.unbindChannel();
 			bootstrap.option(ChannelOption.SO_RCVBUF, this.maxTransferUnit);
 			bootstrap.option(ChannelOption.SO_SNDBUF, this.maxTransferUnit);
+			bootstrap.option(ChannelOption.SO_BROADCAST, true);
 			this.channel = bootstrap.bind(0).sync().channel();
 			handler.setChannel(channel);
 		} catch (Exception e) {
