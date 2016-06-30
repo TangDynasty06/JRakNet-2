@@ -85,30 +85,35 @@ public class SplitPacketTest implements RakNet {
 					+ session.getAddress() + ", checking data...");
 
 			// Check packet ID
+			System.out.println("Server: Checking header byte...");
 			if (packet.getId() != SPLIT_START_ID) {
-				System.err.println("Packet header is " + packet.getId() + " when it should be " + SPLIT_START_ID + "!");
+				System.err.println(
+						"Server: Packet header is " + packet.getId() + " when it should be " + SPLIT_START_ID + "!");
 				System.exit(1);
 			}
 
 			// Check shorts
+			System.out.println("Server: Checking if data is sequenced correctly...");
 			int lastShort = -1;
 			while (packet.remaining() >= 2) {
 				int currentShort = packet.getUShort();
 				if (currentShort - lastShort != 1) {
-					System.err.println("Short data was not split correctly!");
+					System.err.println("Server: Short data was not split correctly!");
 					System.exit(1);
 				} else {
 					lastShort = currentShort;
 				}
 			}
 
-			// Check ending byte
+			// Check packet footer
+			System.out.println("Server: Checking footer byte...");
 			if (packet.getUByte() != SPLIT_END_ID) {
-				System.err.println("Packet footer is " + packet.getId() + " when it should be " + SPLIT_START_ID + "!");
+				System.err.println(
+						"Server: Packet footer is " + packet.getId() + " when it should be " + SPLIT_START_ID + "!");
 				System.exit(1);
 			}
 
-			System.out.println("Split packet test passed! ｡◕‿‿◕｡");
+			System.out.println("Server: Split packet test passed!");
 			System.exit(0);
 		});
 
